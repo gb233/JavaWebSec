@@ -1,0 +1,427 @@
+// ==========================================
+// Java Web安全教学系统 - 全局样式
+// ==========================================
+
+// 基础样式重置
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #303133;
+  background-color: #f5f7fa;
+}
+
+// 链接样式
+a {
+  color: #409eff;
+  text-decoration: none;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #66b1ff;
+  }
+}
+
+// 列表样式
+ul, ol {
+  list-style: none;
+}
+
+// 图片样式
+img {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+// 表单元素样式
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+// ==========================================
+// 工具类样式
+// ==========================================
+
+// 文本对齐
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+// 浮动
+.float-left { float: left; }
+.float-right { float: right; }
+
+// 清除浮动
+.clearfix::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+// 显示/隐藏
+.hidden { display: none !important; }
+.invisible { visibility: hidden; }
+
+// 间距工具类
+@for $i from 0 through 10 {
+  .m-#{$i} { margin: #{$i * 4}px !important; }
+  .mt-#{$i} { margin-top: #{$i * 4}px !important; }
+  .mb-#{$i} { margin-bottom: #{$i * 4}px !important; }
+  .ml-#{$i} { margin-left: #{$i * 4}px !important; }
+  .mr-#{$i} { margin-right: #{$i * 4}px !important; }
+  .mx-#{$i} { 
+    margin-left: #{$i * 4}px !important; 
+    margin-right: #{$i * 4}px !important; 
+  }
+  .my-#{$i} { 
+    margin-top: #{$i * 4}px !important; 
+    margin-bottom: #{$i * 4}px !important; 
+  }
+  
+  .p-#{$i} { padding: #{$i * 4}px !important; }
+  .pt-#{$i} { padding-top: #{$i * 4}px !important; }
+  .pb-#{$i} { padding-bottom: #{$i * 4}px !important; }
+  .pl-#{$i} { padding-left: #{$i * 4}px !important; }
+  .pr-#{$i} { padding-right: #{$i * 4}px !important; }
+  .px-#{$i} { 
+    padding-left: #{$i * 4}px !important; 
+    padding-right: #{$i * 4}px !important; 
+  }
+  .py-#{$i} { 
+    padding-top: #{$i * 4}px !important; 
+    padding-bottom: #{$i * 4}px !important; 
+  }
+}
+
+// ==========================================
+// Element Plus 样式定制
+// ==========================================
+
+// 主色调变量
+:root {
+  --el-color-primary: #409eff;
+  --el-color-primary-light-3: #79bbff;
+  --el-color-primary-light-5: #a0cfff;
+  --el-color-primary-light-7: #c6e2ff;
+  --el-color-primary-light-8: #d9ecff;
+  --el-color-primary-light-9: #ecf5ff;
+  --el-color-primary-dark-2: #337ecc;
+  
+  // 成功色
+  --el-color-success: #67c23a;
+  --el-color-success-light-3: #95d475;
+  --el-color-success-light-5: #b3e19d;
+  --el-color-success-light-7: #d1edc4;
+  --el-color-success-light-8: #e1f3d8;
+  --el-color-success-light-9: #f0f9eb;
+  --el-color-success-dark-2: #529b2e;
+  
+  // 警告色
+  --el-color-warning: #e6a23c;
+  --el-color-warning-light-3: #eebe77;
+  --el-color-warning-light-5: #f3d19e;
+  --el-color-warning-light-7: #f8e3c5;
+  --el-color-warning-light-8: #faecd8;
+  --el-color-warning-light-9: #fdf6ec;
+  --el-color-warning-dark-2: #b88230;
+  
+  // 危险色
+  --el-color-danger: #f56c6c;
+  --el-color-danger-light-3: #f89898;
+  --el-color-danger-light-5: #fab6b6;
+  --el-color-danger-light-7: #fcd3d3;
+  --el-color-danger-light-8: #fde2e2;
+  --el-color-danger-light-9: #fef0f0;
+  --el-color-danger-dark-2: #c45656;
+  
+  // 信息色
+  --el-color-info: #909399;
+  --el-color-info-light-3: #b1b3b8;
+  --el-color-info-light-5: #c8c9cc;
+  --el-color-info-light-7: #dedfe0;
+  --el-color-info-light-8: #e9e9eb;
+  --el-color-info-light-9: #f4f4f5;
+  --el-color-info-dark-2: #73767a;
+}
+
+// 卡片样式定制
+.el-card {
+  border-radius: 8px;
+  border: 1px solid #ebeef5;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  
+  .el-card__header {
+    border-bottom: 1px solid #ebeef5;
+    padding: 18px 20px;
+    background-color: #fafafa;
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      
+      .card-title {
+        font-weight: 600;
+        color: #303133;
+      }
+    }
+  }
+  
+  .el-card__body {
+    padding: 20px;
+  }
+}
+
+// 表格样式定制
+.el-table {
+  border-radius: 8px;
+  overflow: hidden;
+  
+  .el-table__header-wrapper {
+    .el-table__header {
+      th {
+        background-color: #fafafa;
+        color: #909399;
+        font-weight: 600;
+        border-bottom: 1px solid #ebeef5;
+      }
+    }
+  }
+  
+  .el-table__body-wrapper {
+    .el-table__body {
+      tr {
+        &:hover {
+          background-color: #f5f7fa;
+        }
+      }
+    }
+  }
+}
+
+// 按钮样式定制
+.el-button {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s;
+  
+  &.el-button--primary {
+    background: linear-gradient(135deg, #409eff, #36a3f7);
+    border: none;
+    
+    &:hover {
+      background: linear-gradient(135deg, #66b1ff, #5badf9);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+    }
+  }
+}
+
+// 表单样式定制
+.el-form {
+  .el-form-item {
+    margin-bottom: 22px;
+    
+    .el-form-item__label {
+      color: #606266;
+      font-weight: 500;
+    }
+    
+    .el-form-item__content {
+      .el-input__wrapper {
+        border-radius: 6px;
+        box-shadow: 0 0 0 1px #dcdfe6 inset;
+        transition: all 0.3s;
+        
+        &:hover {
+          box-shadow: 0 0 0 1px #c0c4cc inset;
+        }
+        
+        &.is-focus {
+          box-shadow: 0 0 0 1px #409eff inset;
+        }
+      }
+    }
+  }
+}
+
+// 对话框样式定制
+.el-dialog {
+  border-radius: 12px;
+  
+  .el-dialog__header {
+    padding: 20px 20px 10px;
+    border-bottom: 1px solid #ebeef5;
+    
+    .el-dialog__title {
+      font-weight: 600;
+      color: #303133;
+    }
+  }
+  
+  .el-dialog__body {
+    padding: 20px;
+  }
+  
+  .el-dialog__footer {
+    padding: 10px 20px 20px;
+    border-top: 1px solid #ebeef5;
+  }
+}
+
+// 消息提示样式定制
+.el-message {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.el-notification {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+// ==========================================
+// 进度条样式定制
+// ==========================================
+
+#nprogress {
+  .bar {
+    background: #409eff !important;
+    height: 3px !important;
+  }
+  
+  .peg {
+    box-shadow: 0 0 10px #409eff, 0 0 5px #409eff !important;
+  }
+}
+
+// ==========================================
+// 滚动条样式定制
+// ==========================================
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #a8a8a8;
+  }
+}
+
+// ==========================================
+// 响应式断点
+// ==========================================
+
+// 手机
+@media (max-width: 767px) {
+  .hidden-xs {
+    display: none !important;
+  }
+}
+
+// 平板
+@media (min-width: 768px) and (max-width: 991px) {
+  .hidden-sm {
+    display: none !important;
+  }
+}
+
+// 小型桌面
+@media (min-width: 992px) and (max-width: 1199px) {
+  .hidden-md {
+    display: none !important;
+  }
+}
+
+// 大型桌面
+@media (min-width: 1200px) {
+  .hidden-lg {
+    display: none !important;
+  }
+}
+
+// ==========================================
+// 动画效果
+// ==========================================
+
+// 淡入淡出
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+// 滑动效果
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s;
+}
+
+.slide-enter-from {
+  transform: translateX(-100%);
+}
+
+.slide-leave-to {
+  transform: translateX(100%);
+}
+
+// 缩放效果
+.zoom-enter-active,
+.zoom-leave-active {
+  transition: all 0.3s;
+}
+
+.zoom-enter-from,
+.zoom-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+// ==========================================
+// 打印样式
+// ==========================================
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    color: #000;
+    background: #fff;
+  }
+  
+  .el-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}
+

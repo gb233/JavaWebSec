@@ -1,0 +1,56 @@
+Open Source License (Commercial Use Restricted)
+
+Copyright (c) 2025 Java Web Security Teaching System
+
+This software and associated documentation files (the "Software") are provided under the following terms:
+
+1. Open Source Use License
+   This Software is provided as open source, allowing anyone to:
+   - View, study, and research the source code
+   - Modify the source code
+   - Use, modify, and distribute for non-commercial purposes
+   - Create derivative works for non-commercial purposes
+
+2. Commercial Use Restrictions
+   Without explicit written permission from the copyright owner, no one may use this Software or its derivative works for any commercial purpose, including but not limited to:
+   - Selling, leasing, licensing the Software or services based on the Software
+   - Integrating the Software into commercial products
+   - Using the Software to provide commercial services
+   - Using the Software for any revenue-generating activities
+
+3. Commercial Use Options
+   To use this Software or its derivative works for commercial purposes, one of the following conditions must be met:
+   
+   Option A - Open Source Derivative Works:
+   - Publish all derivative works based on this Software under the same open source license (this License)
+   - Publicly disclose the complete source code of derivative works
+   - Retain all terms and copyright notices of this License
+   
+   Option B - Obtain Commercial Authorization:
+   - Contact the copyright owner to obtain commercial use authorization
+   - Sign a commercial license agreement
+   - Pay applicable license fees (if applicable)
+
+4. Copyleft Terms
+   If you choose Option A (Open Source Derivative Works), then:
+   - All derivative works based on this Software must be published under the same license
+   - Complete source code must be publicly disclosed
+   - No additional restrictions may be added
+   - All terms and copyright notices of this License must be retained
+
+5. Copyright Notice
+   All copies and substantial portions must include the above copyright notice and this license notice.
+
+6. Disclaimer
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+7. Governing Law
+   This License shall be governed by the laws of the People's Republic of China.
+
+8. Contact Information
+   For commercial use authorization, please contact: songgb233@gmail.com or through communication channels available at this project's address.
+
+---
+
+This License is based on the concept of AGPL (Affero General Public License) but adds commercial use restrictions.
+Non-commercial use and open source derivative works are permitted. Commercial use requires open source or authorization.

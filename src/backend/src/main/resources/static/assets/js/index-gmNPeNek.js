@@ -1,0 +1,1 @@
+import{P as e}from"./PlaceholderView-DthLvMug.js";import{y as o,I as r,A as t}from"./vue-vendor-B7mYG-pd.js";import"./index-DVJEd6Gg.js";import"./editor-blDFJ-xS.js";import"./element-plus-BUTdRtCq.js";import"./utils-CiT6A_rT.js";const d=o({__name:"index",setup(i){return(p,n)=>(t(),r(e,{title:"用户管理",description:"用户管理功能正在开发中，将提供用户信息管理和权限控制。",icon:"User"}))}});export{d as default};

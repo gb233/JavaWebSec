@@ -1,0 +1,351 @@
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Maven
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional stylelint cache
+.stylelintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variable files (重要：保护隐私)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+.env.*.local
+!.env.example
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+out
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs (重要：日志文件可能包含敏感信息)
+logs/
+*.log
+log/
+LOG_PATH_IS_UNDEFINED/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.dockerignore
+
+# Application specific
+data/
+uploads/
+backup/
+temp/
+tmp/
+
+# Private development files (重要：隐私文件)
+.private/
+development-docs/
+*.private.*
+
+# Build artifacts
+release/
+*.tar.gz
+*.zip
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+
+# SSL certificates (重要：证书和密钥)
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+*.keystore
+
+# IDE specific
+*.sublime-project
+*.sublime-workspace
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+.vscode/settings.json
+/.cursor/
+/docs/
+/.private/
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+
+# Application logs
+application.log
+error.log
+access.log
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ==========================================
+# 隐私和个人文档（重要：不应提交到GitHub）
+# ==========================================
+
+# Office文档（所有Office文件）
+*.pdf
+*.docx
+*.xlsx
+*.pptx
+*.doc
+*.xls
+*.ppt
+
+
+# 个人开发笔记和报告
+*修复完成报告.md
+*修复方案.md
+*问题诊断*.md
+*深度分析*.md
+*实施计划.md
+*设计方案.md
+*实现方案.md
+*实现总结.md
+*完整实现*.md
+*详细实现*.md
+*详细计划.md
+*布局优化*.md
+*功能注释*.md
+*模块技术*.md
+*新功能测试报告.md
+*连续学习天数*.md
+*手动触发*.md
+*题目导航器*.md
+*排行榜功能*.md
+*基于UML*.md
+rw.md
+PR.md
+
+# 系统设计文档（个人版本）
+数据库E-R图生成说明.md
+数据库核心实体表.md
+数据库表设计.md
+系统E-R图.md
+系统UML用例图.md
+系统UML用例模型.md
+系统传统E-R图.md
+系统实体类图.md
+系统架构设计.md
+系统用例详细描述.md
+系统软件结构图.md
+系统需求分析*.md
+项目目录结构.md
+
+# 功能开发文档（个人版本）
+知识测试功能*.md
+挑战场景*.md
+十个综合挑战场景*.md
+A01-A10*.md
+
+# 自动登录脚本（包含测试账号密码）
+auto-login.js
+
+# 个人笔记和临时文档
+notes/
+personal/
+*.notes.md
+*.draft.md
+*.temp.md
+*.backup.md
+.cursorrules

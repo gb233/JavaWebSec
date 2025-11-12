@@ -1,0 +1,78 @@
+# ========================================
+# Java Web安全教学系统 - 后端Dockerfile
+# 用于构建和发布到GitHub Container Registry
+# ========================================
+
+# ========================================
+# 阶段1: Maven构建
+# ========================================
+FROM maven:3.9-eclipse-temurin-17 AS backend-builder
+
+WORKDIR /app
+
+# 复制Maven配置文件（利用Docker缓存）
+COPY src/backend/pom.xml .
+COPY src/backend/.mvn .mvn
+
+# 下载依赖（利用Docker缓存层）
+RUN mvn dependency:go-offline -B || true
+
+# 复制后端源码
+COPY src/backend/src ./src
+
+# 构建应用（跳过测试以加快构建速度）
+RUN mvn clean package -DskipTests -B \
+    && mv target/security-teaching-system-*.jar target/app.jar
+
+# ========================================
+# 阶段2: 运行时镜像
+# ========================================
+FROM eclipse-temurin:17-jre-alpine
+
+# 安装必要的工具
+RUN apk add --no-cache \
+    curl \
+    tzdata \
+    && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo "Asia/Shanghai" > /etc/timezone
+
+# 创建应用用户
+RUN addgroup -S appuser && adduser -S appuser -G appuser
+
+# 设置工作目录
+WORKDIR /app
+
+# 创建必要的目录
+RUN mkdir -p /app/logs \
+    /app/uploads \
+    /app/static \
+    && chown -R appuser:appuser /app
+
+# 从构建阶段复制JAR文件
+COPY --from=backend-builder /app/target/app.jar app.jar
+
+# 复制Docker配置文件
+COPY docker/application-docker.yml application.yml
+
+# 设置文件权限
+RUN chown -R appuser:appuser /app
+
+# 切换到应用用户
+USER appuser
+
+# 暴露端口
+EXPOSE 8080
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# 环境变量
+ENV SPRING_PROFILES_ACTIVE=docker
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -Djava.security.egd=file:/dev/./urandom"
+ENV SERVER_PORT=8080
+
+# 启动应用
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+
+

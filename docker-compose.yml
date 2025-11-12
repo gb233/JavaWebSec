@@ -1,0 +1,93 @@
+version: "3.9"
+
+services:
+  # MySQL数据库服务
+  mysql:
+    image: mysql:8.0
+    container_name: security-teaching-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-security_teaching_system}
+      MYSQL_USER: ${MYSQL_USER:-security_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-security_pass}
+      TZ: Asia/Shanghai
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 数据库初始化脚本（按顺序执行，MySQL会自动按文件名顺序执行）
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql:ro
+      # A01-A10题目数据（每个分类100题，共1000题）
+      - ./scripts/a01_complete_questions.sql:/docker-entrypoint-initdb.d/02-a01-questions.sql:ro
+      - ./scripts/a02_complete_questions.sql:/docker-entrypoint-initdb.d/03-a02-questions.sql:ro
+      - ./scripts/a03_complete_questions.sql:/docker-entrypoint-initdb.d/04-a03-questions.sql:ro
+      - ./scripts/a04_complete_questions.sql:/docker-entrypoint-initdb.d/05-a04-questions.sql:ro
+      - ./scripts/a05_complete_questions.sql:/docker-entrypoint-initdb.d/06-a05-questions.sql:ro
+      - ./scripts/a06_complete_questions.sql:/docker-entrypoint-initdb.d/07-a06-questions.sql:ro
+      - ./scripts/a07_complete_questions.sql:/docker-entrypoint-initdb.d/08-a07-questions.sql:ro
+      - ./scripts/a08_complete_questions.sql:/docker-entrypoint-initdb.d/09-a08-questions.sql:ro
+      - ./scripts/a09_complete_questions.sql:/docker-entrypoint-initdb.d/10-a09-questions.sql:ro
+      - ./scripts/a10_complete_questions.sql:/docker-entrypoint-initdb.d/11-a10-questions.sql:ro
+      # 挑战场景数据
+      - ./scripts/challenge-scenarios-init.sql:/docker-entrypoint-initdb.d/12-challenge-scenarios.sql:ro
+    command: 
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - security-network
+
+  # 应用服务（单体镜像，包含前后端）
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: javaweb-security:latest
+    container_name: security-teaching-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-security_teaching_system}
+      MYSQL_USER: ${MYSQL_USER:-security_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-security_pass}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JAVA_OPTS: ${JAVA_OPTS:--Xms512m -Xmx1024m}
+      SERVER_PORT: 8080
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - app_logs:/app/logs
+      - app_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - security-network
+
+volumes:
+  mysql_data:
+    driver: local
+  app_logs:
+    driver: local
+  app_uploads:
+    driver: local
+
+networks:
+  security-network:
+    driver: bridge

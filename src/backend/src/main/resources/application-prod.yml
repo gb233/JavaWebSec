@@ -1,0 +1,48 @@
+# 生产环境专用配置
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/javaweb_security}
+    username: ${DATABASE_USERNAME:root}
+    password: ${DATABASE_PASSWORD:root}
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:mySecretKeyForJavaWebSecurityTeachingSystemApplication2024ProductionEnvironment}
+    expiration: ${JWT_EXPIRATION:86400000}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+  security:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:https://yourdomain.com}
+
+  file:
+    upload:
+      path: ${FILE_UPLOAD_PATH:/var/uploads/security-teaching-system/}
+
+logging:
+  level:
+    root: ERROR
+    com.javaweb.security: INFO
+  file:
+    name: /var/log/security-teaching-system/application.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+

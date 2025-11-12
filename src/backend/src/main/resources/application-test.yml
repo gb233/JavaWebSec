@@ -1,0 +1,97 @@
+# 测试模式配置
+test:
+  mode:
+    realtime-feedback:
+      code: "REALTIME_FEEDBACK"
+      name: "实时反馈模式"
+      description: "逐题作答，立即获得反馈和解析。"
+      feedback: true
+      navigation: true
+      random-questions: false
+      single-category: true
+      question-count: 24
+      time-limit: 0
+      features:
+        immediate-feedback: true
+        detailed-explanation: true
+        progress-tracking: true
+        next-question-button: true
+    
+    exam-mode:
+      code: "EXAM_MODE"
+      name: "考试模式"
+      description: "完成所有题目后统一提交，查看详细成绩报告。"
+      feedback: false
+      navigation: true
+      random-questions: false
+      single-category: true
+      question-count: 24
+      time-limit: 0
+      features:
+        batch-submission: true
+        detailed-report: true
+        progress-tracking: true
+        review-answers: true
+    
+    random-comprehensive:
+      code: "RANDOM_COMPREHENSIVE"
+      name: "随机综合模式"
+      description: "从所有漏洞类型中随机抽取题目，实时反馈。"
+      feedback: true
+      navigation: false
+      random-questions: true
+      single-category: false
+      question-count: 24
+      time-limit: 0
+      features:
+        cross-category: true
+        immediate-feedback: true
+        detailed-explanation: true
+        progress-tracking: true
+
+# 题目配置
+question:
+  # 每个分类的题目数量
+  category-question-count: 24
+  # 题目类型分布
+  type-distribution:
+    single: 8
+    multiple: 8
+    judge: 8
+  # 难度分布
+  difficulty-distribution:
+    easy: 8
+    medium: 8
+    hard: 8
+  # 知识点来源分布
+  knowledge-source-distribution:
+    principle: 4
+    harm: 4
+    exploit: 4
+    vulnerable-code: 4
+    secure-code: 4
+    repair: 4
+    detection: 4
+
+# 评分配置
+scoring:
+  # 各类型题目分值
+  single-choice: 5
+  multiple-choice: 10
+  true-false: 5
+  # 总分计算方式
+  total-score-calculation: "cumulative"
+  # 是否显示详细分数
+  show-detailed-score: true
+
+# 测试限制配置
+test-limits:
+  # 最大测试次数（每日）
+  daily-max-tests: 10
+  # 最大测试次数（每月）
+  monthly-max-tests: 100
+  # 测试间隔时间（分钟）
+  test-interval: 5
+  # 是否启用测试限制
+  enable-limits: false
+

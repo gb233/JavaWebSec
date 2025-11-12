@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: security-teaching-mysql-dev
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=security_teaching_dev
+      - MYSQL_USER=teach
+      - MYSQL_PASSWORD=teach2024
+      - TZ=Asia/Shanghai
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    image: maven:3.9-eclipse-temurin-17
+    container_name: security-teaching-backend-dev
+    restart: unless-stopped
+    working_dir: /workspace/backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/security_teaching_dev?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_USERNAME=teach
+      - SPRING_DATASOURCE_PASSWORD=teach2024
+      - JAVA_OPTS=-Xms512m -Xmx768m
+      - TZ=Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: sh -c 'mvn spring-boot:run -Dspring-boot.run.profiles=${SPRING_PROFILES_ACTIVE} -Dspring-boot.run.jvmArguments="${JAVA_OPTS}"'
+    volumes:
+      - ./src/backend:/workspace/backend
+      - maven_repo:/root/.m2
+      - ./src/backend/logs:/workspace/backend/logs
+
+  frontend:
+    image: node:20
+    container_name: security-teaching-frontend-dev
+    restart: unless-stopped
+    working_dir: /workspace/frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - VITE_BACKEND_BASE_URL=http://localhost:8080
+      - TZ=Asia/Shanghai
+    depends_on:
+      backend:
+        condition: service_started
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 3000"
+    volumes:
+      - ./src/frontend:/workspace/frontend
+      - frontend_node_modules:/workspace/frontend/node_modules
+
+volumes:
+  mysql_dev_data:
+  maven_repo:
+  frontend_node_modules:

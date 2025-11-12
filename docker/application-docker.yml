@@ -1,0 +1,121 @@
+# ==========================================
+# Docker环境专用配置文件
+# ==========================================
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+
+spring:
+  application:
+    name: security-teaching-system
+  
+  profiles:
+    active: docker
+  
+  # Docker环境数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:security_teaching_system}?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true&rewriteBatchedStatements=true&connectionCollation=utf8mb4_unicode_ci&characterSetResults=utf8mb4
+    username: ${MYSQL_USER:security_user}
+    password: ${MYSQL_PASSWORD:security_pass}
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      pool-name: DockerSecurityPool
+      minimum-idle: 3
+      maximum-pool-size: 10
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 900000
+
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  # 静态资源配置
+  web:
+    resources:
+      static-locations: file:/app/static/
+      cache:
+        period: 31536000 # 1年缓存
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+      location: /app/uploads/
+
+# MyBatis Plus配置
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+# 应用自定义配置
+app:
+  # JWT配置
+  jwt:
+    secret: ${JWT_SECRET:dockerSecretKeyForJavaWebSecurityTeachingSystem2024}
+    expiration: ${JWT_EXPIRATION:86400000}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+  # 安全配置
+  security:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+      allowed-headers: "*"
+      allow-credentials: true
+
+  # 文件配置
+  file:
+    upload:
+      path: /app/uploads/
+      max-size: 10485760
+      allowed-types: jpg,jpeg,png,gif,pdf,txt,zip,doc,docx
+    avatar:
+      path: /app/uploads/avatars/
+      max-size: 2097152
+
+  # 系统配置
+  system:
+    name: Java Web安全教学系统
+    version: 1.0.0
+    description: 基于OWASP Top 10的Java Web安全教学平台
+
+# Actuator监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mysql:
+      enabled: true
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.javaweb.security: INFO
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%t] %-40.40logger{39} : %m%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%t] %-40.40logger{39} : %m%n"
+  file:
+    name: /var/log/security-teaching-system/application.log
+    max-size: 100MB
+    max-history: 10
+
