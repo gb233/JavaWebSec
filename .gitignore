@@ -342,7 +342,9 @@ A01-A10*.md
 auto-login.js
 
 # 个人笔记和临时文档
-notes/
+# 注意：不要忽略 src/frontend/src/views/notes/ 目录（这是应用功能目录）
+# 只忽略根目录下的 notes/ 目录
+/notes/
 personal/
 *.notes.md
 *.draft.md
