@@ -178,6 +178,10 @@ export interface LoginForm {
   loginIdentifier: string
   password: string
   rememberMe?: boolean
+  captchaId?: string
+  captchaAnswer?: string
+  nonce?: string
+  timestamp?: string
 }
 
 /**
@@ -191,6 +195,10 @@ export interface RegisterForm {
   fullName?: string
   bio?: string
   agreeToTerms: boolean
+  captchaId?: string
+  captchaAnswer?: string
+  nonce?: string
+  timestamp?: string
 }
 
 /**

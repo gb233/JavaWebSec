@@ -96,3 +96,5 @@ echo "   3. 或手动执行：mysql -u root -p security_teaching_system < script
 echo "   4. 或使用Docker Compose自动初始化"
 echo ""
 
+
+

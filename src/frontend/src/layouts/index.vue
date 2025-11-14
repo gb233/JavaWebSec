@@ -179,6 +179,28 @@
     <main ref="mainRef" class="app-main">
       <RouterView />
     </main>
+
+    <!-- 页脚（包含GitHub链接） -->
+    <footer v-if="authStore.isLoggedIn" class="app-footer">
+      <div class="footer-content">
+        <div class="footer-left">
+          <span>© 2024 Java Web安全教学系统</span>
+        </div>
+        <div class="footer-right">
+          <ElLink
+            :href="githubUrl"
+            target="_blank"
+            type="primary"
+            :underline="false"
+          >
+            <ElIcon :size="16" style="margin-right: 4px">
+              <Link />
+            </ElIcon>
+            <span>GitHub</span>
+          </ElLink>
+        </div>
+      </div>
+    </footer>
     
     <!-- 新手指引组件 -->
     <UserGuide 
@@ -229,6 +251,10 @@ const mainRef = ref<HTMLElement | null>(null)
 
 // 指引组件引用
 const userGuideRef = ref()
+
+// GitHub链接（从环境变量或默认值获取）
+const githubUrl = (import.meta.env.VITE_APP_GITHUB_URL || 
+  (typeof __GITHUB_URL__ !== 'undefined' ? __GITHUB_URL__ : 'https://github.com/javaweb-security/teaching-system')) as string
 
 if (import.meta.env.DEV) {
   console.debug('Layout 初始化', {
@@ -386,6 +412,36 @@ const handleGuideSkip = () => {
   .sidebar-menu {
     border-right: none;
     min-height: calc(100vh - 60px);
+  }
+}
+
+.app-footer {
+  grid-column: 1 / -1;
+  background: white;
+  border-top: 1px solid #e4e7ed;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #909399;
+
+  .footer-content {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-left {
+    display: flex;
+    align-items: center;
+  }
+
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
 }
 

@@ -43,6 +43,18 @@ public class UserRegistrationDto {
   /** 邮箱验证码 */
   private String emailVerificationCode;
 
+  /** 验证码ID */
+  private String captchaId;
+
+  /** 验证码答案 */
+  private String captchaAnswer;
+
+  /** 防重放攻击nonce token */
+  private String nonce;
+
+  /** 防重放攻击时间戳 */
+  private String timestamp;
+
   /** 是否同意用户协议 */
   private Boolean agreeToTerms = false;
 

@@ -17,6 +17,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_DEBUG: 'true' | 'false'
   readonly VITE_APP_UPLOAD_URL: string
   readonly VITE_APP_WS_URL: string
+  readonly VITE_APP_GITHUB_URL?: string
 }
 
 interface ImportMeta {
@@ -36,9 +37,6 @@ declare global {
 
     // 全局事件总线
     $eventBus?: any
-
-    // 开发工具
-    __VUE_DEVTOOLS_GLOBAL_HOOK__?: any
   }
 
   // 通用类型

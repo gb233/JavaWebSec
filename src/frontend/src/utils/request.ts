@@ -8,8 +8,12 @@ import { useAuthStore } from '@/stores/modules/auth'
 import { getToken } from '@/utils/auth'
 
 // 创建axios实例
+// 注意：baseURL不应该包含/api，因为API路径已经以/api开头
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+// 确保baseURL不以/api结尾，避免重复
+const normalizedBaseURL = baseURL.replace(/\/api\/?$/, '')
 const service: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: normalizedBaseURL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'

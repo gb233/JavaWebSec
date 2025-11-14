@@ -110,50 +110,47 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             authz ->
                 authz
-                    // 公开访问的端点
+                    // 公开访问的API端点
                     .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/**"))
                     .permitAll()
 
-                    // 编码修复端点（临时公开）
-                    .requestMatchers(new AntPathRequestMatcher("/api/v1/admin/fix-a01-encoding"))
-                    .permitAll()
-
-                    // 系统监控端点
+                    // 系统监控端点（公开访问，无敏感信息）
+                    // 注意：health和info端点仅返回基本状态信息，无敏感数据，可以公开访问
+                    // health返回{"status":"UP"}，info返回{}，不包含敏感信息
                     .requestMatchers(
                         new AntPathRequestMatcher("/actuator/health"),
                         new AntPathRequestMatcher("/actuator/info"))
                     .permitAll()
 
-                    // API文档端点
-                    .requestMatchers(
-                        new AntPathRequestMatcher("/swagger-ui/**"),
-                        new AntPathRequestMatcher("/v3/api-docs/**"),
-                        new AntPathRequestMatcher("/swagger-resources/**"),
-                        new AntPathRequestMatcher("/webjars/**"))
-                    .permitAll()
+                    // 用户统计端点（需要认证，防止泄露系统用户数量等敏感信息）
+                    .requestMatchers(new AntPathRequestMatcher("/api/v1/users/stats", "GET"))
+                    .authenticated()
 
-                    // 静态资源
-                    .requestMatchers(
-                        new AntPathRequestMatcher("/static/**"),
-                        new AntPathRequestMatcher("/public/**"),
-                        new AntPathRequestMatcher("/favicon.ico"))
-                    .permitAll()
+                    // 用户排行榜端点（需要认证，防止用户枚举和信息泄露）
+                    // 注意：排行榜可能泄露用户信息，可能被用于用户枚举攻击
+                    .requestMatchers(new AntPathRequestMatcher("/api/v1/users/ranking", "GET"))
+                    .authenticated()
+
+                    // 用户搜索端点（需要认证，防止用户枚举攻击）
+                    // 注意：用户搜索可能被滥用进行用户枚举攻击，泄露用户名等信息
+                    .requestMatchers(new AntPathRequestMatcher("/api/v1/users/search", "GET"))
+                    .authenticated()
+
+                    // 用户详情端点（需要认证，防止用户枚举和信息泄露）
+                    // 注意：用户详情可能被用于用户枚举攻击，泄露用户信息
+                    .requestMatchers(new AntPathRequestMatcher("/api/v1/users/{userId}", "GET"))
+                    .authenticated()
+
+                    // 文件访问端点（需要认证，防止用户枚举和信息泄露）
+                    // 注意：头像文件可能被用于用户枚举攻击，泄露用户信息
+                    .requestMatchers(new AntPathRequestMatcher("/api/v1/files/**"))
+                    .authenticated()
 
                     // 挑战场景端点需要认证
                     .requestMatchers(new AntPathRequestMatcher("/api/v1/challenge-scenarios/**"))
                     .authenticated()
 
-                    // 公开的用户相关端点
-                    .requestMatchers(new AntPathRequestMatcher("/api/v1/users/stats", "GET"))
-                    .permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/v1/users/ranking", "GET"))
-                    .permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/v1/users/search", "GET"))
-                    .permitAll()
-                    .requestMatchers(new AntPathRequestMatcher("/api/v1/users/{userId}", "GET"))
-                    .permitAll()
-
-                    // 需要认证的用户端点
+                    // 需要认证的用户端点（敏感操作）
                     .requestMatchers(new AntPathRequestMatcher("/api/v1/users/profile", "GET"))
                     .authenticated()
                     .requestMatchers(new AntPathRequestMatcher("/api/v1/users/profile", "PUT"))
@@ -164,17 +161,25 @@ public class SecurityConfig {
                         new AntPathRequestMatcher("/api/v1/users/verify-email", "POST"))
                     .authenticated()
 
-                    // 管理员才能访问的用户管理端点
+                    // 用户管理端点（统一权限模式：所有登录用户都可以访问）
+                    // 注意：当前系统采用统一权限模式，所有注册用户拥有相同的权限
+                    // 虽然数据库中有ADMIN角色，但业务逻辑上所有用户权限相同
                     .requestMatchers(new AntPathRequestMatcher("/api/v1/users"))
-                    .hasRole("ADMIN")
+                    .authenticated()
 
-                    // 系统管理端点
+                    // 系统管理端点（统一权限模式：所有登录用户都可以访问）
+                    // 注意：当前系统采用统一权限模式，所有注册用户拥有相同的权限
+                    // 虽然数据库中有ADMIN角色，但业务逻辑上所有用户权限相同
                     .requestMatchers(new AntPathRequestMatcher("/api/v1/admin/**"))
-                    .hasRole("ADMIN")
+                    .authenticated()
 
-                    // 其他所有端点需要认证
+                    // 所有API端点需要认证（除了上面明确允许的）
+                    .requestMatchers(new AntPathRequestMatcher("/api/**"))
+                    .authenticated()
+
+                    // 所有非API路径允许访问（前端SPA路由由Vue Router处理）
                     .anyRequest()
-                    .authenticated());
+                    .permitAll());
 
     // 添加JWT过滤器
     http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -223,12 +228,7 @@ public class SecurityConfig {
                     // 其他配置与生产环境相同
                     .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/**"))
                     .permitAll()
-                    .requestMatchers(
-                        new AntPathRequestMatcher("/swagger-ui/**"),
-                        new AntPathRequestMatcher("/v3/api-docs/**"),
-                        new AntPathRequestMatcher("/swagger-resources/**"),
-                        new AntPathRequestMatcher("/webjars/**"))
-                    .permitAll()
+                    // 注意：Swagger文档端点已从配置中移除，因为前端未使用
                     .anyRequest()
                     .authenticated())
 

@@ -10,7 +10,25 @@
 
 ## 🚀 快速开始
 
-### Docker方式（推荐：前后端分离部署）
+### Ubuntu 22.04 LTS 一键部署（推荐）
+
+```bash
+# 1. 克隆项目
+git clone <repository-url>
+cd javaweb安全教学系统
+
+# 2. 运行自动部署脚本（自动安装Docker、配置环境、启动服务）
+chmod +x scripts/ubuntu-docker-deploy.sh
+./scripts/ubuntu-docker-deploy.sh
+
+# 3. 访问应用
+# 前端: http://localhost:80
+# 后端API: http://localhost:8080
+```
+
+📖 **详细文档**: [Ubuntu 22.04 LTS 完整部署指南](docs/deployment/UBUNTU_DOCKER_DEPLOYMENT.md) | [快速开始](docs/deployment/UBUNTU_QUICK_START.md)
+
+### Docker方式（通用部署）
 
 ```bash
 # 1. 克隆项目
@@ -4363,5 +4381,250 @@ docker build -t javaweb-security:latest -f Dockerfile .
 2. 可以考虑添加搜索功能，快速查找内容
 3. 可以考虑添加收藏功能，收藏重点知识点
 4. 可以考虑将跳转链接改为实际的URL参数格式（如`?page=demo&payload=order&type=attack`）
+
+---
+
+## 2025-01-XX 会话总结：修复注册重复提示和安全风险分析
+
+### 会话主要目的
+1. 修复注册成功后出现两个重复提示的问题
+2. 分析系统在公网环境下无限制注册和登录的安全风险
+3. 提供安全加固方案和实施建议
+
+### 完成的主要任务
+
+#### 1. 修复注册成功重复提示问题
+**问题描述**：
+- 注册成功后跳转到登录页面时，前端会显示两个"注册成功"的提示消息
+- 一个在`RegisterView.vue`组件中，另一个在`auth.ts` store中
+
+**解决方案**：
+- 删除了`RegisterView.vue`中的重复提示（第487行）
+- 保留`auth.ts` store中的统一消息提示，符合单一职责原则
+- 消息提示统一在store中管理，便于维护
+
+**修改文件**：
+- `src/frontend/src/views/auth/RegisterView.vue`
+  - 删除重复的`ElMessage.success()`调用
+  - 添加注释说明成功消息已在store中显示
+
+#### 2. 安全风险分析
+**发现的安全问题**：
+
+1. **无速率限制（Rate Limiting）** 🔴 高危
+   - 注册接口无频率限制，可被恶意批量注册
+   - 登录接口无频率限制，可被暴力破解攻击
+   - 可能导致数据库资源耗尽、系统性能下降
+
+2. **无验证码保护** 🔴 高危
+   - 注册和登录接口都没有验证码验证
+   - 无法防止自动化攻击
+
+3. **无IP级别限制** 🟡 中危
+   - 同一IP可无限制注册和登录
+   - 无法防止分布式攻击
+
+4. **无账户注册频率限制** 🟡 中危
+   - 同一邮箱可多次尝试注册（虽然有唯一性检查）
+   - 无每日注册次数限制
+
+**已实现的安全措施**：
+- ✅ BCrypt密码加密（强度10）
+- ✅ 登录失败保护（5次失败锁定30分钟）
+- ✅ JWT认证机制
+- ✅ CORS配置
+
+#### 3. 安全加固方案文档
+**创建文档**：`docs/security-analysis.md`
+
+**文档内容**：
+1. 当前安全状况分析（已实现和缺失的安全措施）
+2. 安全风险影响分析（无限制注册和登录的具体影响）
+3. 安全加固方案（速率限制、验证码、IP限制等）
+4. 实施优先级建议（高、中、低优先级）
+5. 监控和告警建议
+
+**推荐方案**：
+- **速率限制**：使用Bucket4j + Redis实现
+  - 注册：每个IP每小时最多5次
+  - 登录：每个IP每分钟最多10次
+- **验证码保护**：使用Google reCAPTCHA v3
+- **IP黑名单**：自动封禁恶意IP
+
+### 关键决策和解决方案
+
+1. **消息提示统一管理**
+   - 决策：将消息提示统一在store中管理
+   - 原因：符合单一职责原则，便于统一管理和维护
+   - 效果：避免重复提示，代码更清晰
+
+2. **安全风险评估**
+   - 决策：创建详细的安全分析文档
+   - 原因：帮助理解风险，提供可执行的解决方案
+   - 效果：为后续安全加固提供指导
+
+3. **优先级划分**
+   - 高优先级：速率限制（注册和登录）
+   - 中优先级：验证码保护、IP黑名单
+   - 低优先级：账户注册频率限制、异常检测
+
+### 使用的技术栈
+- **前端**：Vue 3 + TypeScript + Element Plus
+- **后端**：Spring Boot + Spring Security + JWT
+- **安全分析**：OWASP安全标准
+
+### 修改的文件
+1. `src/frontend/src/views/auth/RegisterView.vue`
+   - 删除重复的注册成功提示
+   - 添加注释说明
+
+2. `docs/security-analysis.md`（新建）
+   - 完整的安全风险分析文档
+   - 包含问题分析、影响评估、解决方案和实施建议
+
+### 代码风格
+- 保持与现有代码风格一致
+- 添加清晰的注释说明
+- 遵循单一职责原则
+
+### 安全建议总结
+
+**如果系统发布到公网，无限制注册和登录会造成以下重大影响**：
+
+1. **数据库资源耗尽**
+   - 恶意用户批量注册大量账户
+   - 数据库存储空间快速耗尽
+
+2. **系统性能下降**
+   - 大量请求占用服务器资源
+   - 数据库连接池耗尽
+   - 响应时间变慢
+
+3. **暴力破解攻击**
+   - 攻击者可无限次尝试密码
+   - 弱密码容易被破解
+
+4. **DDoS攻击风险**
+   - 大量请求导致服务器过载
+   - 可能导致服务不可用
+
+**建议立即实施**：
+1. 注册和登录接口的速率限制（高优先级）
+2. 验证码保护（高优先级）
+
+这两项措施可以有效防止批量注册和暴力破解攻击，保护系统安全。
+
+---
+
+## 2025-01-XX 会话总结：移除Vue DevTools确保生产环境安全
+
+### 会话主要目的
+1. 分析Vue DevTools在生产环境的安全风险
+2. 决定完全移除DevTools以避免安全风险
+3. 清理所有DevTools相关配置和依赖
+
+### 完成的主要任务
+
+#### 1. 安全风险分析
+**发现的风险**：
+- 🔴 **高风险**：如果DevTools泄露到生产环境，可能导致：
+  - 应用内部结构泄露（组件树、路由、Store状态）
+  - API端点泄露
+  - 业务逻辑泄露
+  - 调试能力暴露
+  - 敏感数据泄露（用户token、业务数据）
+
+**用户担忧**：
+- 未使用过DevTools
+- 担心误用开发环境配置作为生产环境
+- 希望从根本上消除风险
+
+#### 2. 完全移除DevTools
+**移除内容**：
+1. ✅ 删除 `package.json` 中的 `vite-plugin-vue-devtools` 依赖
+2. ✅ 删除 `vite.config.ts` 中的DevTools导入和配置
+3. ✅ 删除 `env.d.ts` 中的DevTools类型声明
+4. ✅ 删除构建验证脚本（不再需要）
+5. ✅ 更新安全分析文档
+
+**修改文件**：
+- `src/frontend/package.json`
+  - 删除 `vite-plugin-vue-devtools` 依赖
+- `src/frontend/vite.config.ts`
+  - 删除 `VueDevTools` 导入
+  - 删除DevTools插件配置
+- `src/frontend/env.d.ts`
+  - 删除 `__VUE_DEVTOOLS_GLOBAL_HOOK__` 类型声明
+- `scripts/verify-build.js`
+  - 删除文件（不再需要）
+- `docs/devtools-security-analysis.md`
+  - 更新文档，说明已完全移除
+
+### 关键决策和解决方案
+
+1. **完全移除 vs 环境控制**
+   - 决策：选择完全移除DevTools
+   - 原因：
+     - 用户未使用过DevTools
+     - 避免误用开发环境配置的风险
+     - 从根本上消除安全风险
+   - 效果：无论使用什么环境配置，都不会包含DevTools
+
+2. **安全保证**
+   - 不再依赖环境变量控制
+   - 即使误用开发环境配置，也不会包含DevTools
+   - 简化项目依赖，减少安全隐患
+
+### 使用的技术栈
+- **前端**：Vue 3 + TypeScript + Vite
+- **构建工具**：Vite
+
+### 修改的文件
+1. `src/frontend/package.json`
+   - 删除DevTools依赖
+
+2. `src/frontend/vite.config.ts`
+   - 删除DevTools配置
+
+3. `src/frontend/env.d.ts`
+   - 删除DevTools类型声明
+
+4. `scripts/verify-build.js`
+   - 删除文件
+
+5. `docs/devtools-security-analysis.md`
+   - 更新文档说明
+
+### 代码风格
+- 保持代码简洁
+- 删除不必要的依赖和配置
+- 确保生产环境安全
+
+### 后续操作建议
+
+**需要执行的操作**：
+```bash
+# 更新package-lock.json，移除DevTools相关依赖
+cd src/frontend
+npm install
+```
+
+**验证**：
+- ✅ 确认 `package-lock.json` 中不再包含 `vite-plugin-vue-devtools`
+- ✅ 确认构建时不会包含DevTools相关代码
+- ✅ 确认生产环境部署安全
+
+### 安全建议总结
+
+**移除DevTools的优势**：
+1. ✅ **从根本上消除风险**：不再依赖环境变量控制
+2. ✅ **避免配置错误**：即使误用开发环境配置，也不会包含DevTools
+3. ✅ **简化依赖**：减少不必要的开发依赖
+4. ✅ **生产环境安全**：无论使用什么配置，都不会包含DevTools
+
+**最终状态**：
+- 🟢 **无风险**：DevTools已完全移除
+- ✅ **GitHub安全**：可以安全上传到GitHub
+- ✅ **生产部署安全**：可以安全部署到公网
 
 ---

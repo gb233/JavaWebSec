@@ -174,3 +174,5 @@ jobs:
           echo "Full Stack: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FULL }}"
 
 
+
+

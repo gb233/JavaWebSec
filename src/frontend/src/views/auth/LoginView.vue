@@ -70,6 +70,31 @@
             </div>
           </ElFormItem>
 
+          <!-- 验证码 -->
+          <ElFormItem label="验证码" prop="captchaAnswer">
+            <div class="captcha-container">
+              <ElInput
+                v-model="loginForm.captchaAnswer"
+                placeholder="请输入验证码答案"
+                prefix-icon="Lock"
+                size="large"
+                clearable
+                style="flex: 1"
+              />
+              <div class="captcha-question">
+                <span class="question-text">{{ captchaQuestion }}</span>
+                <ElButton
+                  type="primary"
+                  link
+                  size="small"
+                  @click="refreshCaptcha"
+                >
+                  刷新
+                </ElButton>
+              </div>
+            </div>
+          </ElFormItem>
+
           <!-- 错误提示 -->
           <div v-if="authStore.loginError" class="error-message">
             <ElAlert
@@ -124,6 +149,21 @@
           <span>挑战模式练习</span>
         </div>
       </div>
+
+      <!-- GitHub链接 -->
+      <div class="github-link">
+        <ElLink
+          :href="githubUrl"
+          target="_blank"
+          type="primary"
+          :underline="false"
+        >
+          <ElIcon :size="18" style="margin-right: 4px">
+            <Link />
+          </ElIcon>
+          <span>查看源代码</span>
+        </ElLink>
+      </div>
     </div>
 
     <!-- 忘记密码功能暂时注释掉 - 2025-01-15 -->
@@ -174,6 +214,7 @@ import { Lock as SecurityIcon } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/modules/auth'
 // 修复：resetPassword函数不存在，暂时注释掉
 // import { resetPassword } from '@/api/auth'
+import { getCaptcha, getNonce } from '@/api/auth'
 import type { UserLoginData } from '@/api/auth'
 
 // ================================
@@ -186,6 +227,10 @@ const authStore = useAuthStore()
 const loginFormRef = ref<FormInstance>()
 const forgotPasswordFormRef = ref<FormInstance>()
 
+// GitHub链接（从环境变量或默认值获取）
+const githubUrl = (import.meta.env.VITE_APP_GITHUB_URL || 
+  (typeof __GITHUB_URL__ !== 'undefined' ? __GITHUB_URL__ : 'https://github.com/javaweb-security/teaching-system')) as string
+
 // 忘记密码功能暂时注释掉 - 2025-01-15
 // const showForgotPassword = ref(false)
 // const forgotPasswordLoading = ref(false)
@@ -194,7 +239,11 @@ const forgotPasswordFormRef = ref<FormInstance>()
 const loginForm = reactive<UserLoginData>({
   loginIdentifier: '',
   password: '',
-  rememberMe: false
+  rememberMe: false,
+  captchaId: '',
+  captchaAnswer: '',
+  nonce: '',
+  timestamp: ''
 })
 
 // 忘记密码功能暂时注释掉 - 2025-01-15
@@ -230,6 +279,52 @@ const loginRules: FormRules = {
 // 事件处理
 // ================================
 
+// 验证码相关
+const captchaQuestion = ref('')
+const captchaId = ref('')
+const nonceToken = ref('')
+const nonceTimestamp = ref('')
+
+/**
+ * 获取验证码
+ */
+const refreshCaptcha = async () => {
+  try {
+    const response = await getCaptcha()
+    if (response.code === 200 && response.data) {
+      captchaId.value = response.data.captchaId
+      captchaQuestion.value = response.data.question
+      loginForm.captchaId = captchaId.value
+      loginForm.captchaAnswer = ''
+    } else {
+      ElMessage.error('获取验证码失败，请稍后重试')
+    }
+  } catch (error) {
+    console.error('获取验证码失败:', error)
+    ElMessage.error('获取验证码失败，请稍后重试')
+  }
+}
+
+/**
+ * 获取nonce token
+ */
+const refreshNonce = async () => {
+  try {
+    const response = await getNonce()
+    if (response.code === 200 && response.data) {
+      nonceToken.value = response.data.nonce
+      nonceTimestamp.value = response.data.timestamp
+      loginForm.nonce = nonceToken.value
+      loginForm.timestamp = nonceTimestamp.value
+    } else {
+      ElMessage.error('获取安全令牌失败，请稍后重试')
+    }
+  } catch (error) {
+    console.error('获取nonce token失败:', error)
+    ElMessage.error('获取安全令牌失败，请稍后重试')
+  }
+}
+
 /**
  * 处理登录
  */
@@ -245,6 +340,19 @@ const handleLogin = async () => {
       return
     }
 
+    // 检查验证码
+    if (!loginForm.captchaAnswer || !loginForm.captchaId) {
+      ElMessage.warning('请输入验证码')
+      return
+    }
+
+    // 检查nonce token
+    if (!loginForm.nonce || !loginForm.timestamp) {
+      ElMessage.warning('安全令牌已过期，请刷新页面重试')
+      await refreshNonce()
+      return
+    }
+
     // 清除之前的错误信息
     authStore.clearErrors()
 
@@ -255,9 +363,16 @@ const handleLogin = async () => {
       // 登录成功，跳转到首页或之前页面
       const redirect = router.currentRoute.value.query.redirect as string
       await router.push(redirect || '/')
+    } else {
+      // 登录失败，刷新验证码和nonce
+      await refreshCaptcha()
+      await refreshNonce()
     }
   } catch (error) {
     console.error('登录处理失败:', error)
+    // 登录失败，刷新验证码和nonce
+    await refreshCaptcha()
+    await refreshNonce()
   }
 }
 
@@ -294,14 +409,19 @@ const handleLogin = async () => {
 // 生命周期
 // ================================
 
-onMounted(() => {
+onMounted(async () => {
   // 如果已经登录，直接跳转到首页
   if (authStore.isLoggedIn) {
     router.push('/')
+    return
   }
 
   // 清除之前的错误信息
   authStore.clearErrors()
+
+  // 页面加载时获取验证码和nonce token
+  await refreshCaptcha()
+  await refreshNonce()
 })
 </script>
 
@@ -388,6 +508,30 @@ onMounted(() => {
     margin-bottom: 16px;
   }
 
+  .captcha-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+
+    .captcha-question {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f5f7fa;
+      border-radius: 4px;
+      min-width: 120px;
+      flex-shrink: 0;
+
+      .question-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: #303133;
+      }
+    }
+  }
+
   .login-btn {
     width: 100%;
     height: 48px;
@@ -411,6 +555,15 @@ onMounted(() => {
         color: #36a3f7;
       }
     }
+  }
+
+  .github-link {
+    text-align: center;
+    margin-top: 24px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
   }
 }
 

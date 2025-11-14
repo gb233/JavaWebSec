@@ -123,3 +123,19 @@ export function checkEmailAvailability(email: string): Promise<ApiResult<{ avail
     params: { email }
   })
 }
+
+// 获取验证码
+export function getCaptcha(): Promise<ApiResult<{ captchaId: string; question: string }>> {
+  return request({
+    url: '/api/v1/auth/captcha',
+    method: 'get'
+  })
+}
+
+// 获取防重放攻击nonce token
+export function getNonce(): Promise<ApiResult<{ nonce: string; timestamp: string }>> {
+  return request({
+    url: '/api/v1/auth/nonce',
+    method: 'get'
+  })
+}

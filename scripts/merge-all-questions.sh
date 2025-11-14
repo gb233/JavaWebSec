@@ -43,3 +43,5 @@ echo "SET FOREIGN_KEY_CHECKS = 1;" >> "$OUTPUT_FILE"
 echo "✅ 所有题目SQL已合并到: $OUTPUT_FILE"
 echo "📊 文件大小: $(du -h "$OUTPUT_FILE" | cut -f1)"
 
+
+

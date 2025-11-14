@@ -4,7 +4,6 @@ import { resolve } from 'path'
 import sass from 'sass-embedded'
 import eslint from 'vite-plugin-eslint'
 import WindiCSS from 'vite-plugin-windicss'
-import VueDevTools from 'vite-plugin-vue-devtools'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
@@ -39,8 +38,6 @@ export default defineConfig(({ mode, command }) => {
       // WindiCSS
       WindiCSS(),
 
-      // Vue开发工具（仅开发环境）
-      isDev && VueDevTools(),
 
       // 自动导入
       AutoImport({
@@ -239,7 +236,10 @@ export default defineConfig(({ mode, command }) => {
     // 环境变量
     define: {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
-      __BUILD_TIME__: JSON.stringify(new Date().toISOString())
+      __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+      __GITHUB_URL__: JSON.stringify(
+        process.env.VITE_APP_GITHUB_URL || 'https://github.com/javaweb-security/teaching-system'
+      )
     },
 
     // 预览服务器

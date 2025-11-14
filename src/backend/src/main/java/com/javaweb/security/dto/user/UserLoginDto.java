@@ -25,8 +25,17 @@ public class UserLoginDto {
   /** 是否记住登录状态 */
   private Boolean rememberMe = false;
 
-  /** 验证码（如果需要） */
-  private String captcha;
+  /** 验证码ID */
+  private String captchaId;
+
+  /** 验证码答案 */
+  private String captchaAnswer;
+
+  /** 防重放攻击nonce token */
+  private String nonce;
+
+  /** 防重放攻击时间戳 */
+  private String timestamp;
 
   /** 客户端信息 */
   private String userAgent;

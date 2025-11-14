@@ -132,6 +132,31 @@
             />
           </ElFormItem>
 
+          <!-- 验证码 -->
+          <ElFormItem label="验证码" prop="captchaAnswer">
+            <div class="captcha-container">
+              <ElInput
+                v-model="registerForm.captchaAnswer"
+                placeholder="请输入验证码答案"
+                prefix-icon="Lock"
+                size="large"
+                clearable
+                style="flex: 1"
+              />
+              <div class="captcha-question">
+                <span class="question-text">{{ captchaQuestion }}</span>
+                <ElButton
+                  type="primary"
+                  link
+                  size="small"
+                  @click="refreshCaptcha"
+                >
+                  刷新
+                </ElButton>
+              </div>
+            </div>
+          </ElFormItem>
+
           <!-- 用户协议 -->
           <ElFormItem prop="agreeToTerms">
             <ElCheckbox v-model="registerForm.agreeToTerms">
@@ -179,6 +204,21 @@
           </div>
         </ElForm>
       </ElCard>
+
+      <!-- GitHub链接 -->
+      <div class="github-link">
+        <ElLink
+          :href="githubUrl"
+          target="_blank"
+          type="primary"
+          :underline="false"
+        >
+          <ElIcon :size="18" style="margin-right: 4px">
+            <Link />
+          </ElIcon>
+          <span>查看源代码</span>
+        </ElLink>
+      </div>
     </div>
 
     <!-- 用户服务协议对话框 -->
@@ -246,7 +286,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -258,13 +298,16 @@ import {
   Lock,
   UserFilled,
   Check,
-  Close
+  Close,
+  Link
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/modules/auth'
 // 修复：现在添加了真实的API函数
 import {
   checkUsernameAvailability as fetchUsernameAvailability,
-  checkEmailAvailability as fetchEmailAvailability
+  checkEmailAvailability as fetchEmailAvailability,
+  getCaptcha,
+  getNonce
 } from '@/api/auth'
 import type { RegisterForm } from '@/types/api'
 
@@ -279,6 +322,10 @@ const registerFormRef = ref<FormInstance>()
 const showTermsDialog = ref(false)
 const showPrivacyDialog = ref(false)
 
+// GitHub链接（从环境变量或默认值获取）
+const githubUrl = (import.meta.env.VITE_APP_GITHUB_URL || 
+  (typeof __GITHUB_URL__ !== 'undefined' ? __GITHUB_URL__ : 'https://github.com/javaweb-security/teaching-system')) as string
+
 // 注册表单数据
 const registerForm = reactive<RegisterForm>({
   username: '',
@@ -287,8 +334,18 @@ const registerForm = reactive<RegisterForm>({
   confirmPassword: '',
   fullName: '',
   bio: '',
-  agreeToTerms: false
+  agreeToTerms: false,
+  captchaId: '',
+  captchaAnswer: '',
+  nonce: '',
+  timestamp: ''
 })
+
+// 验证码相关
+const captchaQuestion = ref('')
+const captchaId = ref('')
+const nonceToken = ref('')
+const nonceTimestamp = ref('')
 
 // 字段验证状态
 const usernameStatus = reactive({
@@ -460,6 +517,46 @@ const checkEmailAvailability = async () => {
 }
 
 /**
+ * 获取验证码
+ */
+const refreshCaptcha = async () => {
+  try {
+    const response = await getCaptcha()
+    if (response.code === 200 && response.data) {
+      captchaId.value = response.data.captchaId
+      captchaQuestion.value = response.data.question
+      registerForm.captchaId = captchaId.value
+      registerForm.captchaAnswer = ''
+    } else {
+      ElMessage.error('获取验证码失败，请稍后重试')
+    }
+  } catch (error) {
+    console.error('获取验证码失败:', error)
+    ElMessage.error('获取验证码失败，请稍后重试')
+  }
+}
+
+/**
+ * 获取nonce token
+ */
+const refreshNonce = async () => {
+  try {
+    const response = await getNonce()
+    if (response.code === 200 && response.data) {
+      nonceToken.value = response.data.nonce
+      nonceTimestamp.value = response.data.timestamp
+      registerForm.nonce = nonceToken.value
+      registerForm.timestamp = nonceTimestamp.value
+    } else {
+      ElMessage.error('获取安全令牌失败，请稍后重试')
+    }
+  } catch (error) {
+    console.error('获取nonce token失败:', error)
+    ElMessage.error('获取安全令牌失败，请稍后重试')
+  }
+}
+
+/**
  * 处理注册
  */
 const handleRegister = async () => {
@@ -476,6 +573,19 @@ const handleRegister = async () => {
       return
     }
 
+    // 检查验证码
+    if (!registerForm.captchaAnswer || !registerForm.captchaId) {
+      ElMessage.warning('请输入验证码')
+      return
+    }
+
+    // 检查nonce token
+    if (!registerForm.nonce || !registerForm.timestamp) {
+      ElMessage.warning('安全令牌已过期，请刷新页面重试')
+      await refreshNonce()
+      return
+    }
+
     // 清除之前的错误信息
     authStore.clearErrors()
 
@@ -483,14 +593,30 @@ const handleRegister = async () => {
     const success = await authStore.registerUser(registerForm)
 
     if (success) {
-      // 注册成功，跳转到登录页
-      ElMessage.success('注册成功！请登录您的账户')
+      // 注册成功，跳转到登录页（成功消息已在store中显示）
       await router.push('/login')
+    } else {
+      // 注册失败，刷新验证码和nonce
+      await refreshCaptcha()
+      await refreshNonce()
     }
   } catch (error) {
     console.error('注册处理失败:', error)
+    // 注册失败，刷新验证码和nonce
+    await refreshCaptcha()
+    await refreshNonce()
   }
 }
+
+// ================================
+// 生命周期
+// ================================
+
+onMounted(async () => {
+  // 页面加载时获取验证码和nonce token
+  await refreshCaptcha()
+  await refreshNonce()
+})
 
 // ================================
 // 监听器
@@ -635,6 +761,30 @@ watch(() => registerForm.email, () => {
     margin-bottom: 16px;
   }
 
+  .captcha-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+
+    .captcha-question {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f5f7fa;
+      border-radius: 4px;
+      min-width: 120px;
+      flex-shrink: 0;
+
+      .question-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: #303133;
+      }
+    }
+  }
+
   .register-btn {
     width: 100%;
     height: 48px;
@@ -658,6 +808,15 @@ watch(() => registerForm.email, () => {
         color: #36a3f7;
       }
     }
+  }
+
+  .github-link {
+    text-align: center;
+    margin-top: 24px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
   }
 }
 

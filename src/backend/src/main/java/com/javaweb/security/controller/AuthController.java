@@ -37,6 +37,10 @@ public class AuthController {
 
   private final AuthenticationService authenticationService;
   private final UserService userService;
+  private final com.javaweb.security.service.CaptchaService captchaService;
+  private final com.javaweb.security.service.ReplayAttackPreventionService
+      replayAttackPreventionService;
+  private final com.javaweb.security.config.SecurityFeaturesConfig securityFeaturesConfig;
 
   /** 用户注册 */
   @PostMapping("/register")
@@ -53,6 +57,22 @@ public class AuthController {
         getClientIp(request));
 
     try {
+      String clientIp = getClientIp(request);
+
+      // 验证防重放攻击nonce token（如果启用）
+      if (!replayAttackPreventionService.verifyNonce(
+          registrationDto.getNonce(), registrationDto.getTimestamp(), clientIp)) {
+        log.warn("注册请求防重放验证失败：ip={}", clientIp);
+        return ResponseEntity.badRequest().body(ApiResult.failed("请求已过期或已被使用，请刷新页面重试"));
+      }
+
+      // 验证验证码（如果启用）
+      if (!captchaService.verifyCaptcha(
+          registrationDto.getCaptchaId(), registrationDto.getCaptchaAnswer(), clientIp)) {
+        log.warn("注册请求验证码验证失败：ip={}", clientIp);
+        return ResponseEntity.badRequest().body(ApiResult.failed("验证码错误或已过期，请重新获取"));
+      }
+
       // 检查用户协议同意状态
       if (!Boolean.TRUE.equals(registrationDto.getAgreeToTerms())) {
         return ResponseEntity.badRequest().body(ApiResult.failed("请同意用户服务协议"));
@@ -83,12 +103,27 @@ public class AuthController {
       HttpServletRequest request) {
 
     // 设置客户端信息
-    loginDto.setClientIp(getClientIp(request));
+    String clientIp = getClientIp(request);
+    loginDto.setClientIp(clientIp);
     loginDto.setUserAgent(request.getHeader("User-Agent"));
 
-    log.info("用户登录请求：identifier={}, ip={}", loginDto.getLoginIdentifier(), loginDto.getClientIp());
+    log.info("用户登录请求：identifier={}, ip={}", loginDto.getLoginIdentifier(), clientIp);
 
     try {
+      // 验证防重放攻击nonce token（如果启用）
+      if (!replayAttackPreventionService.verifyNonce(
+          loginDto.getNonce(), loginDto.getTimestamp(), clientIp)) {
+        log.warn("登录请求防重放验证失败：ip={}", clientIp);
+        return ResponseEntity.badRequest().body(ApiResult.failed("请求已过期或已被使用，请刷新页面重试"));
+      }
+
+      // 验证验证码（如果启用）
+      if (!captchaService.verifyCaptcha(
+          loginDto.getCaptchaId(), loginDto.getCaptchaAnswer(), clientIp)) {
+        log.warn("登录请求验证码验证失败：ip={}", clientIp);
+        return ResponseEntity.badRequest().body(ApiResult.failed("验证码错误或已过期，请重新获取"));
+      }
+
       // 执行登录
       LoginResponseDto loginResponse = authenticationService.login(loginDto);
 
@@ -235,6 +270,59 @@ public class AuthController {
     } catch (Exception e) {
       log.error("邮箱检查异常：{}", e.getMessage(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResult.failed("检查失败"));
+    }
+  }
+
+  /** 获取验证码 */
+  @GetMapping("/captcha")
+  @Operation(summary = "获取验证码", description = "获取数学验证码，用于注册和登录")
+  public ResponseEntity<ApiResult<Map<String, String>>> getCaptcha(HttpServletRequest request) {
+    String clientId = getClientIp(request);
+    log.debug("获取验证码请求：clientId={}", clientId);
+
+    try {
+      Map<String, String> captcha = captchaService.generateCaptcha(clientId);
+      return ResponseEntity.ok(ApiResult.success("验证码生成成功", captcha));
+    } catch (Exception e) {
+      log.error("验证码生成异常：{}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(ApiResult.failed("验证码生成失败"));
+    }
+  }
+
+  /** 获取防重放攻击nonce token */
+  @GetMapping("/nonce")
+  @Operation(summary = "获取nonce token", description = "获取一次性nonce token，用于防止重放攻击")
+  public ResponseEntity<ApiResult<Map<String, String>>> getNonce(HttpServletRequest request) {
+    String clientId = getClientIp(request);
+    log.debug("获取nonce token请求：clientId={}", clientId);
+
+    try {
+      Map<String, String> nonce = replayAttackPreventionService.generateNonce(clientId);
+      return ResponseEntity.ok(ApiResult.success("nonce token生成成功", nonce));
+    } catch (Exception e) {
+      log.error("nonce token生成异常：{}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(ApiResult.failed("nonce token生成失败"));
+    }
+  }
+
+  /** 获取安全功能配置 */
+  @GetMapping("/security-config")
+  @Operation(summary = "获取安全配置", description = "获取验证码和防重放攻击的配置状态")
+  public ResponseEntity<ApiResult<Map<String, Boolean>>> getSecurityConfig() {
+    log.debug("获取安全配置请求");
+
+    try {
+      Map<String, Boolean> config =
+          Map.of(
+              "captchaEnabled", securityFeaturesConfig.getCaptcha().isEnabled(),
+              "replayPreventionEnabled", securityFeaturesConfig.getReplayPrevention().isEnabled());
+      return ResponseEntity.ok(ApiResult.success("配置获取成功", config));
+    } catch (Exception e) {
+      log.error("获取安全配置异常：{}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(ApiResult.failed("配置获取失败"));
     }
   }
 
