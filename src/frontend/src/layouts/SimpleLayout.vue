@@ -30,9 +30,9 @@
     <main class="main">
       <RouterView />
     </main>
-    
+
     <!-- 新手指引组件 -->
-    <UserGuide 
+    <UserGuide
       ref="userGuideRef"
       :auto-show="true"
       @complete="handleGuideComplete"

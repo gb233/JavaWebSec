@@ -18,13 +18,13 @@ const getSavedLanguage = () => {
   if (userLanguage) {
     return userLanguage
   }
-  
+
   // 其次使用通用语言设置
   const savedLanguage = localStorage.getItem('language')
   if (savedLanguage) {
     return savedLanguage
   }
-  
+
   // 默认使用中文
   return 'zh-CN'
 }

@@ -4,113 +4,157 @@
     <div class="page-header">
       <div class="header-content">
         <h1 class="page-title">
-          <el-icon class="title-icon"><Document /></el-icon>
+          <ElIcon class="title-icon">
+            <Document />
+          </ElIcon>
           {{ $t('test.title') }}
         </h1>
-        <p class="page-description">{{ $t('test.description') }}</p>
+        <p class="page-description">
+          {{ $t('test.description') }}
+        </p>
       </div>
     </div>
 
     <!-- 测试模式选择 -->
     <div class="test-mode-selector">
       <div class="mode-selector-header">
-        <h2 class="mode-title">{{ $t('test.selectMode') }}</h2>
-        <p class="mode-description">{{ $t('test.selectModeDescription') }}</p>
+        <h2 class="mode-title">
+          {{ $t('test.selectMode') }}
+        </h2>
+        <p class="mode-description">
+          {{ $t('test.selectModeDescription') }}
+        </p>
       </div>
       <div class="mode-options">
-        <el-radio-group v-model="selectedMode" @change="onModeChange" class="mode-radio-group">
-          <el-radio-button label="realtime" class="mode-radio">
+        <ElRadioGroup v-model="selectedMode" class="mode-radio-group" @change="onModeChange">
+          <ElRadioButton label="realtime" class="mode-radio">
             <div class="mode-option">
-              <el-icon class="mode-icon"><Clock /></el-icon>
+              <ElIcon class="mode-icon">
+                <Clock />
+              </ElIcon>
               <div class="mode-info">
-                <div class="mode-name">{{ $t('test.realtimeMode') }}</div>
-                <div class="mode-desc">{{ $t('test.realtimeModeDesc') }}</div>
+                <div class="mode-name">
+                  {{ $t('test.realtimeMode') }}
+                </div>
+                <div class="mode-desc">
+                  {{ $t('test.realtimeModeDesc') }}
+                </div>
               </div>
             </div>
-          </el-radio-button>
-          <el-radio-button label="exam" class="mode-radio">
+          </ElRadioButton>
+          <ElRadioButton label="exam" class="mode-radio">
             <div class="mode-option">
-              <el-icon class="mode-icon"><Trophy /></el-icon>
+              <ElIcon class="mode-icon">
+                <Trophy />
+              </ElIcon>
               <div class="mode-info">
-                <div class="mode-name">{{ $t('test.examMode') }}</div>
-                <div class="mode-desc">{{ $t('test.examModeDesc') }}</div>
+                <div class="mode-name">
+                  {{ $t('test.examMode') }}
+                </div>
+                <div class="mode-desc">
+                  {{ $t('test.examModeDesc') }}
+                </div>
               </div>
             </div>
-          </el-radio-button>
-          <el-radio-button label="random" class="mode-radio">
+          </ElRadioButton>
+          <ElRadioButton label="random" class="mode-radio">
             <div class="mode-option">
-              <el-icon class="mode-icon"><QuestionFilled /></el-icon>
+              <ElIcon class="mode-icon">
+                <QuestionFilled />
+              </ElIcon>
               <div class="mode-info">
-                <div class="mode-name">{{ $t('test.randomMode') }}</div>
-                <div class="mode-desc">{{ $t('test.randomModeDesc') }}</div>
+                <div class="mode-name">
+                  {{ $t('test.randomMode') }}
+                </div>
+                <div class="mode-desc">
+                  {{ $t('test.randomModeDesc') }}
+                </div>
               </div>
             </div>
-          </el-radio-button>
-        </el-radio-group>
+          </ElRadioButton>
+        </ElRadioGroup>
       </div>
     </div>
 
     <!-- 统计卡片 -->
     <div class="stats-cards">
-      <el-row :gutter="20">
-        <el-col :span="6">
-          <el-card class="stat-card">
+      <ElRow :gutter="20">
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
               <div class="stat-icon total">
-                <el-icon><Document /></el-icon>
+                <ElIcon><Document /></ElIcon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ userStats.totalTests || 0 }}</div>
-                <div class="stat-label">{{ $t('test.totalTests') }}</div>
+                <div class="stat-value">
+                  {{ userStats.totalTests || 0 }}
+                </div>
+                <div class="stat-label">
+                  {{ $t('test.totalTests') }}
+                </div>
               </div>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card">
+          </ElCard>
+        </ElCol>
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
               <div class="stat-icon passed">
-                <el-icon><Check /></el-icon>
+                <ElIcon><Check /></ElIcon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ userStats.passedTests || 0 }}</div>
-                <div class="stat-label">{{ $t('test.passedTests') }}</div>
+                <div class="stat-value">
+                  {{ userStats.passedTests || 0 }}
+                </div>
+                <div class="stat-label">
+                  {{ $t('test.passedTests') }}
+                </div>
               </div>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card">
+          </ElCard>
+        </ElCol>
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
               <div class="stat-icon average">
-                <el-icon><DataLine /></el-icon>
+                <ElIcon><DataLine /></ElIcon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ Math.round((userStats as any).averageAccuracy || 0) }}%</div>
-                <div class="stat-label">{{ $t('test.averageScore') }}</div>
+                <div class="stat-value">
+                  {{ Math.round((userStats as any).averageAccuracy || 0) }}%
+                </div>
+                <div class="stat-label">
+                  {{ $t('test.averageScore') }}
+                </div>
               </div>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card">
+          </ElCard>
+        </ElCol>
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
               <div class="stat-icon best">
-                <el-icon><Trophy /></el-icon>
+                <ElIcon><Trophy /></ElIcon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ Math.round((userStats as any).averageAccuracy || 0) }}%</div>
-                <div class="stat-label">{{ $t('test.averageGrade') }}</div>
+                <div class="stat-value">
+                  {{ Math.round((userStats as any).averageAccuracy || 0) }}%
+                </div>
+                <div class="stat-label">
+                  {{ $t('test.averageGrade') }}
+                </div>
               </div>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
+          </ElCard>
+        </ElCol>
+      </ElRow>
     </div>
 
     <!-- 测试分类 -->
     <div class="categories-section">
-      <h2 class="section-title">{{ $t('test.selectCategory') }}</h2>
+      <h2 class="section-title">
+        {{ $t('test.selectCategory') }}
+      </h2>
       <div class="categories-grid">
         <div
           v-for="category in categories"
@@ -119,26 +163,30 @@
           @click="startTest(category)"
         >
           <div class="category-icon">
-            <el-icon><component :is="category.icon" /></el-icon>
+            <ElIcon><component :is="category.icon" /></ElIcon>
           </div>
           <div class="category-content">
-            <h3 class="category-name">{{ category.name }}</h3>
-            <p class="category-description">{{ category.description }}</p>
+            <h3 class="category-name">
+              {{ category.name }}
+            </h3>
+            <p class="category-description">
+              {{ category.description }}
+            </p>
             <div class="category-stats">
               <span class="stat-item">
-                <el-icon><QuestionFilled /></el-icon>
+                <ElIcon><QuestionFilled /></ElIcon>
                 {{ category.questionCount }} 题
               </span>
               <span class="stat-item">
-                <el-icon><Clock /></el-icon>
+                <ElIcon><Clock /></ElIcon>
                 {{ category.timeLimit }} 分钟
               </span>
             </div>
           </div>
           <div class="category-action">
-            <el-button type="primary" size="large" :loading="loading">
+            <ElButton type="primary" size="large" :loading="loading">
               {{ $t('test.startTest') }}
-            </el-button>
+            </ElButton>
           </div>
         </div>
       </div>
@@ -147,43 +195,49 @@
     <!-- 最近测试记录 -->
     <div class="recent-tests">
       <div class="section-header">
-        <h2 class="section-title">最近测试记录</h2>
-        <el-button text @click="viewAllRecords">查看全部</el-button>
+        <h2 class="section-title">
+          最近测试记录
+        </h2>
+        <ElButton text @click="viewAllRecords">
+          查看全部
+        </ElButton>
       </div>
-      <el-table :data="recentRecords" style="width: 100%">
-        <el-table-column label="测试名称">
+      <ElTable :data="recentRecords" style="width: 100%">
+        <ElTableColumn label="测试名称">
           <template #default="{ row }">
             {{ getTestName(row) }}
           </template>
-        </el-table-column>
-        <el-table-column label="分类">
+        </ElTableColumn>
+        <ElTableColumn label="分类">
           <template #default="{ row }">
             {{ getCategoryName(row.categoryCode) }}
           </template>
-        </el-table-column>
-        <el-table-column prop="completionRate" label="分数">
+        </ElTableColumn>
+        <ElTableColumn prop="completionRate" label="分数">
           <template #default="{ row }">
-            <el-tag :type="row.completionRate >= 60 ? 'success' : 'danger'">
+            <ElTag :type="row.completionRate >= 60 ? 'success' : 'danger'">
               {{ Math.round(row.completionRate || 0) }}%
-            </el-tag>
+            </ElTag>
           </template>
-        </el-table-column>
-        <el-table-column prop="timeSpent" label="用时">
+        </ElTableColumn>
+        <ElTableColumn prop="timeSpent" label="用时">
           <template #default="{ row }">
             {{ formatTime(row.timeSpent || 0) }}
           </template>
-        </el-table-column>
-        <el-table-column prop="startedAt" label="测试时间">
+        </ElTableColumn>
+        <ElTableColumn prop="startedAt" label="测试时间">
           <template #default="{ row }">
             {{ formatDate(row.startedAt) }}
           </template>
-        </el-table-column>
-        <el-table-column label="操作">
+        </ElTableColumn>
+        <ElTableColumn label="操作">
           <template #default="{ row }">
-            <el-button text @click="viewTestDetail(row.id)">查看详情</el-button>
+            <ElButton text @click="viewTestDetail(row.id)">
+              查看详情
+            </ElButton>
           </template>
-        </el-table-column>
-      </el-table>
+        </ElTableColumn>
+      </ElTable>
     </div>
   </div>
 </template>
@@ -229,9 +283,9 @@ const onModeChange = (mode: string | number | boolean | undefined) => {
 // 获取模式名称
 const getModeName = (mode: string) => {
   const modeNames: Record<string, string> = {
-    'realtime': '实时反馈模式',
-    'exam': '考试模式',
-    'random': '随机综合模式'
+    realtime: '实时反馈模式',
+    exam: '考试模式',
+    random: '随机综合模式'
   }
   return modeNames[mode] || mode
 }
@@ -331,7 +385,7 @@ onMounted(() => {
 const loadQuestionStatistics = async () => {
   try {
     // 为每个分类加载题目统计
-    const statisticsPromises = categories.value.map(async (category) => {
+    const statisticsPromises = categories.value.map(async category => {
       try {
         const response = await testApi.getCategoryStatistics(category.code)
         if (isSuccessResponse(response) && response.data) {
@@ -344,7 +398,7 @@ const loadQuestionStatistics = async () => {
         // 保持默认值
       }
     })
-    
+
     await Promise.all(statisticsPromises)
   } catch (error) {
     console.error('加载题目统计失败:', error)
@@ -399,7 +453,7 @@ const startTest = async (category: any) => {
           ElMessage.success('测试已开始')
           router.push({
             name: 'TestExam',
-            params: { 
+            params: {
               categoryId: category.code
             },
             query: {
@@ -489,10 +543,10 @@ const getCategoryName = (categoryCode: string) => {
 
   .page-header {
     margin-bottom: 32px;
-    
+
     .header-content {
       text-align: center;
-      
+
       .page-title {
         display: flex;
         align-items: center;
@@ -501,13 +555,13 @@ const getCategoryName = (categoryCode: string) => {
         font-weight: 600;
         color: #1f2937;
         margin-bottom: 8px;
-        
+
         .title-icon {
           margin-right: 12px;
           color: #3b82f6;
         }
       }
-      
+
       .page-description {
         font-size: 16px;
         color: #6b7280;
@@ -585,15 +639,15 @@ const getCategoryName = (categoryCode: string) => {
 
   .stats-cards {
     margin-bottom: 40px;
-    
+
     .stat-card {
       border: none;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      
+
       .stat-content {
         display: flex;
         align-items: center;
-        
+
         .stat-icon {
           width: 48px;
           height: 48px;
@@ -602,28 +656,28 @@ const getCategoryName = (categoryCode: string) => {
           align-items: center;
           justify-content: center;
           margin-right: 16px;
-          
+
           &.total {
             background: #dbeafe;
             color: #3b82f6;
           }
-          
+
           &.passed {
             background: #dcfce7;
             color: #16a34a;
           }
-          
+
           &.average {
             background: #fef3c7;
             color: #d97706;
           }
-          
+
           &.best {
             background: #fce7f3;
             color: #be185d;
           }
         }
-        
+
         .stat-info {
           .stat-value {
             font-size: 24px;
@@ -631,7 +685,7 @@ const getCategoryName = (categoryCode: string) => {
             color: #1f2937;
             line-height: 1;
           }
-          
+
           .stat-label {
             font-size: 14px;
             color: #6b7280;
@@ -644,19 +698,19 @@ const getCategoryName = (categoryCode: string) => {
 
   .categories-section {
     margin-bottom: 40px;
-    
+
     .section-title {
       font-size: 24px;
       font-weight: 600;
       color: #1f2937;
       margin-bottom: 24px;
     }
-    
+
     .categories-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: 24px;
-      
+
       .category-card {
         background: white;
         border-radius: 12px;
@@ -665,13 +719,13 @@ const getCategoryName = (categoryCode: string) => {
         cursor: pointer;
         transition: all 0.3s ease;
         border: 2px solid transparent;
-        
+
         &:hover {
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
           border-color: #3b82f6;
         }
-        
+
         .category-icon {
           width: 48px;
           height: 48px;
@@ -684,40 +738,40 @@ const getCategoryName = (categoryCode: string) => {
           margin-bottom: 16px;
           font-size: 20px;
         }
-        
+
         .category-content {
           margin-bottom: 20px;
-          
+
           .category-name {
             font-size: 18px;
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 8px;
           }
-          
+
           .category-description {
             font-size: 14px;
             color: #6b7280;
             margin-bottom: 12px;
           }
-          
+
           .category-stats {
             display: flex;
             gap: 16px;
-            
+
             .stat-item {
               display: flex;
               align-items: center;
               font-size: 12px;
               color: #6b7280;
-              
+
               .el-icon {
                 margin-right: 4px;
               }
             }
           }
         }
-        
+
         .category-action {
           text-align: center;
         }
@@ -731,7 +785,7 @@ const getCategoryName = (categoryCode: string) => {
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
-      
+
       .section-title {
         font-size: 20px;
         font-weight: 600;

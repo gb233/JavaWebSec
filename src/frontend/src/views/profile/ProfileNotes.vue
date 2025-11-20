@@ -4,96 +4,122 @@
       <h1>学习笔记</h1>
       <p>记录和整理您的学习心得，支持标签分类和搜索功能</p>
     </div>
-    
+
     <div class="notes-stats">
-      <el-row :gutter="20">
-        <el-col :span="6">
-          <el-card class="stat-card">
+      <ElRow :gutter="20">
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ notes.length }}</div>
-              <div class="stat-label">总笔记数</div>
+              <div class="stat-number">
+                {{ notes.length }}
+              </div>
+              <div class="stat-label">
+                总笔记数
+              </div>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card">
+          </ElCard>
+        </ElCol>
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ publicNotes.length }}</div>
-              <div class="stat-label">公开笔记</div>
+              <div class="stat-number">
+                {{ publicNotes.length }}
+              </div>
+              <div class="stat-label">
+                公开笔记
+              </div>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card">
+          </ElCard>
+        </ElCol>
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ pinnedNotes.length }}</div>
-              <div class="stat-label">置顶笔记</div>
+              <div class="stat-number">
+                {{ pinnedNotes.length }}
+              </div>
+              <div class="stat-label">
+                置顶笔记
+              </div>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card">
+          </ElCard>
+        </ElCol>
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ totalWords }}</div>
-              <div class="stat-label">总字数</div>
+              <div class="stat-number">
+                {{ totalWords }}
+              </div>
+              <div class="stat-label">
+                总字数
+              </div>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
+          </ElCard>
+        </ElCol>
+      </ElRow>
     </div>
 
     <div class="notes-list">
-      <el-card>
+      <ElCard>
         <template #header>
           <div class="card-header">
             <span>我的笔记</span>
-            <el-button type="primary" @click="createNote">
-              <el-icon><Plus /></el-icon>
+            <ElButton type="primary" @click="createNote">
+              <ElIcon><Plus /></ElIcon>
               新建笔记
-            </el-button>
+            </ElButton>
           </div>
         </template>
-        
+
         <div v-if="loading" class="loading">
-          <el-skeleton :rows="3" animated />
+          <ElSkeleton :rows="3" animated />
         </div>
-        
+
         <div v-else-if="notes.length === 0" class="empty-state">
-          <el-empty description="暂无笔记">
-            <el-button type="primary" @click="createNote">创建第一篇笔记</el-button>
-          </el-empty>
+          <ElEmpty description="暂无笔记">
+            <ElButton type="primary" @click="createNote">
+              创建第一篇笔记
+            </ElButton>
+          </ElEmpty>
         </div>
-        
+
         <div v-else class="notes-grid">
           <div v-for="note in notes" :key="note.id" class="note-item">
-            <el-card class="note-card" @click="viewNote(note.id)">
+            <ElCard class="note-card" @click="viewNote(note.id)">
               <div class="note-header">
-                <h3 class="note-title">{{ note.title }}</h3>
+                <h3 class="note-title">
+                  {{ note.title }}
+                </h3>
                 <div class="note-actions">
-                  <el-tag v-if="note.isPinned" type="warning" size="small">置顶</el-tag>
-                  <el-tag v-if="note.isPublic" type="success" size="small">公开</el-tag>
+                  <ElTag v-if="note.isPinned" type="warning" size="small">
+                    置顶
+                  </ElTag>
+                  <ElTag v-if="note.isPublic" type="success" size="small">
+                    公开
+                  </ElTag>
                 </div>
               </div>
-              <p class="note-summary">{{ note.summary || '暂无摘要' }}</p>
+              <p class="note-summary">
+                {{ note.summary || '暂无摘要' }}
+              </p>
               <div class="note-meta">
                 <span class="note-type">{{ getNoteTypeLabel(note.noteType) }}</span>
                 <span class="note-date">{{ formatDate(note.createdAt) }}</span>
                 <span class="note-words">{{ note.wordCount }}字</span>
               </div>
-              <div class="note-tags" v-if="note.tags">
-                <el-tag 
-                  v-for="tag in parseTags(note.tags)" 
-                  :key="tag" 
-                  size="small" 
+              <div v-if="note.tags" class="note-tags">
+                <ElTag
+                  v-for="tag in parseTags(note.tags)"
+                  :key="tag"
+                  size="small"
                   class="note-tag"
                 >
                   {{ tag }}
-                </el-tag>
+                </ElTag>
               </div>
-            </el-card>
+            </ElCard>
           </div>
         </div>
-      </el-card>
+      </ElCard>
     </div>
   </div>
 </template>
@@ -140,10 +166,10 @@ const viewNote = (id: number) => {
 
 const getNoteTypeLabel = (type: string) => {
   const typeMap: Record<string, string> = {
-    'PERSONAL': '个人笔记',
-    'SHARED': '分享笔记',
-    'STUDY': '学习笔记',
-    'EXPERIMENT': '实验记录'
+    PERSONAL: '个人笔记',
+    SHARED: '分享笔记',
+    STUDY: '学习笔记',
+    EXPERIMENT: '实验记录'
   }
   return typeMap[type] || type
 }

@@ -7,7 +7,10 @@ import {
   updateCurrentUserProfile,
   changePassword as changeUserPassword,
   verifyEmail as verifyUserEmailApi,
-  getUserStats
+  getUserStats,
+  type UserUpdateData,
+  type PasswordChangeData,
+  type EmailVerificationData
 } from '@/api/user'
 import { getToken, setToken as cacheToken, removeToken } from '@/utils/auth'
 import type {
@@ -15,15 +18,10 @@ import type {
   UserLoginData,
   UserStats
 } from '@/types/api'
-import type {
-  UserUpdateData,
-  PasswordChangeData,
-  EmailVerificationData
-} from '@/api/user'
 
 export const useUserStore = defineStore('user', () => {
   // 状态
-  const token = ref<string>(getToken() || '')
+  const token = ref<string>(getToken() ?? '')
   const userInfo = ref<UserProfile | null>(null)
   const roles = ref<string[]>([])
   const permissions = ref<string[]>([])
@@ -42,9 +40,9 @@ export const useUserStore = defineStore('user', () => {
   const isAuthenticated = computed(() => !!token.value && !!userInfo.value)
   const userDisplayName = computed(() => {
     if (!userInfo.value) return '未知用户'
-    return userInfo.value.fullName || userInfo.value.username
+    return userInfo.value.fullName ?? userInfo.value.username
   })
-  const userRole = computed(() => userInfo.value?.userRole || roles.value[0] || 'user')
+  const userRole = computed(() => userInfo.value?.userRole ?? roles.value[0] ?? 'user')
   const isAdmin = computed(() => userRole.value.toLowerCase() === 'admin' || roles.value.includes('admin'))
   const isTeacher = computed(() => userRole.value.toLowerCase() === 'teacher' || roles.value.includes('teacher'))
   const isStudent = computed(() => userRole.value.toLowerCase() === 'student' || roles.value.includes('student'))
@@ -64,12 +62,12 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = info
 
     if (info) {
-      name.value = info.fullName || info.username || ''
-      email.value = info.email || ''
-      phone.value = info.phone || ''
-      avatar.value = info.avatarUrl || info.avatar || ''
-      roles.value = info.roles || []
-      permissions.value = info.permissions || []
+      name.value = info.fullName ?? info.username ?? ''
+      email.value = info.email ?? ''
+      phone.value = info.phone ?? ''
+      avatar.value = info.avatarUrl ?? info.avatar ?? ''
+      roles.value = info.roles ?? []
+      permissions.value = info.permissions ?? []
       localStorage.setItem('user-info', JSON.stringify(info))
       isLoggedIn.value = true
     } else {
@@ -160,12 +158,12 @@ export const useUserStore = defineStore('user', () => {
           user
         } = response.data
 
-        const resolvedToken = accessToken || tokenValue
+        const resolvedToken = accessToken ?? tokenValue
         if (!resolvedToken) {
           throw new Error('登录响应缺少访问令牌，请联系管理员检查接口返回值')
         }
 
-        const resolvedTokenType = tokenType || 'Bearer'
+        const resolvedTokenType = tokenType ?? 'Bearer'
 
         setAuthToken(resolvedToken, resolvedTokenType)
         if (typeof expiresAt === 'number') {
@@ -274,12 +272,12 @@ export const useUserStore = defineStore('user', () => {
       const response = await getCurrentUserProfile()
       if (response.code === 200 && response.data) {
         setUserInfo(response.data as UserProfile)
-        
+
         // 同时更新authStore的用户信息，保持数据同步
         const { useAuthStore } = await import('./auth')
         const authStore = useAuthStore()
         authStore.updateUser(response.data as UserProfile)
-        
+
         return response.data
       }
       throw new Error(response.message || '获取个人信息失败')
@@ -297,21 +295,22 @@ export const useUserStore = defineStore('user', () => {
       const response = await updateCurrentUserProfile(updateData as UserUpdateData)
       if (response.code === 200 && response.data) {
         setUserInfo(response.data as UserProfile)
-        
+
         // 同时更新authStore的用户信息
         const { useAuthStore } = await import('./auth')
         const authStore = useAuthStore()
         authStore.updateUser(response.data as UserProfile)
-        
+
         return true
       }
       // 显示具体的错误信息
       ElMessage.error(response.message || '更新个人信息失败')
       return false
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('更新个人信息失败:', error)
       // 显示错误信息给用户
-      ElMessage.error(error.message || '更新个人信息失败')
+      const errorMessage = error instanceof Error ? error.message : '更新个人信息失败'
+      ElMessage.error(errorMessage)
       return false
     } finally {
       isUpdating.value = false
@@ -346,9 +345,10 @@ export const useUserStore = defineStore('user', () => {
       }
       ElMessage.error(response.message || '修改密码失败')
       return false
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('修改密码失败:', error)
-      ElMessage.error(error.message || '修改密码失败')
+      const errorMessage = error instanceof Error ? error.message : '修改密码失败'
+      ElMessage.error(errorMessage)
       return false
     } finally {
       isUpdating.value = false

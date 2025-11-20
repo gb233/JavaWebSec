@@ -1,19 +1,21 @@
 <template>
   <div class="challenge-arena">
     <div class="arena-header">
-      <el-breadcrumb separator="/">
-        <el-breadcrumb-item :to="{ path: '/challenge/list' }">挑战列表</el-breadcrumb-item>
-        <el-breadcrumb-item>{{ challenge?.title || '挑战环境' }}</el-breadcrumb-item>
-      </el-breadcrumb>
+      <ElBreadcrumb separator="/">
+        <ElBreadcrumbItem :to="{ path: '/challenge/list' }">
+          挑战列表
+        </ElBreadcrumbItem>
+        <ElBreadcrumbItem>{{ challenge?.title || '挑战环境' }}</ElBreadcrumbItem>
+      </ElBreadcrumb>
     </div>
 
     <div v-if="loading" class="loading">
-      <el-skeleton :rows="5" animated />
+      <ElSkeleton :rows="5" animated />
     </div>
 
     <div v-else-if="challenge" class="arena-content">
       <!-- 挑战目标说明 -->
-      <el-card class="challenge-objective">
+      <ElCard class="challenge-objective">
         <template #header>
           <div class="card-header">
             <span>🎯 挑战目标</span>
@@ -24,13 +26,20 @@
           <div class="objective-steps">
             <h4>📋 挑战步骤：</h4>
             <ol>
-              <li v-for="(step, index) in challengeSteps" :key="index" 
-                  :class="{ 'completed': index < currentStepIndex, 'current': index === currentStepIndex }">
+              <li
+                v-for="(step, index) in challengeSteps"
+                :key="index"
+                :class="{ 'completed': index < currentStepIndex, 'current': index === currentStepIndex }"
+              >
                 <strong>步骤 {{ index + 1 }}：</strong>{{ step.title }}
-                <p class="step-description">{{ step.description }}</p>
+                <p class="step-description">
+                  {{ step.description }}
+                </p>
                 <div v-if="index === currentStepIndex" class="current-step-hint">
-                  <el-alert type="info" :closable="false">
-                    <template #title>当前任务</template>
+                  <ElAlert type="info" :closable="false">
+                    <template #title>
+                      当前任务
+                    </template>
                     <p>{{ step.hint }}</p>
                     <div v-if="step.parameters" class="parameter-hints">
                       <p><strong>需要提供的参数：</strong></p>
@@ -40,24 +49,31 @@
                         </li>
                       </ul>
                     </div>
-                  </el-alert>
+                  </ElAlert>
                 </div>
               </li>
             </ol>
           </div>
         </div>
-      </el-card>
+      </ElCard>
 
-      <el-row :gutter="20" class="challenge-overview">
-        <el-col :span="12">
-          <el-card class="box-card">
+      <ElRow :gutter="20" class="challenge-overview">
+        <ElCol :span="12">
+          <ElCard class="box-card">
             <template #header>
               <div class="card-header">
                 <span>📊 挑战进度</span>
-                <el-button v-if="!progress?.isCompleted" type="primary" size="small" @click="refreshProgress">刷新进度</el-button>
+                <ElButton
+                  v-if="!progress?.isCompleted"
+                  type="primary"
+                  size="small"
+                  @click="refreshProgress"
+                >
+                  刷新进度
+                </ElButton>
               </div>
             </template>
-            <el-progress
+            <ElProgress
               :percentage="Math.min(progress?.progressPercentage || 0, 100)"
               :status="progress?.isCompleted ? 'success' : ''"
               :text-inside="true"
@@ -69,12 +85,14 @@
             </p>
             <div class="progress-details">
               <p><strong>开始时间：</strong>{{ formatTime(progress?.startedAt) }}</p>
-              <p v-if="progress?.completedAt"><strong>完成时间：</strong>{{ formatTime(progress?.completedAt) }}</p>
+              <p v-if="progress?.completedAt">
+                <strong>完成时间：</strong>{{ formatTime(progress?.completedAt) }}
+              </p>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :span="12">
-          <el-card class="box-card">
+          </ElCard>
+        </ElCol>
+        <ElCol :span="12">
+          <ElCard class="box-card">
             <template #header>
               <div class="card-header">
                 <span>🔧 执行操作</span>
@@ -82,82 +100,94 @@
             </template>
             <div v-if="!progress?.isCompleted" class="execution-panel">
               <h4>当前步骤：{{ currentStep?.title }}</h4>
-              <p class="step-hint">{{ currentStep?.hint }}</p>
-              
-              <el-form :model="stepParams" label-width="100px" class="step-form">
-                <el-form-item 
-                  v-for="param in currentStep?.parameters || []" 
+              <p class="step-hint">
+                {{ currentStep?.hint }}
+              </p>
+
+              <ElForm :model="stepParams" label-width="100px" class="step-form">
+                <ElFormItem
+                  v-for="param in currentStep?.parameters || []"
                   :key="param.name"
                   :label="param.name"
                   :required="param.required"
                 >
-                  <el-input 
-                    v-model="stepParams[param.name]" 
+                  <ElInput
+                    v-model="stepParams[param.name]"
                     :placeholder="param.placeholder"
                     :type="(param as any).type || 'text'"
                   />
-                  <div class="param-hint">{{ param.description }}</div>
-                </el-form-item>
-              </el-form>
-              
-              <el-button
+                  <div class="param-hint">
+                    {{ param.description }}
+                  </div>
+                </ElFormItem>
+              </ElForm>
+
+              <ElButton
                 type="primary"
                 :disabled="executingStep || !canExecuteStep"
-                @click="executeCurrentStep"
                 class="execute-button"
+                @click="executeCurrentStep"
               >
-                <el-icon v-if="executingStep" class="is-loading"><Loading /></el-icon>
+                <ElIcon v-if="executingStep" class="is-loading">
+                  <Loading />
+                </ElIcon>
                 {{ executingStep ? '执行中...' : '执行当前步骤' }}
-              </el-button>
+              </ElButton>
             </div>
             <div v-else class="completion-message">
-              <el-result
+              <ElResult
                 icon="success"
                 title="挑战完成！"
                 sub-title="恭喜你成功完成了所有挑战步骤"
               >
                 <template #extra>
-                  <el-button type="primary" @click="goBack">返回挑战列表</el-button>
-                  <el-button type="warning" @click="resetChallenge">重新开始挑战</el-button>
+                  <ElButton type="primary" @click="goBack">
+                    返回挑战列表
+                  </ElButton>
+                  <ElButton type="warning" @click="resetChallenge">
+                    重新开始挑战
+                  </ElButton>
                 </template>
-              </el-result>
+              </ElResult>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
+          </ElCard>
+        </ElCol>
+      </ElRow>
 
       <!-- 执行结果 -->
-      <el-card v-if="stepResult" class="execution-result">
+      <ElCard v-if="stepResult" class="execution-result">
         <template #header>
           <div class="card-header">
             <span>📋 执行结果</span>
-            <el-tag :type="stepResult.success ? 'success' : 'danger'" size="small">
+            <ElTag :type="stepResult.success ? 'success' : 'danger'" size="small">
               {{ stepResult.success ? '成功' : '失败' }}
-            </el-tag>
+            </ElTag>
           </div>
         </template>
-        
+
         <!-- 主要结果信息 -->
-        <el-alert
+        <ElAlert
           :title="stepResult.message"
           :type="stepResult.success ? 'success' : 'error'"
           show-icon
           :closable="false"
         />
-        
+
         <!-- 详细结果数据 -->
         <div v-if="stepResult.data" class="result-details">
           <!-- 漏洞类型信息 -->
           <div v-if="stepResult.data.vulnerabilityType" class="vulnerability-info">
             <h4>🔍 漏洞类型：{{ stepResult.data.vulnerabilityType }}</h4>
           </div>
-          
+
           <!-- 攻击结果 -->
           <div v-if="stepResult.data.result" class="attack-result">
             <h4>⚡ 攻击结果：</h4>
-            <p class="result-text">{{ stepResult.data.result }}</p>
+            <p class="result-text">
+              {{ stepResult.data.result }}
+            </p>
           </div>
-          
+
           <!-- SQL分析 -->
           <div v-if="stepResult.data.sqlAnalysis" class="sql-analysis">
             <h4>🗄️ SQL查询分析：</h4>
@@ -172,11 +202,13 @@
               </div>
               <div class="sql-explanation">
                 <h5>攻击原理：</h5>
-                <p class="explanation-text">{{ stepResult.data.sqlAnalysis.explanation }}</p>
+                <p class="explanation-text">
+                  {{ stepResult.data.sqlAnalysis.explanation }}
+                </p>
               </div>
             </div>
           </div>
-          
+
           <!-- HTML渲染分析 -->
           <div v-if="stepResult.data.htmlAnalysis" class="html-analysis">
             <h4>🌐 HTML渲染分析：</h4>
@@ -191,11 +223,13 @@
               </div>
               <div class="html-explanation">
                 <h5>攻击原理：</h5>
-                <p class="explanation-text">{{ stepResult.data.htmlAnalysis.explanation }}</p>
+                <p class="explanation-text">
+                  {{ stepResult.data.htmlAnalysis.explanation }}
+                </p>
               </div>
             </div>
           </div>
-          
+
           <!-- HTTP请求分析 -->
           <div v-if="stepResult.data.httpAnalysis" class="http-analysis">
             <h4>🌍 HTTP请求分析：</h4>
@@ -210,11 +244,13 @@
               </div>
               <div class="http-explanation">
                 <h5>攻击原理：</h5>
-                <p class="explanation-text">{{ stepResult.data.httpAnalysis.explanation }}</p>
+                <p class="explanation-text">
+                  {{ stepResult.data.httpAnalysis.explanation }}
+                </p>
               </div>
             </div>
           </div>
-          
+
           <!-- 文件上传分析 -->
           <div v-if="stepResult.data.uploadAnalysis" class="upload-analysis">
             <h4>📁 文件上传分析：</h4>
@@ -226,13 +262,17 @@
               </div>
               <div class="upload-explanation">
                 <h5>攻击原理：</h5>
-                <p class="explanation-text">{{ stepResult.data.uploadAnalysis.explanation }}</p>
+                <p class="explanation-text">
+                  {{ stepResult.data.uploadAnalysis.explanation }}
+                </p>
                 <h5>安全建议：</h5>
-                <p class="security-tip">{{ stepResult.data.uploadAnalysis.securityTip }}</p>
+                <p class="security-tip">
+                  {{ stepResult.data.uploadAnalysis.securityTip }}
+                </p>
               </div>
             </div>
           </div>
-          
+
           <!-- 业务逻辑分析 -->
           <div v-if="stepResult.data.businessAnalysis" class="business-analysis">
             <h4>💼 业务逻辑分析：</h4>
@@ -244,13 +284,17 @@
               </div>
               <div class="business-explanation">
                 <h5>攻击原理：</h5>
-                <p class="explanation-text">{{ stepResult.data.businessAnalysis.explanation }}</p>
+                <p class="explanation-text">
+                  {{ stepResult.data.businessAnalysis.explanation }}
+                </p>
                 <h5>安全建议：</h5>
-                <p class="security-tip">{{ stepResult.data.businessAnalysis.securityTip }}</p>
+                <p class="security-tip">
+                  {{ stepResult.data.businessAnalysis.securityTip }}
+                </p>
               </div>
             </div>
           </div>
-          
+
           <!-- JWT分析 -->
           <div v-if="stepResult.data.jwtAnalysis" class="jwt-analysis">
             <h4>🔐 JWT令牌分析：</h4>
@@ -262,24 +306,28 @@
               </div>
               <div class="jwt-explanation">
                 <h5>攻击原理：</h5>
-                <p class="explanation-text">{{ stepResult.data.jwtAnalysis.explanation }}</p>
+                <p class="explanation-text">
+                  {{ stepResult.data.jwtAnalysis.explanation }}
+                </p>
                 <h5>安全建议：</h5>
-                <p class="security-tip">{{ stepResult.data.jwtAnalysis.securityTip }}</p>
+                <p class="security-tip">
+                  {{ stepResult.data.jwtAnalysis.securityTip }}
+                </p>
               </div>
             </div>
           </div>
-          
+
           <!-- 其他数据 -->
           <div v-if="hasOtherData" class="other-data">
             <h4>📊 其他数据：</h4>
             <pre class="result-json">{{ JSON.stringify(filteredData, null, 2) }}</pre>
           </div>
         </div>
-      </el-card>
+      </ElCard>
     </div>
 
     <div v-else class="empty-state">
-      <el-empty description="挑战场景或进度未找到" />
+      <ElEmpty description="挑战场景或进度未找到" />
     </div>
   </div>
 </template>
@@ -304,7 +352,7 @@ const stepResult = ref<any>(null)
 // 根据漏洞类型获取步骤配置
 const getStepConfigByVulnerabilityType = (vulnerabilityType: string, stepIndex: number) => {
   const stepNumber = stepIndex + 1
-  
+
   // 漏洞类型到步骤配置的映射
   const vulnerabilityStepMap: Record<string, any> = {
     // A01系列
@@ -544,7 +592,7 @@ const getStepConfigByVulnerabilityType = (vulnerabilityType: string, stepIndex: 
       ]
     }
   }
-  
+
   // 获取漏洞类型的步骤配置
   const stepConfig = vulnerabilityStepMap[vulnerabilityType]
   if (stepConfig) {
@@ -553,7 +601,7 @@ const getStepConfigByVulnerabilityType = (vulnerabilityType: string, stepIndex: 
       title: `步骤 ${stepNumber}: ${stepConfig.title}`
     }
   }
-  
+
   // 默认配置
   return {
     title: `步骤 ${stepNumber}: 漏洞利用`,
@@ -569,13 +617,13 @@ const getStepConfigByVulnerabilityType = (vulnerabilityType: string, stepIndex: 
 // 挑战步骤定义 - 根据vulnerability_chain动态生成
 const challengeSteps = computed(() => {
   if (!challenge.value) return []
-  
+
   try {
     // 解析vulnerability_chain
-    const vulnerabilityChain = typeof challenge.value.vulnerabilityChain === 'string' 
+    const vulnerabilityChain = typeof challenge.value.vulnerabilityChain === 'string'
       ? JSON.parse(challenge.value.vulnerabilityChain)
       : challenge.value.vulnerabilityChain
-    
+
     if (!Array.isArray(vulnerabilityChain) || vulnerabilityChain.length === 0) {
       console.warn('vulnerability_chain为空或格式错误，使用默认步骤')
       return [
@@ -590,7 +638,7 @@ const challengeSteps = computed(() => {
         }
       ]
     }
-    
+
     // 根据vulnerability_chain动态生成步骤
     return vulnerabilityChain.map((vulnerabilityType: string, index: number) => {
       return getStepConfigByVulnerabilityType(vulnerabilityType, index)
@@ -622,7 +670,7 @@ const currentStep = computed(() => {
 const canExecuteStep = computed(() => {
   if (!currentStep.value) return false
   if (progress.value?.isCompleted) return false
-  
+
   // 检查必填参数
   for (const param of currentStep.value.parameters || []) {
     if (param.required && !stepParams.value[param.name]) {
@@ -635,33 +683,33 @@ const canExecuteStep = computed(() => {
 // 计算是否有其他数据
 const hasOtherData = computed(() => {
   if (!stepResult.value?.data) return false
-  
-  const data = stepResult.value.data
+
+  const { data } = stepResult.value
   const knownKeys = [
-    'vulnerabilityType', 'result', 'sqlAnalysis', 'htmlAnalysis', 
+    'vulnerabilityType', 'result', 'sqlAnalysis', 'htmlAnalysis',
     'httpAnalysis', 'uploadAnalysis', 'businessAnalysis', 'jwtAnalysis'
   ]
-  
+
   return Object.keys(data).some(key => !knownKeys.includes(key))
 })
 
 // 过滤其他数据
 const filteredData = computed(() => {
   if (!stepResult.value?.data) return {}
-  
-  const data = stepResult.value.data
+
+  const { data } = stepResult.value
   const knownKeys = [
-    'vulnerabilityType', 'result', 'sqlAnalysis', 'htmlAnalysis', 
+    'vulnerabilityType', 'result', 'sqlAnalysis', 'htmlAnalysis',
     'httpAnalysis', 'uploadAnalysis', 'businessAnalysis', 'jwtAnalysis'
   ]
-  
+
   const filtered: Record<string, any> = {}
   Object.keys(data).forEach(key => {
     if (!knownKeys.includes(key)) {
       filtered[key] = data[key]
     }
   })
-  
+
   return filtered
 })
 
@@ -694,9 +742,9 @@ const loadChallengeAndProgress = async () => {
       // Initialize stepParams based on the current step's parameters
       if (currentStep.value?.parameters) {
         stepParams.value = currentStep.value.parameters.reduce((acc: any, param: any) => {
-          acc[param.name] = ''; // Initialize with empty string
-          return acc;
-        }, {});
+          acc[param.name] = '' // Initialize with empty string
+          return acc
+        }, {})
       }
     } else {
       const errorMessage = progressData?.message || '加载挑战进度失败'
@@ -721,7 +769,7 @@ const executeCurrentStep = async () => {
 
   try {
     const currentStepName = `step${currentStepIndex.value + 1}`
-    
+
     // Validate required parameters
     for (const param of currentStep.value.parameters) {
       if (param.required && !stepParams.value[param.name]) {
@@ -740,11 +788,11 @@ const executeCurrentStep = async () => {
     // 响应拦截器已经返回了data，所以response就是ApiResult对象
     // response.data 是 ChallengeResult 对象
     const responseData = response as any
-    
+
     // 检查响应结构：ApiResult.success("执行步骤成功", ChallengeResult)
     // responseData.code === 200 表示HTTP成功
     // responseData.data.success 表示业务逻辑成功
-    if (responseData && responseData.code === 200 && responseData.data && responseData.data.success) {
+    if (responseData && responseData.code === 200 && responseData.data?.success) {
       ElMessage.success('步骤执行成功！')
       stepResult.value = responseData.data // ChallengeResult对象
       await refreshProgress() // 刷新进度
@@ -767,7 +815,7 @@ const refreshProgress = async () => {
     const response = await challengeApi.getProgress(parseInt(challengeId.value))
     // 响应拦截器已经返回了data，所以response就是ApiResult对象
     const responseData = response as any
-    
+
     if (responseData && responseData.code === 200 && responseData.data) {
       progress.value = responseData.data
     }
@@ -791,11 +839,11 @@ const resetChallenge = async () => {
     console.log('开始重置挑战，挑战ID:', challengeId.value)
     const response = await challengeApi.resetChallenge(parseInt(challengeId.value))
     console.log('重置挑战响应:', response)
-    
+
     // 响应拦截器已经返回了data，所以response就是ApiResult对象
     const responseData = response as any
     console.log('解析后的响应数据:', responseData)
-    
+
     // 检查响应结构：ApiResult.success("重置挑战成功", ChallengeProgress)
     if (responseData && responseData.code === 200 && responseData.data) {
       ElMessage.success('挑战已重置，可以重新开始！')
@@ -824,9 +872,9 @@ const resetChallenge = async () => {
 watch(challenge, () => {
   if (currentStep.value?.parameters) {
     stepParams.value = currentStep.value.parameters.reduce((acc: any, param: any) => {
-      acc[param.name] = ''; // Initialize with empty string
-      return acc;
-    }, {});
+      acc[param.name] = '' // Initialize with empty string
+      return acc
+    }, {})
   }
 })
 

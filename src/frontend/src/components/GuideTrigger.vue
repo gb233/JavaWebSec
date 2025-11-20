@@ -1,14 +1,14 @@
 <template>
-  <el-button 
+  <ElButton
     id="guide-trigger"
-    type="text" 
+    type="text"
     class="guide-trigger-btn"
-    @click="handleTriggerGuide"
     :loading="loading"
+    @click="handleTriggerGuide"
   >
-    <el-icon><QuestionFilled /></el-icon>
+    <ElIcon><QuestionFilled /></ElIcon>
     <span class="guide-text">{{ $t('guide.trigger') }}</span>
-  </el-button>
+  </ElButton>
 </template>
 
 <script setup lang="ts">
@@ -28,16 +28,16 @@ const loading = ref(false)
 // 方法
 const handleTriggerGuide = async () => {
   if (loading.value) return
-  
+
   loading.value = true
-  
+
   try {
     // 重置用户指引状态
     await guideApi.resetUserGuide()
-    
+
     // 触发指引
     emit('trigger')
-    
+
     ElMessage.success('新手指引已启动')
   } catch (error) {
     console.error('触发指引失败:', error)
@@ -77,7 +77,7 @@ const handleTriggerGuide = async () => {
   .guide-text {
     display: none;
   }
-  
+
   .guide-trigger-btn {
     padding: 8px;
   }

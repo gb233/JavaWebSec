@@ -479,15 +479,25 @@ public class UserServiceImpl implements UserService {
   public UserProfile createUserProfile(Long userId) {
     log.info("创建用户配置文件：userId={}", userId);
 
-    return userProfileRepository
-        .findByUserId(userId)
-        .orElseGet(
-            () -> {
-              UserProfile profile = new UserProfile();
-              profile.setUserId(userId);
-              initializeDefaultProfileValues(profile);
-              return userProfileRepository.save(profile);
-            });
+    // 先查询是否存在
+    Optional<UserProfile> existingProfile = userProfileRepository.findByUserId(userId);
+    if (existingProfile.isPresent()) {
+      return existingProfile.get();
+    }
+
+    // 不存在则创建，如果因为并发导致唯一约束违反，重新查询
+    try {
+      UserProfile profile = new UserProfile();
+      profile.setUserId(userId);
+      initializeDefaultProfileValues(profile);
+      return userProfileRepository.save(profile);
+    } catch (org.springframework.dao.DataIntegrityViolationException e) {
+      // 并发创建导致唯一约束违反，重新查询并返回现有记录
+      log.debug("并发创建UserProfile，重新查询: userId={}", userId);
+      return userProfileRepository
+          .findByUserId(userId)
+          .orElseThrow(() -> new RuntimeException("创建用户配置文件失败，且重新查询也未找到: userId=" + userId, e));
+    }
   }
 
   private void initializeDefaultProfileValues(UserProfile profile) {

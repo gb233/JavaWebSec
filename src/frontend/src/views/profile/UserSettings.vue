@@ -4,169 +4,195 @@
     <div class="page-header">
       <div class="header-content">
         <h1 class="page-title">
-          <el-icon class="title-icon"><Setting /></el-icon>
+          <ElIcon class="title-icon">
+            <Setting />
+          </ElIcon>
           个人设置
         </h1>
-        <p class="page-description">管理您的账户设置和偏好</p>
+        <p class="page-description">
+          管理您的账户设置和偏好
+        </p>
       </div>
     </div>
 
-    <el-row :gutter="24">
+    <ElRow :gutter="24">
       <!-- 左侧导航 -->
-      <el-col :span="6">
-        <el-card class="nav-card">
-          <el-menu
+      <ElCol :span="6">
+        <ElCard class="nav-card">
+          <ElMenu
             :default-active="activeTab"
-            @select="handleTabChange"
             class="settings-menu"
+            @select="handleTabChange"
           >
-            <el-menu-item index="profile">
-              <el-icon><User /></el-icon>
+            <ElMenuItem index="profile">
+              <ElIcon><User /></ElIcon>
               <span>基本信息</span>
-            </el-menu-item>
-            <el-menu-item index="security">
-              <el-icon><Lock /></el-icon>
+            </ElMenuItem>
+            <ElMenuItem index="security">
+              <ElIcon><Lock /></ElIcon>
               <span>安全设置</span>
-            </el-menu-item>
-            <el-menu-item index="preferences">
-              <el-icon><Setting /></el-icon>
+            </ElMenuItem>
+            <ElMenuItem index="preferences">
+              <ElIcon><Setting /></ElIcon>
               <span>学习偏好</span>
-            </el-menu-item>
-            <el-menu-item index="notifications">
-              <el-icon><Bell /></el-icon>
+            </ElMenuItem>
+            <ElMenuItem index="notifications">
+              <ElIcon><Bell /></ElIcon>
               <span>通知设置</span>
-            </el-menu-item>
-            <el-menu-item index="privacy">
-              <el-icon><View /></el-icon>
+            </ElMenuItem>
+            <ElMenuItem index="privacy">
+              <ElIcon><View /></ElIcon>
               <span>隐私设置</span>
-            </el-menu-item>
-          </el-menu>
-        </el-card>
-      </el-col>
+            </ElMenuItem>
+          </ElMenu>
+        </ElCard>
+      </ElCol>
 
       <!-- 右侧内容 -->
-      <el-col :span="18">
+      <ElCol :span="18">
         <!-- 基本信息 -->
-        <el-card v-if="activeTab === 'profile'" class="content-card">
+        <ElCard v-if="activeTab === 'profile'" class="content-card">
           <template #header>
             <span>基本信息</span>
           </template>
-          
-          <el-form :model="profileForm" :rules="profileRules" ref="profileFormRef" label-width="100px">
-            <el-form-item label="头像">
+
+          <ElForm
+            ref="profileFormRef"
+            :model="profileForm"
+            :rules="profileRules"
+            label-width="100px"
+          >
+            <ElFormItem label="头像">
               <div class="avatar-upload">
-                <el-avatar :size="80" :src="profileForm.avatarUrl">
+                <ElAvatar :size="80" :src="profileForm.avatarUrl">
                   {{ profileForm.username?.charAt(0).toUpperCase() }}
-                </el-avatar>
-                <el-button text @click="uploadAvatar">更换头像</el-button>
+                </ElAvatar>
+                <ElButton text @click="uploadAvatar">
+                  更换头像
+                </ElButton>
               </div>
-            </el-form-item>
-            
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="profileForm.username" disabled />
-            </el-form-item>
-            
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="profileForm.email" />
-            </el-form-item>
-            
-            <el-form-item label="真实姓名" prop="fullName">
-              <el-input v-model="profileForm.fullName" />
-            </el-form-item>
-            
-            <el-form-item label="个人简介">
-              <el-input
+            </ElFormItem>
+
+            <ElFormItem label="用户名" prop="username">
+              <ElInput v-model="profileForm.username" disabled />
+            </ElFormItem>
+
+            <ElFormItem label="邮箱" prop="email">
+              <ElInput v-model="profileForm.email" />
+            </ElFormItem>
+
+            <ElFormItem label="真实姓名" prop="fullName">
+              <ElInput v-model="profileForm.fullName" />
+            </ElFormItem>
+
+            <ElFormItem label="个人简介">
+              <ElInput
                 v-model="profileForm.bio"
                 type="textarea"
                 :rows="3"
                 placeholder="介绍一下自己..."
               />
-            </el-form-item>
-            
-            <el-form-item>
-              <el-button type="primary" @click="updateProfile" :loading="updating">
+            </ElFormItem>
+
+            <ElFormItem>
+              <ElButton type="primary" :loading="updating" @click="updateProfile">
                 保存修改
-              </el-button>
-              <el-button @click="resetProfile">重置</el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
+              </ElButton>
+              <ElButton @click="resetProfile">
+                重置
+              </ElButton>
+            </ElFormItem>
+          </ElForm>
+        </ElCard>
 
         <!-- 安全设置 -->
-        <el-card v-if="activeTab === 'security'" class="content-card">
+        <ElCard v-if="activeTab === 'security'" class="content-card">
           <template #header>
             <span>安全设置</span>
           </template>
-          
+
           <div class="security-sections">
             <!-- 修改密码 -->
             <div class="security-section">
               <h3>修改密码</h3>
-              <el-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef" label-width="120px">
-                <el-form-item label="当前密码" prop="currentPassword">
-                  <el-input v-model="passwordForm.currentPassword" type="password" show-password />
-                </el-form-item>
-                <el-form-item label="新密码" prop="newPassword">
-                  <el-input v-model="passwordForm.newPassword" type="password" show-password />
-                </el-form-item>
-                <el-form-item label="确认密码" prop="confirmPassword">
-                  <el-input v-model="passwordForm.confirmPassword" type="password" show-password />
-                </el-form-item>
-                <el-form-item>
-                  <el-button type="primary" @click="updatePassword" :loading="updatingPassword">
+              <ElForm
+                ref="passwordFormRef"
+                :model="passwordForm"
+                :rules="passwordRules"
+                label-width="120px"
+              >
+                <ElFormItem label="当前密码" prop="currentPassword">
+                  <ElInput v-model="passwordForm.currentPassword" type="password" show-password />
+                </ElFormItem>
+                <ElFormItem label="新密码" prop="newPassword">
+                  <ElInput v-model="passwordForm.newPassword" type="password" show-password />
+                </ElFormItem>
+                <ElFormItem label="确认密码" prop="confirmPassword">
+                  <ElInput v-model="passwordForm.confirmPassword" type="password" show-password />
+                </ElFormItem>
+                <ElFormItem>
+                  <ElButton type="primary" :loading="updatingPassword" @click="updatePassword">
                     修改密码
-                  </el-button>
-                </el-form-item>
-              </el-form>
+                  </ElButton>
+                </ElFormItem>
+              </ElForm>
             </div>
 
             <!-- 登录记录 -->
             <div class="security-section">
               <h3>登录记录</h3>
-              <el-table :data="loginRecords" style="width: 100%">
-                <el-table-column prop="ipAddress" label="IP地址" />
-                <el-table-column prop="location" label="登录地点" />
-                <el-table-column prop="device" label="设备信息" />
-                <el-table-column prop="loginTime" label="登录时间" />
-                <el-table-column prop="status" label="状态">
+              <ElTable :data="loginRecords" style="width: 100%">
+                <ElTableColumn prop="ipAddress" label="IP地址" />
+                <ElTableColumn prop="location" label="登录地点" />
+                <ElTableColumn prop="device" label="设备信息" />
+                <ElTableColumn prop="loginTime" label="登录时间" />
+                <ElTableColumn prop="status" label="状态">
                   <template #default="{ row }">
-                    <el-tag :type="row.status === 'success' ? 'success' : 'danger'">
+                    <ElTag :type="row.status === 'success' ? 'success' : 'danger'">
                       {{ row.status === 'success' ? '成功' : '失败' }}
-                    </el-tag>
+                    </ElTag>
                   </template>
-                </el-table-column>
-              </el-table>
+                </ElTableColumn>
+              </ElTable>
             </div>
           </div>
-        </el-card>
+        </ElCard>
 
         <!-- 学习偏好 -->
-        <el-card v-if="activeTab === 'preferences'" class="content-card">
+        <ElCard v-if="activeTab === 'preferences'" class="content-card">
           <template #header>
             <span>学习偏好</span>
           </template>
-          
-          <el-form :model="preferencesForm" label-width="120px">
-            <el-form-item label="学习目标">
-              <el-select v-model="preferencesForm.learningGoal" placeholder="选择学习目标">
-                <el-option label="基础安全知识" value="basic" />
-                <el-option label="Web安全专家" value="web_security" />
-                <el-option label="渗透测试工程师" value="penetration_testing" />
-                <el-option label="安全架构师" value="security_architect" />
-              </el-select>
-            </el-form-item>
-            
-            <el-form-item label="难度偏好">
-              <el-radio-group v-model="preferencesForm.difficultyPreference">
-                <el-radio label="easy">简单</el-radio>
-                <el-radio label="medium">中等</el-radio>
-                <el-radio label="hard">困难</el-radio>
-                <el-radio label="mixed">混合</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            
-            <el-form-item label="学习时间">
-              <el-time-picker
+
+          <ElForm :model="preferencesForm" label-width="120px">
+            <ElFormItem label="学习目标">
+              <ElSelect v-model="preferencesForm.learningGoal" placeholder="选择学习目标">
+                <ElOption label="基础安全知识" value="basic" />
+                <ElOption label="Web安全专家" value="web_security" />
+                <ElOption label="渗透测试工程师" value="penetration_testing" />
+                <ElOption label="安全架构师" value="security_architect" />
+              </ElSelect>
+            </ElFormItem>
+
+            <ElFormItem label="难度偏好">
+              <ElRadioGroup v-model="preferencesForm.difficultyPreference">
+                <ElRadio label="easy">
+                  简单
+                </ElRadio>
+                <ElRadio label="medium">
+                  中等
+                </ElRadio>
+                <ElRadio label="hard">
+                  困难
+                </ElRadio>
+                <ElRadio label="mixed">
+                  混合
+                </ElRadio>
+              </ElRadioGroup>
+            </ElFormItem>
+
+            <ElFormItem label="学习时间">
+              <ElTimePicker
                 v-model="preferencesForm.studyTime"
                 is-range
                 range-separator="至"
@@ -174,92 +200,92 @@
                 end-placeholder="结束时间"
                 placeholder="选择学习时间段"
               />
-            </el-form-item>
-            
-            <el-form-item label="学习提醒">
-              <el-switch v-model="preferencesForm.studyReminder" />
+            </ElFormItem>
+
+            <ElFormItem label="学习提醒">
+              <ElSwitch v-model="preferencesForm.studyReminder" />
               <span class="form-tip">开启后会在学习时间提醒您</span>
-            </el-form-item>
-            
-            <el-form-item>
-              <el-button type="primary" @click="updatePreferences" :loading="updating">
+            </ElFormItem>
+
+            <ElFormItem>
+              <ElButton type="primary" :loading="updating" @click="updatePreferences">
                 保存设置
-              </el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
+              </ElButton>
+            </ElFormItem>
+          </ElForm>
+        </ElCard>
 
         <!-- 通知设置 -->
-        <el-card v-if="activeTab === 'notifications'" class="content-card">
+        <ElCard v-if="activeTab === 'notifications'" class="content-card">
           <template #header>
             <span>通知设置</span>
           </template>
-          
-          <el-form :model="notificationForm" label-width="120px">
-            <el-form-item label="邮件通知">
-              <el-switch v-model="notificationForm.emailEnabled" />
-            </el-form-item>
-            
-            <el-form-item label="学习进度通知">
-              <el-switch v-model="notificationForm.progressNotification" />
-            </el-form-item>
-            
-            <el-form-item label="测试结果通知">
-              <el-switch v-model="notificationForm.testResultNotification" />
-            </el-form-item>
-            
-            <el-form-item label="挑战完成通知">
-              <el-switch v-model="notificationForm.challengeNotification" />
-            </el-form-item>
-            
-            <el-form-item label="系统公告">
-              <el-switch v-model="notificationForm.systemAnnouncement" />
-            </el-form-item>
-            
-            <el-form-item>
-              <el-button type="primary" @click="updateNotifications" :loading="updating">
+
+          <ElForm :model="notificationForm" label-width="120px">
+            <ElFormItem label="邮件通知">
+              <ElSwitch v-model="notificationForm.emailEnabled" />
+            </ElFormItem>
+
+            <ElFormItem label="学习进度通知">
+              <ElSwitch v-model="notificationForm.progressNotification" />
+            </ElFormItem>
+
+            <ElFormItem label="测试结果通知">
+              <ElSwitch v-model="notificationForm.testResultNotification" />
+            </ElFormItem>
+
+            <ElFormItem label="挑战完成通知">
+              <ElSwitch v-model="notificationForm.challengeNotification" />
+            </ElFormItem>
+
+            <ElFormItem label="系统公告">
+              <ElSwitch v-model="notificationForm.systemAnnouncement" />
+            </ElFormItem>
+
+            <ElFormItem>
+              <ElButton type="primary" :loading="updating" @click="updateNotifications">
                 保存设置
-              </el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
+              </ElButton>
+            </ElFormItem>
+          </ElForm>
+        </ElCard>
 
         <!-- 隐私设置 -->
-        <el-card v-if="activeTab === 'privacy'" class="content-card">
+        <ElCard v-if="activeTab === 'privacy'" class="content-card">
           <template #header>
             <span>隐私设置</span>
           </template>
-          
-          <el-form :model="privacyForm" label-width="120px">
-            <el-form-item label="公开学习进度">
-              <el-switch v-model="privacyForm.publicProgress" />
+
+          <ElForm :model="privacyForm" label-width="120px">
+            <ElFormItem label="公开学习进度">
+              <ElSwitch v-model="privacyForm.publicProgress" />
               <span class="form-tip">允许其他用户查看您的学习进度</span>
-            </el-form-item>
-            
-            <el-form-item label="公开测试成绩">
-              <el-switch v-model="privacyForm.publicTestScores" />
+            </ElFormItem>
+
+            <ElFormItem label="公开测试成绩">
+              <ElSwitch v-model="privacyForm.publicTestScores" />
               <span class="form-tip">允许其他用户查看您的测试成绩</span>
-            </el-form-item>
-            
-            <el-form-item label="公开挑战记录">
-              <el-switch v-model="privacyForm.publicChallenges" />
+            </ElFormItem>
+
+            <ElFormItem label="公开挑战记录">
+              <ElSwitch v-model="privacyForm.publicChallenges" />
               <span class="form-tip">允许其他用户查看您的挑战记录</span>
-            </el-form-item>
-            
-            <el-form-item label="数据收集">
-              <el-switch v-model="privacyForm.dataCollection" />
+            </ElFormItem>
+
+            <ElFormItem label="数据收集">
+              <ElSwitch v-model="privacyForm.dataCollection" />
               <span class="form-tip">允许系统收集匿名使用数据以改进服务</span>
-            </el-form-item>
-            
-            <el-form-item>
-              <el-button type="primary" @click="updatePrivacy" :loading="updating">
+            </ElFormItem>
+
+            <ElFormItem>
+              <ElButton type="primary" :loading="updating" @click="updatePrivacy">
                 保存设置
-              </el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-col>
-    </el-row>
+              </ElButton>
+            </ElFormItem>
+          </ElForm>
+        </ElCard>
+      </ElCol>
+    </ElRow>
   </div>
 </template>
 
@@ -480,10 +506,10 @@ const updatePrivacy = async () => {
 
   .page-header {
     margin-bottom: 32px;
-    
+
     .header-content {
       text-align: center;
-      
+
       .page-title {
         display: flex;
         align-items: center;
@@ -492,13 +518,13 @@ const updatePrivacy = async () => {
         font-weight: 600;
         color: #1f2937;
         margin-bottom: 8px;
-        
+
         .title-icon {
           margin-right: 12px;
           color: #3b82f6;
         }
       }
-      
+
       .page-description {
         font-size: 16px;
         color: #6b7280;
@@ -523,7 +549,7 @@ const updatePrivacy = async () => {
     .security-sections {
       .security-section {
         margin-bottom: 32px;
-        
+
         h3 {
           font-size: 16px;
           font-weight: 600;

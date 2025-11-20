@@ -14,7 +14,7 @@ const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
 const normalizedBaseURL = baseURL.replace(/\/api\/?$/, '')
 const service: AxiosInstance = axios.create({
   baseURL: normalizedBaseURL,
-  timeout: 10000,
+  timeout: 15000, // 增加超时时间到15秒，提升稳定性
   headers: {
     'Content-Type': 'application/json'
   }
@@ -25,7 +25,10 @@ service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // 添加认证token
     const token = getToken()
-    console.log('请求拦截器 - Token:', token ? '存在' : '不存在')
+    // 移除生产环境的console.log，减少性能开销
+    if (import.meta.env.DEV) {
+      console.log('请求拦截器 - Token:', token ? '存在' : '不存在')
+    }
     if (token) {
       if (!config.headers) {
         config.headers = {}
@@ -33,8 +36,10 @@ service.interceptors.request.use(
       const tokenType = localStorage.getItem('token_type') || 'Bearer'
       const normalizedType = tokenType.trim() || 'Bearer'
       config.headers.Authorization = `${normalizedType} ${token}`.trim()
-      console.log('请求拦截器 - Authorization:', config.headers.Authorization)
-    } else {
+      if (import.meta.env.DEV) {
+        console.log('请求拦截器 - Authorization:', config.headers.Authorization)
+      }
+    } else if (import.meta.env.DEV) {
       console.warn('请求拦截器 - 没有找到token')
     }
 

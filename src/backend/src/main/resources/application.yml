@@ -1,7 +1,8 @@
 # Global configuration
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/security_teaching_system?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true&rewriteBatchedStatements=true&cachePrepStmts=true&useServerPrepStmts=true&connectionCollation=utf8mb4_unicode_ci&useOldAliasMetadataBehavior=true&autoReconnect=true&useSSL=false&characterSetResults=utf8mb4&useLocalSessionState=true&useCompression=true&characterSetClient=utf8mb4&characterSetConnection=utf8mb4&useOldAliasMetadataBehavior=true&useCompression=true&useLocalSessionState=true&useSSL=false&characterSetResults=utf8mb4&connectionCollation=utf8mb4_unicode_ci&useServerPrepStmts=true&cachePrepStmts=true&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&useSSL=false&zeroDateTimeBehavior=convertToNull&characterEncoding=UTF-8&useUnicode=true
+    # 优化后的数据库连接URL - 去除重复参数，提升连接效率
+    url: jdbc:mysql://localhost:3306/security_teaching_system?useUnicode=true&characterEncoding=UTF-8&characterSetResults=utf8mb4&characterSetClient=utf8mb4&characterSetConnection=utf8mb4&connectionCollation=utf8mb4_unicode_ci&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true&rewriteBatchedStatements=true&cachePrepStmts=true&useServerPrepStmts=true&useOldAliasMetadataBehavior=true&autoReconnect=true&useLocalSessionState=true&useCompression=true
     username: root
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -9,7 +10,7 @@ spring:
     hikari:
       pool-name: SecurityTeachingSystemPool
       minimum-idle: 5
-      maximum-pool-size: 20
+      maximum-pool-size: 30
       auto-commit: false # Unified auto-commit setting
       idle-timeout: 600000
       max-lifetime: 1800000
@@ -94,6 +95,8 @@ app:
     allowed-origins: 
       - http://localhost:3000
       - http://127.0.0.1:3000
+      - http://localhost:3001
+      - http://127.0.0.1:3001
     allowed-methods:
       - GET
       - POST
@@ -120,13 +123,13 @@ app:
     # 验证码配置
     captcha:
       enabled: true # 是否启用验证码（true=启用，false=禁用）
-      expiry-minutes: 5 # 验证码过期时间（分钟）
+      expiry-seconds: 120 # 验证码过期时间（秒）
     
     # 防重放攻击配置
     replay-prevention:
       enabled: true # 是否启用防重放攻击（true=启用，false=禁用）
-      nonce-expiry-seconds: 300 # nonce token过期时间（秒）
-      timestamp-tolerance-seconds: 60 # 时间戳容差（秒）
+      nonce-expiry-seconds: 120 # nonce token过期时间（秒，与验证码过期时间一致）
+      timestamp-tolerance-seconds: 120 # 时间戳容差（秒，与过期时间一致）
 
   knowledge:
     cache:
@@ -174,14 +177,6 @@ management:
   info:
     env:
       enabled: true
-
-# SpringDoc OpenAPI (Swagger) 配置 - 禁用Swagger文档
-# 注意：前端未使用Swagger，因此禁用以避免泄露API结构
-springdoc:
-  api-docs:
-    enabled: false
-  swagger-ui:
-    enabled: false
 
 # Server configuration
 server:

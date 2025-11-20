@@ -1,34 +1,40 @@
 <template>
   <div class="test-new-features">
     <h1>新功能测试页面</h1>
-    
+
     <div class="feature-section">
       <h2>语言切换功能</h2>
       <LanguageSwitch />
     </div>
-    
+
     <div class="feature-section">
       <h2>新手指引功能</h2>
       <GuideTrigger @trigger="handleTriggerGuide" />
     </div>
-    
+
     <div class="feature-section">
       <h2>用户指引组件</h2>
-      <UserGuide 
+      <UserGuide
         ref="userGuideRef"
         :auto-show="false"
         @complete="handleGuideComplete"
         @skip="handleGuideSkip"
       />
     </div>
-    
+
     <div class="feature-section">
       <h2>测试按钮</h2>
-      <ElButton @click="testLanguageAPI">测试语言 API</ElButton>
-      <ElButton @click="testGuideAPI">测试指引 API</ElButton>
-      <ElButton @click="triggerGuide">手动触发指引</ElButton>
+      <ElButton @click="testLanguageAPI">
+        测试语言 API
+      </ElButton>
+      <ElButton @click="testGuideAPI">
+        测试指引 API
+      </ElButton>
+      <ElButton @click="triggerGuide">
+        手动触发指引
+      </ElButton>
     </div>
-    
+
     <div class="feature-section">
       <h2>API 测试结果</h2>
       <pre>{{ apiResults }}</pre>

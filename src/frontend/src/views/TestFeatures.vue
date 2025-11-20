@@ -1,21 +1,21 @@
 <template>
   <div class="test-features">
     <h1>功能测试页面</h1>
-    
+
     <!-- 语言切换测试 -->
     <div class="feature-section">
       <h2>语言切换功能</h2>
       <LanguageSwitch />
     </div>
-    
+
     <!-- 新手指引测试 -->
     <div class="feature-section">
       <h2>新手指引功能</h2>
       <GuideTrigger @trigger="handleTriggerGuide" />
     </div>
-    
+
     <!-- 新手指引组件 -->
-    <UserGuide 
+    <UserGuide
       ref="userGuideRef"
       :auto-show="false"
       @complete="handleGuideComplete"

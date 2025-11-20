@@ -1,37 +1,37 @@
 <template>
   <div class="challenge-progress">
     <div v-if="loading" class="loading">
-      <el-skeleton :rows="3" animated />
+      <ElSkeleton :rows="3" animated />
     </div>
-    
+
     <div v-else-if="progress" class="progress-content">
       <div class="progress-header">
         <h2>{{ challenge?.title }}</h2>
         <div class="progress-stats">
-          <el-statistic title="完成度" :value="progress.progressPercentage" suffix="%" />
-          <el-statistic title="当前步骤" :value="progress.currentStep" />
-          <el-statistic title="用时" :value="timeSpent" suffix="分钟" />
+          <ElStatistic title="完成度" :value="progress.progressPercentage" suffix="%" />
+          <ElStatistic title="当前步骤" :value="progress.currentStep" />
+          <ElStatistic title="用时" :value="timeSpent" suffix="分钟" />
         </div>
       </div>
-      
+
       <div class="progress-steps">
-        <el-steps :active="progress.currentStep" finish-status="success">
-          <el-step 
-            v-for="(vuln, index) in vulnerabilityChain" 
+        <ElSteps :active="progress.currentStep" finish-status="success">
+          <ElStep
+            v-for="(vuln, index) in vulnerabilityChain"
             :key="index"
             :title="vuln"
             :description="`步骤 ${index + 1}`"
           />
-        </el-steps>
+        </ElSteps>
       </div>
-      
+
       <div class="progress-actions">
-        <el-button type="primary" @click="executeStep" :loading="executing">
+        <ElButton type="primary" :loading="executing" @click="executeStep">
           执行下一步
-        </el-button>
-        <el-button @click="viewChallenge">
+        </ElButton>
+        <ElButton @click="viewChallenge">
           返回挑战详情
-        </el-button>
+        </ElButton>
       </div>
     </div>
   </div>
@@ -73,7 +73,7 @@ const loadProgress = async () => {
       challengeApi.getProgress(route.params.id),
       challengeApi.getScenario(route.params.id)
     ])
-    
+
     if (progressResponse.success) {
       progress.value = progressResponse.data
     }
@@ -96,7 +96,7 @@ const executeStep = async () => {
       username: 'admin',
       password: 'admin'
     }
-    
+
     const response = await challengeApi.executeStep(route.params.id, step, params)
     if (response.success) {
       ElMessage.success('步骤执行成功')

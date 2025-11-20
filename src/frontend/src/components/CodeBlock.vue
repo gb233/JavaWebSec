@@ -1,7 +1,7 @@
 <template>
-  <el-scrollbar class="code-block">
+  <ElScrollbar class="code-block">
     <pre><code ref="codeRef" :class="codeClass">{{ displayContent }}</code></pre>
-  </el-scrollbar>
+  </ElScrollbar>
 </template>
 
 <script setup lang="ts">

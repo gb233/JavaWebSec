@@ -316,7 +316,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
           requireAuth: true,
           activeMenu: '/challenge/list'
         }
-      },
+      }
       // 排行榜功能暂时注释掉 - 2025-01-15
       // {
       //   path: 'leaderboard',
@@ -458,85 +458,88 @@ export const asyncRoutes: RouteRecordRaw[] = [
       }
     ]
   },
-  {
-    path: '/admin',
-    component: Layout,
-    redirect: '/admin/users',
-    meta: {
-      title: '系统管理',
-      icon: 'Tools',
-      requireAuth: true,
-      roles: ['admin']
-    },
-    children: [
-      {
-        path: 'users',
-        name: 'AdminUsers',
-        component: () => import('@/views/admin/users/index.vue'),
-        meta: {
-          title: '用户管理',
-          icon: 'UserFilled',
-          requireAuth: true,
-          roles: ['admin']
-        }
-      },
-      {
-        path: 'vulnerabilities',
-        name: 'AdminVulnerabilities',
-        component: () => import('@/views/admin/vulnerabilities/index.vue'),
-        meta: {
-          title: '漏洞管理',
-          icon: 'Monitor',
-          requireAuth: true,
-          roles: ['admin']
-        }
-      },
-      {
-        path: 'questions',
-        name: 'AdminQuestions',
-        component: () => import('@/views/admin/questions/index.vue'),
-        meta: {
-          title: '题库管理',
-          icon: 'EditPen',
-          requireAuth: true,
-          roles: ['admin']
-        }
-      },
-      {
-        path: 'challenges',
-        name: 'AdminChallenges',
-        component: () => import('@/views/admin/challenges/index.vue'),
-        meta: {
-          title: '挑战管理',
-          icon: 'Trophy',
-          requireAuth: true,
-          roles: ['admin']
-        }
-      },
-      {
-        path: 'system',
-        name: 'AdminSystem',
-        component: () => import('@/views/admin/system/index.vue'),
-        meta: {
-          title: '系统配置',
-          icon: 'Setting',
-          requireAuth: true,
-          roles: ['admin']
-        }
-      },
-      {
-        path: 'logs',
-        name: 'AdminLogs',
-        component: () => import('@/views/admin/logs/index.vue'),
-        meta: {
-          title: '日志管理',
-          icon: 'Document',
-          requireAuth: true,
-          roles: ['admin']
-        }
-      }
-    ]
-  }
+  // 系统管理模块 - 所有管理功能页面均为占位符或未完成联调，暂时全部注释 - 2025-01-15
+  // 后端AttackLogController注释说明："前端日志管理/攻击日志模块尚未完成联调，目前仅用于后续演示与扩展"
+  // 前端logs/index.vue注释说明："攻击日志前端仍在开发中，当前页面仅提供占位视图，接口数据未在正式环境上线"
+  // {
+  //   path: '/admin',
+  //   component: Layout,
+  //   redirect: '/admin/logs',
+  //   meta: {
+  //     title: '系统管理',
+  //     icon: 'Tools',
+  //     requireAuth: true,
+  //     roles: ['admin']
+  //   },
+  //   children: [
+  //     {
+  //       path: 'users',
+  //       name: 'AdminUsers',
+  //       component: () => import('@/views/admin/users/index.vue'),
+  //       meta: {
+  //         title: '用户管理',
+  //         icon: 'UserFilled',
+  //         requireAuth: true,
+  //         roles: ['admin']
+  //       }
+  //     },
+  //     {
+  //       path: 'vulnerabilities',
+  //       name: 'AdminVulnerabilities',
+  //       component: () => import('@/views/admin/vulnerabilities/index.vue'),
+  //       meta: {
+  //         title: '漏洞管理',
+  //         icon: 'Monitor',
+  //         requireAuth: true,
+  //         roles: ['admin']
+  //       }
+  //     },
+  //     {
+  //       path: 'questions',
+  //       name: 'AdminQuestions',
+  //       component: () => import('@/views/admin/questions/index.vue'),
+  //       meta: {
+  //         title: '题库管理',
+  //         icon: 'EditPen',
+  //         requireAuth: true,
+  //         roles: ['admin']
+  //       }
+  //     },
+  //     {
+  //       path: 'challenges',
+  //       name: 'AdminChallenges',
+  //       component: () => import('@/views/admin/challenges/index.vue'),
+  //       meta: {
+  //         title: '挑战管理',
+  //         icon: 'Trophy',
+  //         requireAuth: true,
+  //         roles: ['admin']
+  //       }
+  //     },
+  //     {
+  //       path: 'system',
+  //       name: 'AdminSystem',
+  //       component: () => import('@/views/admin/system/index.vue'),
+  //       meta: {
+  //         title: '系统配置',
+  //         icon: 'Setting',
+  //         requireAuth: true,
+  //         roles: ['admin']
+  //       }
+  //     },
+  //     {
+  //       path: 'logs',
+  //       name: 'AdminLogs',
+  //       component: () => import('@/views/admin/logs/index.vue'),
+  //       meta: {
+  //         title: '日志管理',
+  //         icon: 'Document',
+  //         requireAuth: true,
+  //         roles: ['admin']
+  //       }
+  //     }
+  //   ]
+  // }
 ]
 
 // 创建路由实例

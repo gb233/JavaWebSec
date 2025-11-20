@@ -1,34 +1,36 @@
 <template>
-  <el-dropdown 
+  <ElDropdown
     id="language-switch"
-    @command="handleLanguageChange" 
     trigger="click"
     placement="bottom-end"
+    @command="handleLanguageChange"
   >
-    <el-button type="text" class="language-switch-btn">
-        <el-icon><Setting /></el-icon>
+    <ElButton type="text" class="language-switch-btn">
+      <ElIcon><Setting /></ElIcon>
       <span class="language-text">{{ currentLanguage.displayName }}</span>
-      <el-icon class="el-icon--right"><ArrowDown /></el-icon>
-    </el-button>
-    
+      <ElIcon class="el-icon--right">
+        <ArrowDown />
+      </ElIcon>
+    </ElButton>
+
     <template #dropdown>
-      <el-dropdown-menu>
-        <el-dropdown-item 
-          v-for="language in supportedLanguages" 
+      <ElDropdownMenu>
+        <ElDropdownItem
+          v-for="language in supportedLanguages"
           :key="language.languageCode"
           :command="language.languageCode"
           :class="{ 'is-active': language.languageCode === currentLanguage.languageCode }"
         >
           <span class="language-option">
             <span class="language-name">{{ language.displayName }}</span>
-            <el-icon v-if="language.languageCode === currentLanguage.languageCode" class="check-icon">
+            <ElIcon v-if="language.languageCode === currentLanguage.languageCode" class="check-icon">
               <Check />
-            </el-icon>
+            </ElIcon>
           </span>
-        </el-dropdown-item>
-      </el-dropdown-menu>
+        </ElDropdownItem>
+      </ElDropdownMenu>
     </template>
-  </el-dropdown>
+  </ElDropdown>
 </template>
 
 <script setup lang="ts">
@@ -68,7 +70,7 @@ const loadCurrentLanguage = async () => {
         }
       }
     }
-    
+
     // 如果localStorage没有或语言不支持，使用默认中文
     currentLanguage.value = {
       languageCode: 'zh-CN',
@@ -77,7 +79,7 @@ const loadCurrentLanguage = async () => {
     }
     locale.value = 'zh-CN'
     localStorage.setItem('user-language', 'zh-CN')
-    
+
     // 可选：尝试从API获取（但不依赖它）
     try {
       const response = await languageApi.getCurrentLanguage()
@@ -134,34 +136,34 @@ const handleLanguageChange = async (languageCode: string) => {
   }
 
   isChanging.value = true
-  
+
   try {
     // 立即更新UI和localStorage
     const selectedLanguage = supportedLanguages.value.find(lang => lang.languageCode === languageCode)
     if (selectedLanguage) {
       currentLanguage.value = selectedLanguage
       locale.value = languageCode
-      
+
       // 保存用户语言偏好到localStorage
       localStorage.setItem('user-language', languageCode)
       localStorage.setItem('language', languageCode)
-      
+
       ElMessage.success(
-        languageCode === 'zh-CN' 
-          ? '语言切换成功' 
+        languageCode === 'zh-CN'
+          ? '语言切换成功'
           : 'Language switched successfully'
       )
-      
+
       // 尝试保存到后端（可选）
       try {
         await languageApi.setLanguage(languageCode)
       } catch (apiError) {
         console.warn('保存语言偏好到后端失败，但本地设置已保存:', apiError)
       }
-      
+
       // 设置语言切换标记，避免触发新手指引
       sessionStorage.setItem('language-switching', 'true')
-      
+
       // 刷新页面以应用语言更改
       setTimeout(() => {
         window.location.reload()
@@ -236,7 +238,7 @@ onMounted(async () => {
   .language-text {
     display: none;
   }
-  
+
   .language-switch-btn {
     padding: 8px;
   }

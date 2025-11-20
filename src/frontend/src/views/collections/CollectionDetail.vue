@@ -1,166 +1,216 @@
 <template>
   <div class="collection-detail">
     <div v-if="loading" class="loading">
-      <el-skeleton :rows="5" animated />
+      <ElSkeleton :rows="5" animated />
     </div>
-    
+
     <div v-else-if="collection" class="collection-content">
       <div class="collection-header">
         <div class="collection-title-section">
           <h1>{{ collection.name }}</h1>
           <div class="collection-meta">
-            <el-tag v-if="collection.isPublic" type="success">公开</el-tag>
-            <el-tag v-if="collection.isDefault" type="warning">默认</el-tag>
+            <ElTag v-if="collection.isPublic" type="success">
+              公开
+            </ElTag>
+            <ElTag v-if="collection.isDefault" type="warning">
+              默认
+            </ElTag>
             <span class="collection-date">{{ formatDate(collection.createdAt) }}</span>
             <span class="collection-views">{{ collection.viewCount || 0 }} 次浏览</span>
           </div>
         </div>
-        
+
         <div class="collection-actions">
-          <el-button type="primary" @click="addItem" v-if="canEdit">
-            <el-icon><Plus /></el-icon>
+          <ElButton v-if="canEdit" type="primary" @click="addItem">
+            <ElIcon><Plus /></ElIcon>
             添加项目
-          </el-button>
-          <el-button @click="editCollection" v-if="canEdit">
-            <el-icon><Edit /></el-icon>
+          </ElButton>
+          <ElButton v-if="canEdit" @click="editCollection">
+            <ElIcon><Edit /></ElIcon>
             编辑
-          </el-button>
-          <el-button @click="shareCollection" v-if="collection.isPublic">
-            <el-icon><Share /></el-icon>
+          </ElButton>
+          <ElButton v-if="collection.isPublic" @click="shareCollection">
+            <ElIcon><Share /></ElIcon>
             分享
-          </el-button>
-          <el-button @click="deleteCollection" type="danger" v-if="canEdit">
-            <el-icon><Delete /></el-icon>
+          </ElButton>
+          <ElButton v-if="canEdit" type="danger" @click="deleteCollection">
+            <ElIcon><Delete /></ElIcon>
             删除
-          </el-button>
+          </ElButton>
         </div>
       </div>
-      
-      <div class="collection-description" v-if="collection.description">
+
+      <div v-if="collection.description" class="collection-description">
         <h3>描述</h3>
         <p>{{ collection.description }}</p>
       </div>
-      
-      <div class="collection-tags" v-if="collection.tags && parseTags(collection.tags).length > 0">
+
+      <div v-if="collection.tags && parseTags(collection.tags).length > 0" class="collection-tags">
         <h3>标签</h3>
-        <el-tag v-for="tag in parseTags(collection.tags)" :key="tag" class="tag-item">{{ tag }}</el-tag>
+        <ElTag v-for="tag in parseTags(collection.tags)" :key="tag" class="tag-item">
+          {{ tag }}
+        </ElTag>
       </div>
-      
+
       <div class="collection-items">
         <div class="items-header">
           <h3>收藏项目 ({{ items.length }})</h3>
           <div class="items-actions">
-            <el-input 
-              v-model="searchKeyword" 
+            <ElInput
+              v-model="searchKeyword"
               placeholder="搜索项目"
               style="width: 200px; margin-right: 12px;"
               clearable
             >
               <template #prefix>
-                <el-icon><Search /></el-icon>
+                <ElIcon><Search /></ElIcon>
               </template>
-            </el-input>
-            <el-select v-model="filterType" placeholder="筛选类型" style="width: 120px;" clearable>
-              <el-option label="全部" value="" />
-              <el-option label="漏洞" value="VULNERABILITY" />
-              <el-option label="笔记" value="NOTE" />
-              <el-option label="链接" value="LINK" />
-              <el-option label="文件" value="FILE" />
-            </el-select>
+            </ElInput>
+            <ElSelect
+              v-model="filterType"
+              placeholder="筛选类型"
+              style="width: 120px;"
+              clearable
+            >
+              <ElOption label="全部" value="" />
+              <ElOption label="漏洞" value="VULNERABILITY" />
+              <ElOption label="笔记" value="NOTE" />
+              <ElOption label="链接" value="LINK" />
+              <ElOption label="文件" value="FILE" />
+            </ElSelect>
           </div>
         </div>
-        
+
         <div v-if="filteredItems.length === 0" class="empty-items">
-          <el-empty description="暂无收藏项目">
-            <el-button type="primary" @click="addItem" v-if="canEdit">添加第一个项目</el-button>
-          </el-empty>
+          <ElEmpty description="暂无收藏项目">
+            <ElButton v-if="canEdit" type="primary" @click="addItem">
+              添加第一个项目
+            </ElButton>
+          </ElEmpty>
         </div>
-        
+
         <div v-else class="items-grid">
           <div v-for="item in filteredItems" :key="item.id" class="item-card">
             <div class="item-header">
-              <h4 class="item-title">{{ item.itemTitle }}</h4>
+              <h4 class="item-title">
+                {{ item.itemTitle }}
+              </h4>
               <div class="item-actions">
-                <el-button size="small" @click="viewItem(item)">查看</el-button>
-                <el-button size="small" @click="editItem(item)" v-if="canEdit">编辑</el-button>
-                <el-button size="small" type="danger" @click="removeItem(item)" v-if="canEdit">移除</el-button>
+                <ElButton size="small" @click="viewItem(item)">
+                  查看
+                </ElButton>
+                <ElButton v-if="canEdit" size="small" @click="editItem(item)">
+                  编辑
+                </ElButton>
+                <ElButton
+                  v-if="canEdit"
+                  size="small"
+                  type="danger"
+                  @click="removeItem(item)"
+                >
+                  移除
+                </ElButton>
               </div>
             </div>
-            <p class="item-description" v-if="item.itemDescription">{{ item.itemDescription }}</p>
+            <p v-if="item.itemDescription" class="item-description">
+              {{ item.itemDescription }}
+            </p>
             <div class="item-meta">
-              <el-tag size="small" :type="getItemTypeColor(item.itemType)">{{ getItemTypeLabel(item.itemType) }}</el-tag>
+              <ElTag size="small" :type="getItemTypeColor(item.itemType)">
+                {{ getItemTypeLabel(item.itemType) }}
+              </ElTag>
               <span class="item-date">{{ formatDate(item.addedAt) }}</span>
             </div>
-            <div class="item-url" v-if="item.itemUrl">
-              <el-link :href="item.itemUrl" target="_blank" type="primary">
-                <el-icon><Link /></el-icon>
+            <div v-if="item.itemUrl" class="item-url">
+              <ElLink :href="item.itemUrl" target="_blank" type="primary">
+                <ElIcon><Link /></ElIcon>
                 访问链接
-              </el-link>
+              </ElLink>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
+
     <div v-else class="error-state">
-      <el-empty description="收藏夹不存在或已被删除">
-        <el-button type="primary" @click="goBack">返回</el-button>
-      </el-empty>
+      <ElEmpty description="收藏夹不存在或已被删除">
+        <ElButton type="primary" @click="goBack">
+          返回
+        </ElButton>
+      </ElEmpty>
     </div>
-    
+
     <!-- 添加项目对话框 -->
-    <el-dialog v-model="showAddItemDialog" title="添加收藏项目" width="500px">
-      <el-form :model="newItemForm" label-width="100px">
-        <el-form-item label="项目标题" required>
-          <el-input v-model="newItemForm.itemTitle" placeholder="请输入项目标题" />
-        </el-form-item>
-        <el-form-item label="项目类型">
-          <el-select v-model="newItemForm.itemType" placeholder="请选择项目类型">
-            <el-option label="链接" value="LINK" />
-            <el-option label="笔记" value="NOTE" />
-            <el-option label="漏洞" value="VULNERABILITY" />
-            <el-option label="文件" value="FILE" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="项目描述">
-          <el-input v-model="newItemForm.itemDescription" type="textarea" :rows="3" placeholder="请输入项目描述" />
-        </el-form-item>
-        <el-form-item label="项目链接">
-          <el-input v-model="newItemForm.itemUrl" placeholder="请输入项目链接" />
-        </el-form-item>
-      </el-form>
+    <ElDialog v-model="showAddItemDialog" title="添加收藏项目" width="500px">
+      <ElForm :model="newItemForm" label-width="100px">
+        <ElFormItem label="项目标题" required>
+          <ElInput v-model="newItemForm.itemTitle" placeholder="请输入项目标题" />
+        </ElFormItem>
+        <ElFormItem label="项目类型">
+          <ElSelect v-model="newItemForm.itemType" placeholder="请选择项目类型">
+            <ElOption label="链接" value="LINK" />
+            <ElOption label="笔记" value="NOTE" />
+            <ElOption label="漏洞" value="VULNERABILITY" />
+            <ElOption label="文件" value="FILE" />
+          </ElSelect>
+        </ElFormItem>
+        <ElFormItem label="项目描述">
+          <ElInput
+            v-model="newItemForm.itemDescription"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入项目描述"
+          />
+        </ElFormItem>
+        <ElFormItem label="项目链接">
+          <ElInput v-model="newItemForm.itemUrl" placeholder="请输入项目链接" />
+        </ElFormItem>
+      </ElForm>
       <template #footer>
-        <el-button @click="showAddItemDialog = false">取消</el-button>
-        <el-button type="primary" @click="addNewItem">添加</el-button>
+        <ElButton @click="showAddItemDialog = false">
+          取消
+        </ElButton>
+        <ElButton type="primary" @click="addNewItem">
+          添加
+        </ElButton>
       </template>
-    </el-dialog>
-    
+    </ElDialog>
+
     <!-- 编辑项目对话框 -->
-    <el-dialog v-model="showEditItemDialog" title="编辑收藏项目" width="500px">
-      <el-form :model="editingItem" label-width="100px" v-if="editingItem">
-        <el-form-item label="项目标题" required>
-          <el-input v-model="editingItem.itemTitle" placeholder="请输入项目标题" />
-        </el-form-item>
-        <el-form-item label="项目类型">
-          <el-select v-model="editingItem.itemType" placeholder="请选择项目类型">
-            <el-option label="链接" value="LINK" />
-            <el-option label="笔记" value="NOTE" />
-            <el-option label="漏洞" value="VULNERABILITY" />
-            <el-option label="文件" value="FILE" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="项目描述">
-          <el-input v-model="editingItem.itemDescription" type="textarea" :rows="3" placeholder="请输入项目描述" />
-        </el-form-item>
-        <el-form-item label="项目链接">
-          <el-input v-model="editingItem.itemUrl" placeholder="请输入项目链接" />
-        </el-form-item>
-      </el-form>
+    <ElDialog v-model="showEditItemDialog" title="编辑收藏项目" width="500px">
+      <ElForm v-if="editingItem" :model="editingItem" label-width="100px">
+        <ElFormItem label="项目标题" required>
+          <ElInput v-model="editingItem.itemTitle" placeholder="请输入项目标题" />
+        </ElFormItem>
+        <ElFormItem label="项目类型">
+          <ElSelect v-model="editingItem.itemType" placeholder="请选择项目类型">
+            <ElOption label="链接" value="LINK" />
+            <ElOption label="笔记" value="NOTE" />
+            <ElOption label="漏洞" value="VULNERABILITY" />
+            <ElOption label="文件" value="FILE" />
+          </ElSelect>
+        </ElFormItem>
+        <ElFormItem label="项目描述">
+          <ElInput
+            v-model="editingItem.itemDescription"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入项目描述"
+          />
+        </ElFormItem>
+        <ElFormItem label="项目链接">
+          <ElInput v-model="editingItem.itemUrl" placeholder="请输入项目链接" />
+        </ElFormItem>
+      </ElForm>
       <template #footer>
-        <el-button @click="showEditItemDialog = false">取消</el-button>
-        <el-button type="primary" @click="updateItem">保存</el-button>
+        <ElButton @click="showEditItemDialog = false">
+          取消
+        </ElButton>
+        <ElButton type="primary" @click="updateItem">
+          保存
+        </ElButton>
       </template>
-    </el-dialog>
+    </ElDialog>
   </div>
 </template>
 
@@ -199,19 +249,19 @@ const canEdit = computed(() => {
 
 const filteredItems = computed(() => {
   let filtered = items.value
-  
+
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
-    filtered = filtered.filter(item => 
+    filtered = filtered.filter(item =>
       item.itemTitle.toLowerCase().includes(keyword) ||
       (item.itemDescription && item.itemDescription.toLowerCase().includes(keyword))
     )
   }
-  
+
   if (filterType.value) {
     filtered = filtered.filter(item => item.itemType === filterType.value)
   }
-  
+
   return filtered
 })
 
@@ -220,7 +270,7 @@ const loadCollection = async () => {
     loading.value = true
     const collectionId = route.params.id as string
     const response = await collectionApi.getCollectionById(parseInt(collectionId))
-    
+
     if (isSuccessResponse(response) && response.data) {
       collection.value = response.data
       await loadItems()
@@ -236,7 +286,7 @@ const loadCollection = async () => {
 
 const loadItems = async () => {
   if (!collection.value) return
-  
+
   try {
     const response = await collectionItemApi.getItemsByCollection(collection.value.id)
     if (isSuccessResponse(response) && response.data) {
@@ -269,16 +319,16 @@ const shareCollection = () => {
 
 const deleteCollection = async () => {
   if (!collection.value) return
-  
+
   try {
     await ElMessageBox.confirm('确定要删除这个收藏夹吗？', '确认删除', {
       confirmButtonText: '删除',
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
+
     const response = await collectionApi.deleteCollection(collection.value.id)
-    
+
     if (isSuccessResponse(response)) {
       ElMessage.success('收藏夹已删除')
       router.push('/profile/collections')
@@ -326,9 +376,9 @@ const removeItem = async (item: CollectionItem) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
+
     const response = await collectionItemApi.deleteItem(item.id)
-    
+
     if (isSuccessResponse(response)) {
       ElMessage.success('项目已移除')
       await loadItems()
@@ -344,20 +394,20 @@ const removeItem = async (item: CollectionItem) => {
 
 const getItemTypeLabel = (type: string) => {
   const typeMap: Record<string, string> = {
-    'VULNERABILITY': '漏洞',
-    'NOTE': '笔记',
-    'LINK': '链接',
-    'FILE': '文件'
+    VULNERABILITY: '漏洞',
+    NOTE: '笔记',
+    LINK: '链接',
+    FILE: '文件'
   }
   return typeMap[type] || type
 }
 
 const getItemTypeColor = (type: string) => {
   const colorMap: Record<string, string> = {
-    'VULNERABILITY': 'danger',
-    'NOTE': 'primary',
-    'LINK': 'success',
-    'FILE': 'info'
+    VULNERABILITY: 'danger',
+    NOTE: 'primary',
+    LINK: 'success',
+    FILE: 'info'
   }
   return colorMap[type] || 'primary'
 }
@@ -380,7 +430,7 @@ const goBack = () => {
 
 const addNewItem = async () => {
   if (!collection.value) return
-  
+
   try {
     const response = await collectionItemApi.createItem({
       collectionId: collection.value.id,
@@ -390,7 +440,7 @@ const addNewItem = async () => {
       itemDescription: newItemForm.value.itemDescription,
       itemUrl: newItemForm.value.itemUrl
     })
-    
+
     if (isSuccessResponse(response)) {
       ElMessage.success('项目添加成功')
       showAddItemDialog.value = false
@@ -411,7 +461,7 @@ const addNewItem = async () => {
 
 const updateItem = async () => {
   if (!editingItem.value) return
-  
+
   try {
     const response = await collectionItemApi.updateItem(editingItem.value.id!, {
       itemTitle: editingItem.value.itemTitle,
@@ -419,7 +469,7 @@ const updateItem = async () => {
       itemType: editingItem.value.itemType,
       itemUrl: editingItem.value.itemUrl
     })
-    
+
     if (isSuccessResponse(response)) {
       ElMessage.success('项目更新成功')
       showEditItemDialog.value = false
@@ -607,24 +657,24 @@ onMounted(() => {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .collection-actions {
     width: 100%;
     justify-content: flex-start;
   }
-  
+
   .items-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .items-actions {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .items-grid {
     grid-template-columns: 1fr;
   }

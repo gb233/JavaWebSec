@@ -1,11 +1,11 @@
 <template>
   <div v-if="showGuide" class="user-guide-overlay">
     <!-- 指引遮罩层 -->
-    <div class="guide-mask" @click="handleMaskClick"></div>
-    
+    <div class="guide-mask" @click="handleMaskClick" />
+
     <!-- 指引内容 -->
-    <div 
-      v-if="currentStep" 
+    <div
+      v-if="currentStep"
       class="guide-content"
       :class="`guide-${currentStep.position}`"
       :style="guideStyle"
@@ -19,53 +19,53 @@
           {{ currentStepIndex + 1 }} / {{ guideSteps.length }}
         </div>
       </div>
-      
+
       <!-- 指引内容 -->
       <div class="guide-body">
         <div class="guide-description">
           {{ currentStep.description }}
         </div>
       </div>
-      
+
       <!-- 指引操作 -->
       <div class="guide-actions">
-        <el-button 
-          v-if="currentStepIndex > 0" 
-          @click="previousStep"
+        <ElButton
+          v-if="currentStepIndex > 0"
           size="small"
+          @click="previousStep"
         >
           {{ $t('guide.previous') }}
-        </el-button>
-        
-        <el-button 
-          v-if="currentStepIndex < guideSteps.length - 1" 
-          @click="nextStep"
+        </ElButton>
+
+        <ElButton
+          v-if="currentStepIndex < guideSteps.length - 1"
           type="primary"
           size="small"
+          @click="nextStep"
         >
           {{ $t('guide.next') }}
-        </el-button>
-        
-        <el-button 
-          v-if="currentStepIndex === guideSteps.length - 1" 
-          @click="completeGuide"
+        </ElButton>
+
+        <ElButton
+          v-if="currentStepIndex === guideSteps.length - 1"
           type="success"
           size="small"
+          @click="completeGuide"
         >
           {{ $t('guide.complete') }}
-        </el-button>
-        
-        <el-button 
-          @click="skipGuide"
+        </ElButton>
+
+        <ElButton
           size="small"
           text
+          @click="skipGuide"
         >
           {{ $t('guide.skip') }}
-        </el-button>
+        </ElButton>
       </div>
-      
+
       <!-- 指引指示器 -->
-      <div class="guide-indicator" :class="`indicator-${currentStep.position}`"></div>
+      <div class="guide-indicator" :class="`indicator-${currentStep.position}`" />
     </div>
   </div>
 </template>
@@ -112,7 +112,7 @@ const loadGuideSteps = async () => {
 
 const checkShouldShowGuide = async () => {
   if (!props.autoShow) return false
-  
+
   try {
     const response = await guideApi.shouldShowGuide()
     return isSuccessResponse(response) && response.data === true
@@ -133,17 +133,17 @@ const startGuide = async () => {
 
 const updateGuidePosition = () => {
   if (!currentStep.value) return
-  
+
   const targetElement = document.querySelector(currentStep.value.targetElement)
   if (targetElement) {
     const rect = targetElement.getBoundingClientRect()
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft
-    
+
     const position = currentStep.value.position || 'bottom'
     let top = rect.top + scrollTop
     let left = rect.left + scrollLeft
-    
+
     // 根据位置调整
     switch (position) {
       case 'top':
@@ -163,7 +163,7 @@ const updateGuidePosition = () => {
         left = rect.right + scrollLeft + 20
         break
     }
-    
+
     guideStyle.value = {
       position: 'absolute',
       top: `${top}px`,
@@ -207,10 +207,10 @@ const skipGuide = async () => {
   try {
     // 先关闭指引遮罩，避免层级冲突
     showGuide.value = false
-    
+
     // 使用setTimeout确保DOM更新完成
     await new Promise(resolve => setTimeout(resolve, 100))
-    
+
     await ElMessageBox.confirm(
       '确定要跳过新手指引吗？您可以在右上角重新查看指引。',
       '跳过指引',
@@ -220,7 +220,7 @@ const skipGuide = async () => {
         type: 'warning'
       }
     )
-    
+
     // 用户确认跳过，禁用自动显示指引
     // 这样下次登录时就不会自动弹出指引了
     try {
@@ -231,7 +231,7 @@ const skipGuide = async () => {
       console.error('禁用自动显示指引失败:', error)
       // 即使API调用失败，也继续执行跳过逻辑
     }
-    
+
     emit('skip')
   } catch {
     // 用户取消，重新显示指引
@@ -263,7 +263,7 @@ onMounted(async () => {
       console.log('检测到语言切换，跳过新手指引')
       return
     }
-    
+
     // 完全依赖后端API判断是否显示新手指引
     // 后端会检查数据库中的 hasCompletedInitialGuide 字段
     // 如果用户已经完成过指引，API会返回false，不会显示指引
@@ -423,15 +423,15 @@ onMounted(async () => {
     max-width: 280px;
     margin: 0 20px;
   }
-  
+
   .guide-header {
     padding: 12px 16px 8px;
   }
-  
+
   .guide-body {
     padding: 12px 16px;
   }
-  
+
   .guide-actions {
     padding: 8px 16px 12px;
     flex-wrap: wrap;

@@ -3,76 +3,120 @@
     <div class="stats-header">
       <h2>徽章统计</h2>
     </div>
-    
+
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon">🏆</div>
+        <div class="stat-icon">
+          🏆
+        </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.totalBadges || 0 }}</div>
-          <div class="stat-label">总徽章数</div>
+          <div class="stat-value">
+            {{ stats.totalBadges || 0 }}
+          </div>
+          <div class="stat-label">
+            总徽章数
+          </div>
         </div>
       </div>
-      
+
       <div class="stat-card">
-        <div class="stat-icon">📚</div>
+        <div class="stat-icon">
+          📚
+        </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.learningBadges || 0 }}</div>
-          <div class="stat-label">学习类徽章</div>
+          <div class="stat-value">
+            {{ stats.learningBadges || 0 }}
+          </div>
+          <div class="stat-label">
+            学习类徽章
+          </div>
         </div>
       </div>
-      
+
       <div class="stat-card">
-        <div class="stat-icon">📝</div>
+        <div class="stat-icon">
+          📝
+        </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.testBadges || 0 }}</div>
-          <div class="stat-label">测试类徽章</div>
+          <div class="stat-value">
+            {{ stats.testBadges || 0 }}
+          </div>
+          <div class="stat-label">
+            测试类徽章
+          </div>
         </div>
       </div>
-      
+
       <div class="stat-card">
-        <div class="stat-icon">🏆</div>
+        <div class="stat-icon">
+          🏆
+        </div>
         <div class="stat-content">
-          <div class="stat-value">{{ stats.challengeBadges || 0 }}</div>
-          <div class="stat-label">挑战类徽章</div>
+          <div class="stat-value">
+            {{ stats.challengeBadges || 0 }}
+          </div>
+          <div class="stat-label">
+            挑战类徽章
+          </div>
         </div>
       </div>
-      
+
       <div class="stat-card">
-        <div class="stat-icon">⭐</div>
-        <div class="stat-content">
-          <div class="stat-value">{{ stats.specialBadges || 0 }}</div>
-          <div class="stat-label">特殊类徽章</div>
+        <div class="stat-icon">
+          ⭐
         </div>
-      </div>
-    </div>
-    
-    <div class="recent-badges" v-if="recentBadges.length > 0">
-      <h3>最近获得的徽章</h3>
-      <div class="recent-list">
-        <div 
-          v-for="badge in recentBadges" 
-          :key="badge.id"
-          class="recent-item"
-        >
-          <div class="badge-icon">{{ badge.badgeIcon }}</div>
-          <div class="badge-info">
-            <div class="badge-name">{{ badge.badgeName }}</div>
-            <div class="earned-time">{{ formatTime(badge.earnedAt) }}</div>
+        <div class="stat-content">
+          <div class="stat-value">
+            {{ stats.specialBadges || 0 }}
+          </div>
+          <div class="stat-label">
+            特殊类徽章
           </div>
         </div>
       </div>
     </div>
-    
-    <div class="progress-summary" v-if="progressStats">
+
+    <div v-if="recentBadges.length > 0" class="recent-badges">
+      <h3>最近获得的徽章</h3>
+      <div class="recent-list">
+        <div
+          v-for="badge in recentBadges"
+          :key="badge.id"
+          class="recent-item"
+        >
+          <div class="badge-icon">
+            {{ badge.badgeIcon }}
+          </div>
+          <div class="badge-info">
+            <div class="badge-name">
+              {{ badge.badgeName }}
+            </div>
+            <div class="earned-time">
+              {{ formatTime(badge.earnedAt) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="progressStats" class="progress-summary">
       <h3>进度概览</h3>
       <div class="progress-cards">
         <div class="progress-card">
-          <div class="progress-label">进行中</div>
-          <div class="progress-value">{{ progressStats.totalProgress || 0 }}</div>
+          <div class="progress-label">
+            进行中
+          </div>
+          <div class="progress-value">
+            {{ progressStats.totalProgress || 0 }}
+          </div>
         </div>
         <div class="progress-card">
-          <div class="progress-label">已完成</div>
-          <div class="progress-value">{{ progressStats.completedProgress || 0 }}</div>
+          <div class="progress-label">
+            已完成
+          </div>
+          <div class="progress-value">
+            {{ progressStats.completedProgress || 0 }}
+          </div>
         </div>
       </div>
     </div>
@@ -126,11 +170,11 @@ const formatTime = (timeString: string) => {
   const time = new Date(timeString)
   const now = new Date()
   const diff = now.getTime() - time.getTime()
-  
+
   const minutes = Math.floor(diff / (1000 * 60))
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
+
   if (minutes < 60) {
     return `${minutes}分钟前`
   } else if (hours < 24) {

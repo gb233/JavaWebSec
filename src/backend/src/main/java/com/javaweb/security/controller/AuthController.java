@@ -307,6 +307,20 @@ public class AuthController {
     }
   }
 
+  /** 获取服务器时间（用于时间同步） */
+  @GetMapping("/server-time")
+  @Operation(summary = "获取服务器时间", description = "获取服务器当前时间戳，用于客户端时间同步")
+  public ResponseEntity<ApiResult<Map<String, Object>>> getServerTime() {
+    long serverTime = System.currentTimeMillis();
+    return ResponseEntity.ok(
+        ApiResult.success(
+            "服务器时间获取成功",
+            Map.of(
+                "serverTime", serverTime,
+                "timestamp", serverTime,
+                "timezone", "Asia/Shanghai")));
+  }
+
   /** 获取安全功能配置 */
   @GetMapping("/security-config")
   @Operation(summary = "获取安全配置", description = "获取验证码和防重放攻击的配置状态")

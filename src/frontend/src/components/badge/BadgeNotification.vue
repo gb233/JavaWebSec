@@ -1,15 +1,19 @@
 <template>
-  <div class="badge-notification" v-if="visible">
+  <div v-if="visible" class="badge-notification">
     <div class="notification-content">
-      <div class="badge-icon">{{ notification.badgeIcon }}</div>
+      <div class="badge-icon">
+        {{ notification.badgeIcon }}
+      </div>
       <div class="notification-text">
         <h3>{{ notification.message }}</h3>
         <p>{{ notification.badgeDescription }}</p>
-        <div class="points-reward" v-if="notification.pointsReward">
+        <div v-if="notification.pointsReward" class="points-reward">
           +{{ notification.pointsReward }} 积分
         </div>
       </div>
-      <button class="close-btn" @click="close">×</button>
+      <button class="close-btn" @click="close">
+        ×
+      </button>
     </div>
   </div>
 </template>
@@ -42,7 +46,7 @@ let autoCloseTimer: NodeJS.Timeout | null = null
 const show = (data: BadgeNotification) => {
   notification.value = data
   visible.value = true
-  
+
   // 自动关闭
   autoCloseTimer = setTimeout(() => {
     close()

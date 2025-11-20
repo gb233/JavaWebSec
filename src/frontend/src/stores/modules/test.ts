@@ -7,11 +7,11 @@ export const useTestStore = defineStore('test', () => {
   const currentSession = ref<TestSession | null>(null)
   const currentQuestions = ref<TestQuestion[]>([])
   const currentAnswers = ref<Record<number, string>>({})
-  
+
   // 测试记录
   const testRecords = ref<UserTestRecord[]>([])
   const testStats = ref<TestStats | null>(null)
-  
+
   // 加载状态
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -79,14 +79,14 @@ export const useTestStore = defineStore('test', () => {
     testStats,
     loading,
     error,
-    
+
     // 计算属性
     isTestActive,
     currentQuestionIndex,
     totalQuestions,
     answeredQuestions,
     progress,
-    
+
     // 方法
     setCurrentSession,
     clearCurrentSession,

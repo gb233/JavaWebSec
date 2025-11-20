@@ -66,3 +66,11 @@ SELECT COUNT(*) FROM vulnerability_categories;
 
 
 
+
+
+
+
+
+
+
+

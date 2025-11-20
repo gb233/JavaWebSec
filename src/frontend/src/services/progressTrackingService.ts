@@ -35,8 +35,8 @@ export class ProgressTrackingService {
    * 记录用户交互
    */
   async recordUserInteraction(
-    vulnerabilityCode: string, 
-    interactionType: string, 
+    vulnerabilityCode: string,
+    interactionType: string,
     interactionData: Record<string, any>
   ) {
     try {
@@ -55,8 +55,8 @@ export class ProgressTrackingService {
    * 记录演示执行
    */
   async recordDemoExecution(
-    vulnerabilityCode: string, 
-    demoType: string, 
+    vulnerabilityCode: string,
+    demoType: string,
     executionData: Record<string, any>
   ) {
     try {
@@ -72,45 +72,58 @@ export class ProgressTrackingService {
   }
 
   /**
-   * 记录学习完成
+   * 记录学习完成（所有操作都是关键操作，必须全部成功）
    */
   async recordLearningCompleted(
-    vulnerabilityCode: string, 
-    studyTime: number, 
+    vulnerabilityCode: string,
+    studyTime: number,
     score: number
   ) {
+    // 第一步：更新用户统计（关键操作，必须成功）
     try {
-      // 更新用户统计
       await userStatsApi.updateVulnerabilityStats({
         userId: this.userId,
         vulnerabilityCode,
         studyTime,
         points: score
       })
+      console.log('用户统计更新成功')
+    } catch (error: any) {
+      console.error('更新用户统计失败:', error?.message || error)
+      // 统计更新失败必须抛出异常，这是系统功能
+      throw new Error(`更新用户统计失败: ${error?.message || '未知错误'}`)
+    }
 
-      // 记录活动
+    // 第二步：记录活动（关键操作，必须成功）
+    try {
       await userActivityApi.recordLearningCompleted({
         userId: this.userId,
         vulnerabilityCode,
         studyTime,
         score
       })
-    } catch (error) {
-      console.error('记录学习完成失败:', error)
+      console.log('学习活动记录成功')
+    } catch (error: any) {
+      console.error('记录学习活动失败:', error?.message || error)
+      // 活动记录失败必须抛出异常，这是系统功能
+      throw new Error(`记录学习活动失败: ${error?.message || '未知错误'}`)
     }
+
+    // 所有操作都成功
+    console.log('记录学习完成成功: 统计更新和活动记录都成功')
   }
 
   /**
    * 记录测试完成
    */
   async recordTestCompleted(
-    vulnerabilityCode: string, 
-    score: number, 
+    vulnerabilityCode: string,
+    score: number,
     accuracy: number
   ) {
     try {
       const passed = score >= 70 && accuracy >= 0.7
-      
+
       // 更新用户统计
       await userStatsApi.updateTestStats({
         userId: this.userId,
@@ -146,8 +159,8 @@ export class ProgressTrackingService {
    * 记录挑战完成
    */
   async recordChallengeCompleted(
-    vulnerabilityCode: string, 
-    score: number, 
+    vulnerabilityCode: string,
+    score: number,
     badge?: string
   ) {
     try {

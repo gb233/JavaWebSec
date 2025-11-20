@@ -4,114 +4,146 @@
     <div class="page-header">
       <div class="header-content">
         <h1 class="page-title">
-          <el-icon class="title-icon"><User /></el-icon>
+          <ElIcon class="title-icon">
+            <User />
+          </ElIcon>
           {{ $t('profile.title') }}
         </h1>
-        <p class="page-description">{{ $t('profile.description') }}</p>
+        <p class="page-description">
+          {{ $t('profile.description') }}
+        </p>
       </div>
     </div>
 
-    <el-row :gutter="24">
+    <ElRow :gutter="24">
       <!-- 左侧个人信息 -->
-      <el-col :span="8">
-        <el-card class="profile-card">
+      <ElCol :span="8">
+        <ElCard class="profile-card">
           <template #header>
             <span>{{ $t('profile.basicInfo') }}</span>
           </template>
-          
+
           <div class="profile-content">
             <div class="avatar-section">
-              <el-avatar :size="80" :src="userInfo.avatarUrl">
+              <ElAvatar :size="80" :src="userInfo.avatarUrl">
                 {{ userInfo.username?.charAt(0).toUpperCase() }}
-              </el-avatar>
+              </ElAvatar>
               <div class="user-info">
-                <h3 class="username">{{ userInfo.username }}</h3>
-                <p class="user-email">{{ userInfo.email }}</p>
-                <el-tag :type="getUserLevelTag(userInfo.level)">
+                <h3 class="username">
+                  {{ userInfo.username }}
+                </h3>
+                <p class="user-email">
+                  {{ userInfo.email }}
+                </p>
+                <ElTag :type="getUserLevelTag(userInfo.level)">
                   {{ getUserLevelName(userInfo.level) }}
-                </el-tag>
+                </ElTag>
               </div>
             </div>
-            
+
             <div class="profile-stats">
               <div class="stat-item">
-                <div class="stat-value">{{ userStats.totalStudyTime || 0 }}</div>
-                <div class="stat-label">{{ $t('profile.studyTime') }}</div>
+                <div class="stat-value">
+                  {{ userStats.totalStudyTime || 0 }}
+                </div>
+                <div class="stat-label">
+                  {{ $t('profile.studyTime') }}
+                </div>
               </div>
               <div class="stat-item">
-                <div class="stat-value">{{ userStats.completedVulnerabilities || 0 }}</div>
-                <div class="stat-label">{{ $t('profile.completedVulnerabilities') }}</div>
+                <div class="stat-value">
+                  {{ userStats.completedVulnerabilities || 0 }}
+                </div>
+                <div class="stat-label">
+                  {{ $t('profile.completedVulnerabilities') }}
+                </div>
               </div>
               <div class="stat-item">
-                <div class="stat-value">{{ userStats.totalPoints || 0 }}</div>
-                <div class="stat-label">{{ $t('profile.totalPoints') }}</div>
+                <div class="stat-value">
+                  {{ userStats.totalPoints || 0 }}
+                </div>
+                <div class="stat-label">
+                  {{ $t('profile.totalPoints') }}
+                </div>
               </div>
             </div>
           </div>
-        </el-card>
+        </ElCard>
 
         <!-- 学习成就 -->
-        <el-card class="achievements-card">
+        <ElCard class="achievements-card">
           <template #header>
             <span>学习成就</span>
           </template>
-          
+
           <div class="achievements-list">
-            <div 
-              v-for="achievement in achievements" 
+            <div
+              v-for="achievement in achievements"
               :key="achievement.id"
               class="achievement-item"
               :class="{ 'earned': achievement.earned }"
             >
               <div class="achievement-icon">
-                <el-icon><component :is="achievement.icon" /></el-icon>
+                <ElIcon><component :is="achievement.icon" /></ElIcon>
               </div>
               <div class="achievement-info">
-                <div class="achievement-name">{{ achievement.name }}</div>
-                <div class="achievement-desc">{{ achievement.description }}</div>
+                <div class="achievement-name">
+                  {{ achievement.name }}
+                </div>
+                <div class="achievement-desc">
+                  {{ achievement.description }}
+                </div>
               </div>
               <div class="achievement-status">
-                <el-tag v-if="achievement.earned" type="success" size="small">已获得</el-tag>
-                <el-tag v-else type="info" size="small">未获得</el-tag>
+                <ElTag v-if="achievement.earned" type="success" size="small">
+                  已获得
+                </ElTag>
+                <ElTag v-else type="info" size="small">
+                  未获得
+                </ElTag>
               </div>
             </div>
           </div>
-        </el-card>
-      </el-col>
+        </ElCard>
+      </ElCol>
 
       <!-- 右侧内容 -->
-      <el-col :span="16">
+      <ElCol :span="16">
         <!-- 学习进度 -->
-        <el-card class="progress-card">
+        <ElCard class="progress-card">
           <template #header>
             <span>学习进度</span>
           </template>
-          
+
           <div class="progress-content">
             <div class="progress-overview">
               <div class="progress-item">
-                <div class="progress-label">总体进度</div>
-                <el-progress 
-                  :percentage="Math.round(overallProgress)" 
+                <div class="progress-label">
+                  总体进度
+                </div>
+                <ElProgress
+                  :percentage="Math.round(overallProgress)"
                   :stroke-width="8"
                   :show-text="true"
                 />
               </div>
               <div class="progress-item">
-                <div class="progress-label">本周学习</div>
-                <el-progress 
-                  :percentage="Math.round(weeklyProgress)" 
+                <div class="progress-label">
+                  本周学习
+                </div>
+                <ElProgress
+                  :percentage="Math.round(weeklyProgress)"
                   :stroke-width="8"
                   :show-text="true"
                 />
               </div>
             </div>
-            
+
             <div class="category-progress">
               <h4>分类进度</h4>
               <div class="category-list">
-                <div 
-                  v-for="category in categoryProgress" 
+                <div
+                  v-for="category in categoryProgress"
                   :key="category.code"
                   class="category-item"
                 >
@@ -119,8 +151,8 @@
                     <span class="category-name">{{ category.name }}</span>
                     <span class="category-count">{{ category.completed }}/{{ category.total }}</span>
                   </div>
-                  <el-progress 
-                    :percentage="Math.round(category.percentage)" 
+                  <ElProgress
+                    :percentage="Math.round(category.percentage)"
                     :stroke-width="6"
                     :show-text="false"
                   />
@@ -128,51 +160,55 @@
               </div>
             </div>
           </div>
-        </el-card>
+        </ElCard>
 
         <!-- 最近活动 -->
-        <el-card class="activity-card">
+        <ElCard class="activity-card">
           <template #header>
             <span>最近活动</span>
           </template>
-          
-          <el-timeline>
-            <el-timeline-item
+
+          <ElTimeline>
+            <ElTimelineItem
               v-for="activity in recentActivities"
               :key="activity.id"
               :timestamp="formatDate(activity.timestamp)"
               :type="getActivityType(activity.type)"
             >
               <div class="activity-content">
-                <div class="activity-title">{{ activity.title }}</div>
-                <div class="activity-desc">{{ activity.description }}</div>
+                <div class="activity-title">
+                  {{ activity.title }}
+                </div>
+                <div class="activity-desc">
+                  {{ activity.description }}
+                </div>
               </div>
-            </el-timeline-item>
-          </el-timeline>
-        </el-card>
+            </ElTimelineItem>
+          </ElTimeline>
+        </ElCard>
 
         <!-- 学习统计图表 -->
-        <el-card class="chart-card">
+        <ElCard class="chart-card">
           <template #header>
             <span>学习统计</span>
           </template>
-          
+
           <div class="chart-content">
-            <el-tabs v-model="activeTab">
-              <el-tab-pane label="学习时长" name="studyTime">
-                <div ref="studyTimeChart" class="chart-container"></div>
-              </el-tab-pane>
-              <el-tab-pane label="测试成绩" name="testScores">
-                <div ref="testScoresChart" class="chart-container"></div>
-              </el-tab-pane>
-              <el-tab-pane label="挑战进度" name="challengeProgress">
-                <div ref="challengeChart" class="chart-container"></div>
-              </el-tab-pane>
-            </el-tabs>
+            <ElTabs v-model="activeTab">
+              <ElTabPane label="学习时长" name="studyTime">
+                <div ref="studyTimeChart" class="chart-container" />
+              </ElTabPane>
+              <ElTabPane label="测试成绩" name="testScores">
+                <div ref="testScoresChart" class="chart-container" />
+              </ElTabPane>
+              <ElTabPane label="挑战进度" name="challengeProgress">
+                <div ref="challengeChart" class="chart-container" />
+              </ElTabPane>
+            </ElTabs>
           </div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </ElCard>
+      </ElCol>
+    </ElRow>
   </div>
 </template>
 
@@ -283,7 +319,7 @@ const loadUserData = async () => {
       completedVulnerabilities: 15,
       totalPoints: 850
     }
-    
+
     overallProgress.value = 65
     weeklyProgress.value = 80
   } catch (error) {
@@ -340,7 +376,7 @@ const initCharts = () => {
 const initStudyTimeChart = () => {
   const chartDom = document.querySelector('.chart-container')
   if (!chartDom) return
-  
+
   const myChart = echarts.init(chartDom as HTMLElement)
   const option = {
     title: {
@@ -384,10 +420,10 @@ const initChallengeChart = () => {
 
   .page-header {
     margin-bottom: 32px;
-    
+
     .header-content {
       text-align: center;
-      
+
       .page-title {
         display: flex;
         align-items: center;
@@ -396,13 +432,13 @@ const initChallengeChart = () => {
         font-weight: 600;
         color: #1f2937;
         margin-bottom: 8px;
-        
+
         .title-icon {
           margin-right: 12px;
           color: #3b82f6;
         }
       }
-      
+
       .page-description {
         font-size: 16px;
         color: #6b7280;
@@ -413,23 +449,23 @@ const initChallengeChart = () => {
 
   .profile-card {
     margin-bottom: 24px;
-    
+
     .profile-content {
       .avatar-section {
         display: flex;
         align-items: center;
         margin-bottom: 24px;
-        
+
         .user-info {
           margin-left: 16px;
-          
+
           .username {
             font-size: 20px;
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 4px;
           }
-          
+
           .user-email {
             font-size: 14px;
             color: #6b7280;
@@ -437,21 +473,21 @@ const initChallengeChart = () => {
           }
         }
       }
-      
+
       .profile-stats {
         display: flex;
         justify-content: space-around;
-        
+
         .stat-item {
           text-align: center;
-          
+
           .stat-value {
             font-size: 24px;
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 4px;
           }
-          
+
           .stat-label {
             font-size: 12px;
             color: #6b7280;
@@ -468,17 +504,17 @@ const initChallengeChart = () => {
         align-items: center;
         padding: 12px 0;
         border-bottom: 1px solid #f3f4f6;
-        
+
         &:last-child {
           border-bottom: none;
         }
-        
+
         &.earned {
           .achievement-icon {
             color: #16a34a;
           }
         }
-        
+
         .achievement-icon {
           width: 32px;
           height: 32px;
@@ -490,18 +526,18 @@ const initChallengeChart = () => {
           margin-right: 12px;
           color: #6b7280;
         }
-        
+
         .achievement-info {
           flex: 1;
           margin-right: 12px;
-          
+
           .achievement-name {
             font-size: 14px;
             font-weight: 500;
             color: #1f2937;
             margin-bottom: 2px;
           }
-          
+
           .achievement-desc {
             font-size: 12px;
             color: #6b7280;
@@ -515,14 +551,14 @@ const initChallengeChart = () => {
   .activity-card,
   .chart-card {
     margin-bottom: 24px;
-    
+
     .progress-content {
       .progress-overview {
         margin-bottom: 24px;
-        
+
         .progress-item {
           margin-bottom: 16px;
-          
+
           .progress-label {
             font-size: 14px;
             color: #374151;
@@ -530,7 +566,7 @@ const initChallengeChart = () => {
           }
         }
       }
-      
+
       .category-progress {
         h4 {
           font-size: 16px;
@@ -538,21 +574,21 @@ const initChallengeChart = () => {
           color: #1f2937;
           margin-bottom: 16px;
         }
-        
+
         .category-list {
           .category-item {
             margin-bottom: 12px;
-            
+
             .category-info {
               display: flex;
               justify-content: space-between;
               margin-bottom: 4px;
-              
+
               .category-name {
                 font-size: 14px;
                 color: #374151;
               }
-              
+
               .category-count {
                 font-size: 12px;
                 color: #6b7280;
@@ -562,7 +598,7 @@ const initChallengeChart = () => {
         }
       }
     }
-    
+
     .activity-content {
       .activity-title {
         font-size: 14px;
@@ -570,13 +606,13 @@ const initChallengeChart = () => {
         color: #1f2937;
         margin-bottom: 4px;
       }
-      
+
       .activity-desc {
         font-size: 12px;
         color: #6b7280;
       }
     }
-    
+
     .chart-content {
       .chart-container {
         width: 100%;

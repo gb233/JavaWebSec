@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-import type { ApiResult, UserInfo, UserProfile, PageResult } from '@/types/api'
+import type { ApiResult, UserInfo, PageResult } from '@/types/api'
 
 // ================================
 // 用户管理相关接口类型定义

@@ -1,23 +1,31 @@
 <template>
   <div class="simple-test">
     <h1>简单功能测试</h1>
-    
+
     <div class="test-section">
       <h2>语言切换测试</h2>
-      <button @click="testLanguageSwitch">测试语言切换</button>
+      <button @click="testLanguageSwitch">
+        测试语言切换
+      </button>
       <p>当前语言: {{ currentLanguage }}</p>
     </div>
-    
+
     <div class="test-section">
       <h2>新手指引测试</h2>
-      <button @click="testGuide">测试新手指引</button>
+      <button @click="testGuide">
+        测试新手指引
+      </button>
       <p>指引状态: {{ guideStatus }}</p>
     </div>
-    
+
     <div class="test-section">
       <h2>API测试</h2>
-      <button @click="testLanguageApi">测试语言API</button>
-      <button @click="testGuideApi">测试指引API</button>
+      <button @click="testLanguageApi">
+        测试语言API
+      </button>
+      <button @click="testGuideApi">
+        测试指引API
+      </button>
       <pre>{{ apiResult }}</pre>
     </div>
   </div>

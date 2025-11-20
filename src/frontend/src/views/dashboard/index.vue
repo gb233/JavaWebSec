@@ -135,37 +135,37 @@
             </div>
           </template>
 
-      <div class="activity-list">
-        <div
-          v-if="displayActivities.length === 0"
-          class="activity-empty"
-        >
-          <ElIcon :size="48" color="#dcdfe6">
-            <Clock />
-          </ElIcon>
-          <p>{{ $t('dashboard.noRecentActivity') }}</p>
-        </div>
-        <div
-          v-for="(activity, index) in displayActivities"
-          v-else
-          :key="activity.timestamp || index"
-          class="activity-item"
-        >
-          <div class="activity-icon" :class="activity.type">
-            <ElIcon>
-              <component :is="activity.iconComponent" />
-            </ElIcon>
-          </div>
-          <div class="activity-content">
-            <div class="activity-title">
-              {{ activity.title }}
+          <div class="activity-list">
+            <div
+              v-if="displayActivities.length === 0"
+              class="activity-empty"
+            >
+              <ElIcon :size="48" color="#dcdfe6">
+                <Clock />
+              </ElIcon>
+              <p>{{ $t('dashboard.noRecentActivity') }}</p>
             </div>
-            <div class="activity-time">
-              {{ activity.timeLabel }}
+            <div
+              v-for="(activity, index) in displayActivities"
+              v-else
+              :key="activity.timestamp || index"
+              class="activity-item"
+            >
+              <div class="activity-icon" :class="activity.type">
+                <ElIcon>
+                  <component :is="activity.iconComponent" />
+                </ElIcon>
+              </div>
+              <div class="activity-content">
+                <div class="activity-title">
+                  {{ activity.title }}
+                </div>
+                <div class="activity-time">
+                  {{ activity.timeLabel }}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
         </ElCard>
       </ElCol>
 
@@ -309,20 +309,20 @@ const displayActivities = computed(() => {
   }
   return activityList.value.map(item => {
     // 生成国际化title
-    let title = item.title
+    let { title } = item
     if (!title) {
       if (item.activityKey) {
         // 使用国际化key
         title = $t(item.activityKey)
       } else if (item.testName) {
         // 根据testName和isPassed动态生成
-        const key = item.isPassed 
-          ? 'dashboard.activity.testPassed' 
+        const key = item.isPassed
+          ? 'dashboard.activity.testPassed'
           : 'dashboard.activity.testCompleted'
         title = $t(key, { testName: item.testName })
       }
     }
-    
+
     // 生成国际化timeLabel
     let timeLabel = item.timeAgo
     if (!timeLabel && item.timestamp) {
@@ -332,7 +332,7 @@ const displayActivities = computed(() => {
       const diffMs = now.getTime() - timestamp.getTime()
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
       const diffDays = Math.floor(diffHours / 24)
-      
+
       if (diffHours < 1) {
         timeLabel = $t('dashboard.activity.justNow')
       } else if (diffHours < 24) {
@@ -345,7 +345,7 @@ const displayActivities = computed(() => {
     } else if (!timeLabel) {
       timeLabel = $t('dashboard.activity.justNow')
     }
-    
+
     return {
       ...item,
       title,

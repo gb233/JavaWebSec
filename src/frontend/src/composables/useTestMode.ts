@@ -51,15 +51,15 @@ export interface AnswerResult {
 // 核心测试模式逻辑
 export const useTestMode = (modeCode: string) => {
   const config = testModeConfigs[modeCode as keyof typeof testModeConfigs] || testModeConfigs.realtime
-  
+
   const processAnswer = async (sessionCode: string, question: TestQuestion, answer: string): Promise<AnswerResult> => {
     try {
       // 调用现有API
       const response = await testApi.submitAnswer(sessionCode, question.id, answer)
-      
+
       if (response.success && response.data) {
         const result = response.data
-        
+
         // 根据模式配置调整返回结果
         return {
           id: result.id || 0,
@@ -83,10 +83,10 @@ export const useTestMode = (modeCode: string) => {
       throw error
     }
   }
-  
-  return { 
-    config, 
-    processAnswer 
+
+  return {
+    config,
+    processAnswer
   }
 }
 

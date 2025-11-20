@@ -84,11 +84,11 @@ export const useAuthStore = defineStore('auth', () => {
         const createdAt = new Date(userData.createdAt)
         const now = new Date()
         const hoursDiff = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
-        
+
         // 如果用户创建时间在24小时内，认为是新用户
         return hoursDiff <= 24
       }
-      
+
       // 如果没有创建时间信息，检查是否是新注册的用户
       // 可以通过其他方式判断，比如检查用户是否完成了初始设置等
       return false

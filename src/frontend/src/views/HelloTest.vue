@@ -2,8 +2,12 @@
   <div>
     <h1>Hello Test Page</h1>
     <p>如果你看到这个页面，说明Vue组件正常工作！</p>
-    <button @click="testClick">点击测试</button>
-    <p v-if="clicked">按钮已点击！</p>
+    <button @click="testClick">
+      点击测试
+    </button>
+    <p v-if="clicked">
+      按钮已点击！
+    </p>
   </div>
 </template>
 

@@ -125,7 +125,7 @@ export function checkEmailAvailability(email: string): Promise<ApiResult<{ avail
 }
 
 // 获取验证码
-export function getCaptcha(): Promise<ApiResult<{ captchaId: string; question: string }>> {
+export function getCaptcha(): Promise<ApiResult<{ captchaId: string; captchaQuestion: string; expiryTime?: string; enabled?: string }>> {
   return request({
     url: '/api/v1/auth/captcha',
     method: 'get'
@@ -133,9 +133,17 @@ export function getCaptcha(): Promise<ApiResult<{ captchaId: string; question: s
 }
 
 // 获取防重放攻击nonce token
-export function getNonce(): Promise<ApiResult<{ nonce: string; timestamp: string }>> {
+export function getNonce(): Promise<ApiResult<{ nonce: string; timestamp: string; expiryTime?: string; enabled?: string }>> {
   return request({
     url: '/api/v1/auth/nonce',
+    method: 'get'
+  })
+}
+
+// 获取服务器时间（用于时间同步）
+export function getServerTime(): Promise<ApiResult<{ serverTime: number; timestamp: number; timezone: string }>> {
+  return request({
+    url: '/api/v1/auth/server-time',
     method: 'get'
   })
 }

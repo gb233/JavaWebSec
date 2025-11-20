@@ -11,12 +11,13 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 创建数据库(如果不存在)
-CREATE DATABASE IF NOT EXISTS security_teaching_system 
-  CHARACTER SET utf8mb4 
-  COLLATE utf8mb4_unicode_ci;
+-- 注意：数据库已在脚本中创建，这里不需要再次创建
+-- CREATE DATABASE IF NOT EXISTS security_teaching_system 
+--   CHARACTER SET utf8mb4 
+--   COLLATE utf8mb4_unicode_ci;
 
-USE security_teaching_system;
+-- USE security_teaching_system;
+-- 注意：数据库已在脚本中指定，这里不需要USE语句
 
 -- =====================================================
 -- 1. 用户管理模块表
@@ -65,7 +66,7 @@ CREATE TABLE user_profiles (
     gender ENUM('MALE', 'FEMALE', 'OTHER') COMMENT '性别',
     country VARCHAR(50) COMMENT '所在国家',
     city VARCHAR(50) COMMENT '所在城市',
-![1758933698401](image/init-db/1758933698401.png)![1758933700986](image/init-db/1758933700986.png)![1758933715252](image/init-db/1758933715252.png)![1758933715491](image/init-db/1758933715491.png)![1758933715705](image/init-db/1758933715705.png)![1758933715875](image/init-db/1758933715875.png)![1758933716039](image/init-db/1758933716039.png)![1758933716208](image/init-db/1758933716208.png)![1758933778908](image/init-db/1758933778908.png)![1758933791084](image/init-db/1758933791084.png)![1758933792862](image/init-db/1758933792862.png)![1758933793654](image/init-db/1758933793654.png)![1758933813243](image/init-db/1758933813243.png)![1758933813627](image/init-db/1758933813627.png)![1758933814013](image/init-db/1758933814013.png)![1758933814295](image/init-db/1758933814295.png)![1758933852382](image/init-db/1758933852382.png)![1758933856117](image/init-db/1758933856117.png)![1758933856302](image/init-db/1758933856302.png)![1758933856489](image/init-db/1758933856489.png)![1758933856634](image/init-db/1758933856634.png)![1758933856823](image/init-db/1758933856823.png)![1758933856976](image/init-db/1758933856976.png)![1758933857211](image/init-db/1758933857211.png)![1758933857350](image/init-db/1758933857350.png)![1758933857534](image/init-db/1758933857534.png)![1758933864185](image/init-db/1758933864185.png)![1758933864442](image/init-db/1758933864442.png)![1758933864640](image/init-db/1758933864640.png)![1758933864841](image/init-db/1758933864841.png)![1758933876971](image/init-db/1758933876971.png)![1758933877541](image/init-db/1758933877541.png)![1758933888369](image/init-db/1758933888369.png)![1758933888602](image/init-db/1758933888602.png)![1758933888796](image/init-db/1758933888796.png)![1758933889091](image/init-db/1758933889091.png)![1758933889254](image/init-db/1758933889254.png)![1758933889488](image/init-db/1758933889488.png)    skill_level ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT') DEFAULT 'BEGINNER' COMMENT '技能水平',
+    skill_level ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT') DEFAULT 'BEGINNER' COMMENT '技能水平',
     preferred_language VARCHAR(20) NOT NULL DEFAULT 'zh-CN' COMMENT '首选语言',
     timezone VARCHAR(50) NOT NULL DEFAULT 'Asia/Shanghai' COMMENT '时区设置',
     email_notifications BIT(1) NOT NULL DEFAULT b'1' COMMENT '是否接收邮件通知',
@@ -532,6 +533,59 @@ CREATE TABLE error_logs (
     INDEX idx_error_logs_trace (trace_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统错误日志表';
+
+-- 邮箱验证令牌表
+DROP TABLE IF EXISTS email_verification_tokens;
+CREATE TABLE email_verification_tokens (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '令牌ID',
+    user_id BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+    email VARCHAR(100) NOT NULL COMMENT '邮箱地址',
+    code VARCHAR(32) NOT NULL COMMENT '验证码',
+    token_type VARCHAR(32) NOT NULL COMMENT '令牌类型',
+    used BIT(1) NOT NULL DEFAULT b'0' COMMENT '是否已使用',
+    expires_at DATETIME(6) NOT NULL COMMENT '过期时间',
+    created_at DATETIME(6) NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (id),
+    KEY idx_email_token_type (email, token_type),
+    KEY idx_user_token_type (user_id, token_type),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='邮箱验证令牌表';
+
+-- 系统配置表（扩展版本）
+DROP TABLE IF EXISTS system_configs;
+CREATE TABLE system_configs (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '配置ID',
+    config_key VARCHAR(255) NOT NULL COMMENT '配置键名',
+    config_value TEXT COMMENT '配置值',
+    config_type VARCHAR(255) COMMENT '配置类型',
+    description VARCHAR(255) COMMENT '配置描述',
+    is_sensitive BIT(1) NOT NULL DEFAULT b'0' COMMENT '是否敏感',
+    created_at DATETIME(6) NOT NULL COMMENT '创建时间',
+    updated_at DATETIME(6) COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY UK_pk5mof051xp5r3e75s2e23s8s (config_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表（扩展版本）';
+
+-- 系统日志表
+DROP TABLE IF EXISTS system_logs;
+CREATE TABLE system_logs (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+    user_id BIGINT UNSIGNED COMMENT '用户ID',
+    username VARCHAR(50) COMMENT '用户名',
+    action VARCHAR(100) NOT NULL COMMENT '操作动作',
+    level VARCHAR(20) NOT NULL COMMENT '日志级别',
+    module VARCHAR(50) COMMENT '模块名称',
+    description TEXT COMMENT '日志描述',
+    ip_address VARCHAR(45) COMMENT 'IP地址',
+    user_agent TEXT COMMENT '用户代理',
+    created_at DATETIME(6) NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_level (level),
+    INDEX idx_module (module),
+    INDEX idx_created_at (created_at),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统日志表';
 
 -- 文件上传记录表
 DROP TABLE IF EXISTS file_uploads;

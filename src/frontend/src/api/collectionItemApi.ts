@@ -5,7 +5,7 @@ import request from '@/utils/request'
 export interface CollectionItem {
   id?: number
   collectionId: number
-  itemId: number | string  // 后端是Long，JSON序列化后可能是number或string
+  itemId: number | string // 后端是Long，JSON序列化后可能是number或string
   itemType: string
   itemTitle: string
   itemDescription?: string
@@ -50,7 +50,7 @@ export const collectionItemApi = {
   },
 
   // 根据收藏夹ID获取项目列表
-  getItemsByCollection: (collectionId: number, params?: any) => {
+  getItemsByCollection: (collectionId: number, params?: Record<string, unknown>) => {
     return request({
       url: `/api/v1/collection-items/collection/${collectionId}`,
       method: 'get',
@@ -59,7 +59,7 @@ export const collectionItemApi = {
   },
 
   // 搜索收藏项目
-  searchItems: (params: any) => {
+  searchItems: (params: Record<string, unknown>) => {
     return request({
       url: '/api/v1/collection-items/search',
       method: 'get',

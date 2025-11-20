@@ -66,9 +66,39 @@ public class UserActivityController {
         studyTime,
         score);
 
-    userActivityService.recordLearningCompleted(userId, vulnerabilityCode, studyTime, score);
+    try {
+      // 参数验证
+      if (userId == null) {
+        return ResponseEntity.badRequest().body(ApiResult.failed("用户ID不能为空"));
+      }
+      if (vulnerabilityCode == null || vulnerabilityCode.trim().isEmpty()) {
+        return ResponseEntity.badRequest().body(ApiResult.failed("漏洞代码不能为空"));
+      }
+      if (studyTime == null || studyTime < 0) {
+        return ResponseEntity.badRequest().body(ApiResult.failed("学习时长必须大于等于0"));
+      }
+      if (score == null || score < 0) {
+        return ResponseEntity.badRequest().body(ApiResult.failed("得分必须大于等于0"));
+      }
 
-    return ResponseEntity.ok(ApiResult.success("学习完成活动记录成功"));
+      userActivityService.recordLearningCompleted(userId, vulnerabilityCode, studyTime, score);
+
+      return ResponseEntity.ok(ApiResult.success("学习完成活动记录成功"));
+    } catch (IllegalArgumentException e) {
+      log.warn("记录学习完成活动参数错误: {}", e.getMessage());
+      return ResponseEntity.badRequest().body(ApiResult.failed(e.getMessage()));
+    } catch (Exception e) {
+      log.error(
+          "记录学习完成活动失败: userId={}, vulnerabilityCode={}, studyTime={}, score={}, error={}",
+          userId,
+          vulnerabilityCode,
+          studyTime,
+          score,
+          e.getMessage(),
+          e);
+      return ResponseEntity.internalServerError()
+          .body(ApiResult.failed("记录学习完成活动失败: " + e.getMessage()));
+    }
   }
 
   @PostMapping("/test-passed")

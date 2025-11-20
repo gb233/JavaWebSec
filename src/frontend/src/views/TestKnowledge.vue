@@ -1,7 +1,7 @@
 <template>
   <div class="test-knowledge">
     <h1>知识中心测试页面</h1>
-    
+
     <div class="test-section">
       <h2>认证状态测试</h2>
       <p>Token: {{ token ? '已设置' : '未设置' }}</p>
@@ -11,14 +11,22 @@
 
     <div class="test-section">
       <h2>API测试</h2>
-      <ElButton @click="testCategories">测试分类接口</ElButton>
-      <ElButton @click="testVulnerabilities">测试漏洞接口</ElButton>
-      <ElButton @click="testUsers">测试用户接口</ElButton>
+      <ElButton @click="testCategories">
+        测试分类接口
+      </ElButton>
+      <ElButton @click="testVulnerabilities">
+        测试漏洞接口
+      </ElButton>
+      <ElButton @click="testUsers">
+        测试用户接口
+      </ElButton>
     </div>
 
     <div class="test-section">
       <h2>示例数据测试</h2>
-      <ElButton @click="loadMockData">加载示例数据</ElButton>
+      <ElButton @click="loadMockData">
+        加载示例数据
+      </ElButton>
       <div v-if="mockData.length > 0">
         <h3>示例数据 ({{ mockData.length }} 条)</h3>
         <div v-for="item in mockData" :key="item.id" class="mock-item">
@@ -61,7 +69,7 @@ const testCategories = async () => {
     ElMessage.success('分类接口调用成功')
   } catch (error: any) {
     apiResponse.value = JSON.stringify(error.response?.data || error.message, null, 2)
-    ElMessage.error('分类接口调用失败: ' + error.message)
+    ElMessage.error(`分类接口调用失败: ${error.message}`)
   }
 }
 
@@ -72,7 +80,7 @@ const testVulnerabilities = async () => {
     ElMessage.success('漏洞接口调用成功')
   } catch (error: any) {
     apiResponse.value = JSON.stringify(error.response?.data || error.message, null, 2)
-    ElMessage.error('漏洞接口调用失败: ' + error.message)
+    ElMessage.error(`漏洞接口调用失败: ${error.message}`)
   }
 }
 
@@ -84,7 +92,7 @@ const testUsers = async () => {
     ElMessage.success('用户接口调用成功')
   } catch (error: any) {
     apiResponse.value = JSON.stringify(error.message, null, 2)
-    ElMessage.error('用户接口调用失败: ' + error.message)
+    ElMessage.error(`用户接口调用失败: ${error.message}`)
   }
 }
 

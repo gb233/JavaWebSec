@@ -24,23 +24,42 @@
             <span>我的统计</span>
           </div>
         </template>
-        
+
         <div class="stats-grid" v-loading="myStatsLoading">
           <div class="stat-item">
-            <div class="stat-value">{{ myStats?.totalChallenges || 0 }}</div>
-            <div class="stat-label">总挑战次数</div>
+            <div class="stat-value">{{ myStats?.totalChallenges || 0 }}
+</div>
+
+            <div class="stat-label">
+总挑战次数
+</div>
+
           </div>
           <div class="stat-item">
-            <div class="stat-value">{{ myStats?.successCount || 0 }}</div>
-            <div class="stat-label">成功次数</div>
+            <div class="stat-value">{{ myStats?.successCount || 0 }}
+</div>
+
+            <div class="stat-label">
+成功次数
+</div>
+
           </div>
           <div class="stat-item">
-            <div class="stat-value">{{ myStats?.totalScore || 0 }}</div>
-            <div class="stat-label">总积分</div>
+            <div class="stat-value">{{ myStats?.totalScore || 0 }}
+</div>
+
+            <div class="stat-label">
+总积分
+</div>
+
           </div>
           <div class="stat-item">
-            <div class="stat-value">{{ myStats?.successRatePercent || '0%' }}</div>
-            <div class="stat-label">成功率</div>
+            <div class="stat-value">{{ myStats?.successRatePercent || '0%' }}
+</div>
+
+            <div class="stat-label">
+成功率
+</div>
           </div>
         </div>
       </ElCard>
@@ -54,9 +73,9 @@
             <ElIcon><Trophy /></ElIcon>
             <span>排行榜</span>
             <div class="header-actions">
-              <ElSelect 
-                v-model="selectedCategory" 
-                placeholder="选择分类" 
+              <ElSelect
+                v-model="selectedCategory"
+                placeholder="选择分类"
                 @change="handleCategoryChange"
                 style="width: 120px; margin-right: 10px;"
               >
@@ -82,9 +101,9 @@
 
         <div class="leaderboard-content" v-loading="leaderboardLoading">
           <!-- 排行榜表格 -->
-          <ElTable 
-            :data="leaderboardData" 
-            stripe 
+          <ElTable
+            :data="leaderboardData"
+            stripe
             style="width: 100%"
             empty-text="暂无排行榜数据"
           >
@@ -96,12 +115,12 @@
                 </div>
               </template>
             </ElTableColumn>
-            
+
             <ElTableColumn prop="displayName" label="用户" min-width="120">
               <template #default="{ row }">
                 <div class="user-cell">
-                  <ElAvatar 
-                    :src="row.avatarUrl" 
+                  <ElAvatar
+                    :src="row.avatarUrl"
                     :size="32"
                     class="user-avatar"
                   >
@@ -114,30 +133,30 @@
                 </div>
               </template>
             </ElTableColumn>
-            
+
             <ElTableColumn prop="totalScore" label="总积分" width="100" align="center">
               <template #default="{ row }">
                 <ElTag type="primary" size="small">{{ row.totalScore }}</ElTag>
               </template>
             </ElTableColumn>
-            
+
             <ElTableColumn prop="successRate" label="成功率" width="100" align="center">
               <template #default="{ row }">
-                <ElTag 
-                  :type="getSuccessRateType(row.successRate)" 
+                <ElTag
+                  :type="getSuccessRateType(row.successRate)"
                   size="small"
                 >
                   {{ row.successRatePercent || (row.successRate + '%') }}
                 </ElTag>
               </template>
             </ElTableColumn>
-            
+
             <ElTableColumn prop="totalChallenges" label="挑战次数" width="100" align="center">
               <template #default="{ row }">
                 <span class="challenge-count">{{ row.totalChallenges }}</span>
               </template>
             </ElTableColumn>
-            
+
             <ElTableColumn prop="lastChallengeAt" label="最后挑战" width="120" align="center">
               <template #default="{ row }">
                 <span v-if="row.lastChallengeAt" class="last-challenge">
@@ -212,14 +231,14 @@ const loadLeaderboard = async () => {
       sortBy: 'totalScore',
       sortDir: 'desc' as const
     }
-    
+
     let response
     if (selectedCategory.value === 'all') {
       response = await leaderboardApi.getOverallLeaderboard(params)
     } else {
       response = await leaderboardApi.getCategoryLeaderboard(selectedCategory.value, params)
     }
-    
+
     if (response.success && response.data) {
       leaderboardData.value = response.data.content || []
       totalElements.value = response.data.totalElements || 0
@@ -445,18 +464,18 @@ onMounted(() => {
   .challenge-leaderboard {
     padding: 16px;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
-  
+
   .header-actions {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
   }
-  
+
   .header-actions .el-select,
   .header-actions .el-button {
     width: 100%;

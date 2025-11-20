@@ -7,81 +7,97 @@
         <span class="earned-badges">已获得 {{ earnedBadges }} 个</span>
       </div>
     </div>
-    
+
     <!-- 视图模式切换 -->
     <div class="view-mode">
-      <button 
-        :class="['view-btn', { active: viewMode === 'all' }]"
+      <button
+        class="view-btn"
+        :class="[{ active: viewMode === 'all' }]"
         @click="viewMode = 'all'"
       >
         🌟 全部徽章
       </button>
-      <button 
-        :class="['view-btn', { active: viewMode === 'earned' }]"
+      <button
+        class="view-btn"
+        :class="[{ active: viewMode === 'earned' }]"
         @click="viewMode = 'earned'"
       >
         ✅ 我的徽章
       </button>
-      <button 
-        :class="['view-btn', { active: viewMode === 'progress' }]"
+      <button
+        class="view-btn"
+        :class="[{ active: viewMode === 'progress' }]"
         @click="viewMode = 'progress'"
       >
         📊 进行中
       </button>
     </div>
-    
+
     <div class="category-tabs">
-      <button 
-        v-for="category in categories" 
+      <button
+        v-for="category in categories"
         :key="category.code"
-        :class="['tab', { active: activeCategory === category.code }]"
+        class="tab"
+        :class="[{ active: activeCategory === category.code }]"
         @click="activeCategory = category.code"
       >
         {{ category.icon }} {{ category.name }}
       </button>
     </div>
-    
+
     <div class="badge-grid">
-      <div 
-        v-for="badge in filteredBadges" 
+      <div
+        v-for="badge in filteredBadges"
         :key="badge.id"
-        :class="['badge-card', getBadgeCardClass(badge)]"
+        class="badge-card"
+        :class="[getBadgeCardClass(badge)]"
         @click="showBadgeDetail(badge)"
       >
-        <div class="badge-icon">{{ badge.badgeIcon }}</div>
-        <div class="badge-name">{{ badge.badgeName }}</div>
-        <div class="badge-description">{{ badge.badgeDescription }}</div>
+        <div class="badge-icon">
+          {{ badge.badgeIcon }}
+        </div>
+        <div class="badge-name">
+          {{ badge.badgeName }}
+        </div>
+        <div class="badge-description">
+          {{ badge.badgeDescription }}
+        </div>
         <div class="badge-rarity" :class="badge.badgeRarity.toLowerCase()">
           {{ getRarityText(badge.badgeRarity) }}
         </div>
-        <div class="badge-points" v-if="badge.pointsReward">
+        <div v-if="badge.pointsReward" class="badge-points">
           +{{ badge.pointsReward }} 积分
         </div>
-        
+
         <!-- 徽章状态指示器 -->
         <div class="badge-status">
-          <div v-if="badge.earned" class="status-earned">✓ 已获得</div>
+          <div v-if="badge.earned" class="status-earned">
+            ✓ 已获得
+          </div>
           <div v-else-if="badge.progress" class="status-progress">
             📊 {{ Math.round(badge.progress.progressPercentage) }}%
           </div>
-          <div v-else class="status-locked">🔒 未开始</div>
+          <div v-else class="status-locked">
+            🔒 未开始
+          </div>
         </div>
-        
+
         <!-- 进度条（仅在进行中时显示） -->
         <div v-if="badge.progress && !badge.earned" class="progress-bar">
-          <div 
-            class="progress-fill" 
+          <div
+            class="progress-fill"
             :style="{ width: badge.progress.progressPercentage + '%' }"
-          ></div>
+          />
         </div>
       </div>
     </div>
-    
-    <div class="pagination" v-if="totalPages > 1">
-      <button 
-        v-for="page in totalPages" 
+
+    <div v-if="totalPages > 1" class="pagination">
+      <button
+        v-for="page in totalPages"
         :key="page"
-        :class="['page-btn', { active: currentPage === page }]"
+        class="page-btn"
+        :class="[{ active: currentPage === page }]"
         @click="currentPage = page"
       >
         {{ page }}
@@ -141,31 +157,31 @@ const categories = ref<Category[]>([
 
 const filteredBadges = computed(() => {
   let filtered = badges.value
-  
+
   // 按分类筛选
   if (activeCategory.value !== 'ALL') {
     filtered = filtered.filter(badge => badge.badgeCategory === activeCategory.value)
   }
-  
+
   // 先标记已获得的徽章和进度
   filtered = filtered.map(badge => {
     const earned = userBadges.value.includes(badge.id)
     const progress = badgeProgress.value.find(p => p.badgeId === badge.id)
-    
+
     return {
       ...badge,
       earned,
       progress
     }
   })
-  
+
   // 然后按视图模式筛选
   if (viewMode.value === 'earned') {
     filtered = filtered.filter(badge => badge.earned)
   } else if (viewMode.value === 'progress') {
     filtered = filtered.filter(badge => badge.progress && !badge.earned)
   }
-  
+
   const start = (currentPage.value - 1) * pageSize
   const end = start + pageSize
   return filtered.slice(start, end)
@@ -175,12 +191,12 @@ const totalBadges = computed(() => badges.value.length)
 const earnedBadges = computed(() => userBadges.value.length)
 const totalPages = computed(() => {
   let filtered = badges.value
-  
+
   // 按分类筛选
   if (activeCategory.value !== 'ALL') {
     filtered = filtered.filter(badge => badge.badgeCategory === activeCategory.value)
   }
-  
+
   // 按视图模式筛选
   if (viewMode.value === 'earned') {
     filtered = filtered.filter(badge => userBadges.value.includes(badge.id))
@@ -190,7 +206,7 @@ const totalPages = computed(() => {
       return progress && !userBadges.value.includes(badge.id)
     })
   }
-  
+
   return Math.ceil(filtered.length / pageSize)
 })
 
@@ -202,10 +218,10 @@ const getBadgeCardClass = (badge: Badge) => {
 
 const getRarityText = (rarity: string) => {
   const rarityMap: Record<string, string> = {
-    'COMMON': '普通',
-    'RARE': '稀有',
-    'EPIC': '史诗',
-    'LEGENDARY': '传说'
+    COMMON: '普通',
+    RARE: '稀有',
+    EPIC: '史诗',
+    LEGENDARY: '传说'
   }
   return rarityMap[rarity] || rarity
 }

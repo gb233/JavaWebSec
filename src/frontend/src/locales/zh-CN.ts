@@ -100,7 +100,6 @@ export default {
     flowchart: '攻击流程图'
   },
 
-
   // 挑战模式
   challenge: {
     title: '挑战模式',
@@ -117,7 +116,7 @@ export default {
     submit: '提交答案',
     reset: '重置挑战',
     progress: '挑战进度',
-    score: '得分',
+    score: '得分'
     // ranking: '排行榜' // 排行榜功能暂时注释掉 - 2025-01-15
   },
 

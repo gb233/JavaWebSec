@@ -3,15 +3,17 @@
     <!-- 结果头部 -->
     <div class="result-header">
       <div class="result-icon" :class="resultClass">
-        <el-icon v-if="testRecord.isPassed">
+        <ElIcon v-if="testRecord.isPassed">
           <Trophy />
-        </el-icon>
-        <el-icon v-else>
+        </ElIcon>
+        <ElIcon v-else>
           <Warning />
-        </el-icon>
+        </ElIcon>
       </div>
       <div class="result-content">
-        <h1 class="result-title">{{ testRecord.isPassed ? '恭喜通过！' : '继续努力！' }}</h1>
+        <h1 class="result-title">
+          {{ testRecord.isPassed ? '恭喜通过！' : '继续努力！' }}
+        </h1>
         <p class="result-description">
           {{ testRecord.isPassed ? '您已成功通过测试' : '测试未通过，请继续学习' }}
         </p>
@@ -20,57 +22,77 @@
 
     <!-- 成绩统计 -->
     <div class="score-section">
-      <el-row :gutter="24">
-        <el-col :span="6">
+      <ElRow :gutter="24">
+        <ElCol :span="6">
           <div class="score-card">
-            <div class="score-value">{{ Math.round(testRecord.percentage) }}%</div>
-            <div class="score-label">总分</div>
+            <div class="score-value">
+              {{ Math.round(testRecord.percentage) }}%
+            </div>
+            <div class="score-label">
+              总分
+            </div>
           </div>
-        </el-col>
-        <el-col :span="6">
+        </ElCol>
+        <ElCol :span="6">
           <div class="score-card">
-            <div class="score-value">{{ testRecord.correctAnswers }}</div>
-            <div class="score-label">正确题数</div>
+            <div class="score-value">
+              {{ testRecord.correctAnswers }}
+            </div>
+            <div class="score-label">
+              正确题数
+            </div>
           </div>
-        </el-col>
-        <el-col :span="6">
+        </ElCol>
+        <ElCol :span="6">
           <div class="score-card">
-            <div class="score-value">{{ testRecord.wrongAnswers }}</div>
-            <div class="score-label">错误题数</div>
+            <div class="score-value">
+              {{ testRecord.wrongAnswers }}
+            </div>
+            <div class="score-label">
+              错误题数
+            </div>
           </div>
-        </el-col>
-        <el-col :span="6">
+        </ElCol>
+        <ElCol :span="6">
           <div class="score-card">
-            <div class="score-value">{{ formatTime(testRecord.timeTaken) }}</div>
-            <div class="score-label">用时</div>
+            <div class="score-value">
+              {{ formatTime(testRecord.timeTaken) }}
+            </div>
+            <div class="score-label">
+              用时
+            </div>
           </div>
-        </el-col>
-      </el-row>
+        </ElCol>
+      </ElRow>
     </div>
 
     <!-- 答题详情 -->
     <div class="answer-details">
-      <h2 class="section-title">答题详情</h2>
+      <h2 class="section-title">
+        答题详情
+      </h2>
       <div class="answers-list">
-        <div 
-          v-for="(detail, index) in testRecord.answerDetails" 
+        <div
+          v-for="(detail, index) in testRecord.answerDetails"
           :key="detail.id"
           class="answer-item"
           :class="{ 'correct': detail.isCorrect, 'wrong': !detail.isCorrect }"
         >
           <div class="answer-header">
-            <div class="question-number">第 {{ index + 1 }} 题</div>
+            <div class="question-number">
+              第 {{ index + 1 }} 题
+            </div>
             <div class="answer-status">
-              <el-tag :type="detail.isCorrect ? 'success' : 'danger'">
+              <ElTag :type="detail.isCorrect ? 'success' : 'danger'">
                 {{ detail.isCorrect ? '正确' : '错误' }}
-              </el-tag>
+              </ElTag>
             </div>
           </div>
-          
+
           <div class="question-text">
             {{ detail.questionText || '题目内容' }}
           </div>
-          
+
           <div class="answer-content">
             <div class="user-answer">
               <span class="label">您的答案：</span>
@@ -80,7 +102,7 @@
               <span class="label">正确答案：</span>
               <span class="value">{{ detail.correctAnswer }}</span>
             </div>
-            <div class="explanation" v-if="detail.explanation">
+            <div v-if="detail.explanation" class="explanation">
               <span class="label">解析：</span>
               <span class="value">{{ detail.explanation }}</span>
             </div>
@@ -91,25 +113,25 @@
 
     <!-- 操作按钮 -->
     <div class="result-actions">
-      <el-button size="large" @click="goToCategories">
+      <ElButton size="large" @click="goToCategories">
         返回测试分类
-      </el-button>
-      <el-button 
-        type="primary" 
-        size="large" 
-        @click="retakeTest"
+      </ElButton>
+      <ElButton
         v-if="!testRecord.isPassed"
+        type="primary"
+        size="large"
+        @click="retakeTest"
       >
         重新测试
-      </el-button>
-      <el-button 
-        type="success" 
-        size="large" 
-        @click="viewWrongQuestions"
+      </ElButton>
+      <ElButton
         v-if="testRecord.wrongAnswers > 0"
+        type="success"
+        size="large"
+        @click="viewWrongQuestions"
       >
         查看错题
-      </el-button>
+      </ElButton>
     </div>
   </div>
 </template>
@@ -203,17 +225,17 @@ const formatUserAnswer = (userAnswer: string) => {
   if (!userAnswer || userAnswer.trim() === '' || userAnswer === 'null' || userAnswer === 'undefined') {
     return '未作答'
   }
-  
+
   // 如果是"已答题但答案为空"的情况，显示为"未作答"
   if (userAnswer === '已答题但答案为空') {
     return '未作答'
   }
-  
+
   // 如果是字母格式的答案（如A,B,C），直接返回
   if (userAnswer.match(/^[A-Z,]+$/)) {
     return userAnswer
   }
-  
+
   // 如果是其他格式，直接返回
   return userAnswer
 }

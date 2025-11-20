@@ -4,73 +4,77 @@
     <div class="page-header">
       <div class="header-content">
         <h1 class="page-title">
-          <el-icon class="title-icon"><Document /></el-icon>
+          <ElIcon class="title-icon">
+            <Document />
+          </ElIcon>
           测试记录
         </h1>
-        <p class="page-description">查看您的所有测试记录和成绩</p>
+        <p class="page-description">
+          查看您的所有测试记录和成绩
+        </p>
       </div>
     </div>
 
     <!-- 筛选条件 -->
     <div class="filter-section">
-      <el-card>
-        <el-form :model="filterForm" inline>
-          <el-form-item label="分类">
-            <el-select 
-              v-model="filterForm.categoryCode" 
-              placeholder="选择分类" 
+      <ElCard>
+        <ElForm :model="filterForm" inline>
+          <ElFormItem label="分类">
+            <ElSelect
+              v-model="filterForm.categoryCode"
+              placeholder="选择分类"
               clearable
               style="width: 200px"
             >
-              <el-option label="全部" value="" />
-              <el-option label="越权访问" value="A01" />
-              <el-option label="加密失败" value="A02" />
-              <el-option label="注入攻击" value="A03" />
-              <el-option label="不安全设计" value="A04" />
-              <el-option label="安全配置错误" value="A05" />
-              <el-option label="易受攻击组件" value="A06" />
-              <el-option label="身份认证失败" value="A07" />
-              <el-option label="软件和数据完整性故障" value="A08" />
-              <el-option label="安全日志记录和监控失败" value="A09" />
-              <el-option label="服务端请求伪造" value="A10" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="状态">
-            <el-select 
-              v-model="filterForm.status" 
-              placeholder="选择状态" 
+              <ElOption label="全部" value="" />
+              <ElOption label="越权访问" value="A01" />
+              <ElOption label="加密失败" value="A02" />
+              <ElOption label="注入攻击" value="A03" />
+              <ElOption label="不安全设计" value="A04" />
+              <ElOption label="安全配置错误" value="A05" />
+              <ElOption label="易受攻击组件" value="A06" />
+              <ElOption label="身份认证失败" value="A07" />
+              <ElOption label="软件和数据完整性故障" value="A08" />
+              <ElOption label="安全日志记录和监控失败" value="A09" />
+              <ElOption label="服务端请求伪造" value="A10" />
+            </ElSelect>
+          </ElFormItem>
+          <ElFormItem label="状态">
+            <ElSelect
+              v-model="filterForm.status"
+              placeholder="选择状态"
               clearable
               style="width: 150px"
             >
-              <el-option label="全部" value="" />
-              <el-option label="通过" value="passed" />
-              <el-option label="未通过" value="failed" />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="loadRecords" :loading="loading">
-              <el-icon><Search /></el-icon>
+              <ElOption label="全部" value="" />
+              <ElOption label="通过" value="passed" />
+              <ElOption label="未通过" value="failed" />
+            </ElSelect>
+          </ElFormItem>
+          <ElFormItem>
+            <ElButton type="primary" :loading="loading" @click="loadRecords">
+              <ElIcon><Search /></ElIcon>
               筛选
-            </el-button>
-            <el-button @click="resetFilter">
-              <el-icon><Refresh /></el-icon>
+            </ElButton>
+            <ElButton @click="resetFilter">
+              <ElIcon><Refresh /></ElIcon>
               重置
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </el-card>
+            </ElButton>
+          </ElFormItem>
+        </ElForm>
+      </ElCard>
     </div>
 
     <!-- 测试记录列表 -->
     <div class="records-section">
-      <el-card>
+      <ElCard>
         <template #header>
           <div class="card-header">
             <div class="header-left">
               <span class="card-title">测试记录</span>
               <div v-if="currentFilters.length > 0" class="filter-tags">
-                <el-tag 
-                  v-for="(filter, index) in currentFilters" 
+                <ElTag
+                  v-for="(filter, index) in currentFilters"
                   :key="index"
                   size="small"
                   type="info"
@@ -78,71 +82,73 @@
                   @close="clearFilter(index)"
                 >
                   {{ filter }}
-                </el-tag>
+                </ElTag>
               </div>
             </div>
-            <el-button text @click="loadRecords" :loading="loading">
-              <el-icon><Refresh /></el-icon>
+            <ElButton text :loading="loading" @click="loadRecords">
+              <ElIcon><Refresh /></ElIcon>
               刷新
-            </el-button>
+            </ElButton>
           </div>
         </template>
 
-        <el-table :data="records" v-loading="loading" style="width: 100%">
-          <el-table-column label="测试名称" width="200">
+        <ElTable v-loading="loading" :data="records" style="width: 100%">
+          <ElTableColumn label="测试名称" width="200">
             <template #default="{ row }">
               {{ getTestName(row) }}
             </template>
-          </el-table-column>
-          <el-table-column label="分类" width="120">
+          </ElTableColumn>
+          <ElTableColumn label="分类" width="120">
             <template #default="{ row }">
               {{ getCategoryName(row.categoryCode) }}
             </template>
-          </el-table-column>
-          <el-table-column label="分数" width="100">
+          </ElTableColumn>
+          <ElTableColumn label="分数" width="100">
             <template #default="{ row }">
-              <el-tag :type="getScoreTagType(row.completionRate)">
+              <ElTag :type="getScoreTagType(row.completionRate)">
                 {{ Math.round(row.completionRate || 0) }}%
-              </el-tag>
+              </ElTag>
             </template>
-          </el-table-column>
-          <el-table-column label="正确" width="80">
+          </ElTableColumn>
+          <ElTableColumn label="正确" width="80">
             <template #default="{ row }">
               {{ row.correctCount || 0 }}
             </template>
-          </el-table-column>
-          <el-table-column label="错误" width="80">
+          </ElTableColumn>
+          <ElTableColumn label="错误" width="80">
             <template #default="{ row }">
               {{ (row.totalQuestions || 0) - (row.correctCount || 0) }}
             </template>
-          </el-table-column>
-          <el-table-column label="用时" width="120">
+          </ElTableColumn>
+          <ElTableColumn label="用时" width="120">
             <template #default="{ row }">
               {{ formatTime(row.timeSpent) }}
             </template>
-          </el-table-column>
-          <el-table-column label="测试时间" width="180">
+          </ElTableColumn>
+          <ElTableColumn label="测试时间" width="180">
             <template #default="{ row }">
               {{ formatDate(row.startedAt) }}
             </template>
-          </el-table-column>
-          <el-table-column label="操作" width="150">
+          </ElTableColumn>
+          <ElTableColumn label="操作" width="150">
             <template #default="{ row }">
-              <el-button text @click="viewDetail(row.id)">查看详情</el-button>
-              <el-button 
-                text 
-                @click="retakeTest(row)" 
+              <ElButton text @click="viewDetail(row.id)">
+                查看详情
+              </ElButton>
+              <ElButton
                 v-if="(row.completionRate || 0) < 60"
+                text
+                @click="retakeTest(row)"
               >
                 重测
-              </el-button>
+              </ElButton>
             </template>
-          </el-table-column>
-        </el-table>
+          </ElTableColumn>
+        </ElTable>
 
         <!-- 分页 -->
         <div class="pagination-wrapper">
-          <el-pagination
+          <ElPagination
             v-model:current-page="pagination.page"
             v-model:page-size="pagination.size"
             :page-sizes="[10, 20, 50, 100]"
@@ -152,7 +158,7 @@
             @current-change="handleCurrentChange"
           />
         </div>
-      </el-card>
+      </ElCard>
     </div>
   </div>
 </template>
@@ -211,13 +217,13 @@ const loadRecords = async () => {
       page: pagination.page - 1,
       size: pagination.size
     }
-    
+
     const response = await testApi.getUserTestRecords(params)
     if (isSuccessResponse(response) && response.data) {
       const pageData = response.data
       records.value = Array.isArray(pageData.content) ? [...pageData.content] : []
       pagination.total = pageData.totalElements ?? records.value.length
-      
+
       // 应用状态筛选
       if (filterForm.status) {
         records.value = records.value.filter(record => {
@@ -290,16 +296,16 @@ const getTestName = (record: UserTestRecord) => {
 const getCategoryName = (categoryCode: string) => {
   if (!categoryCode) return '未知分类'
   const categoryMap: Record<string, string> = {
-    'A01': '越权访问',
-    'A02': '加密失败',
-    'A03': '注入攻击',
-    'A04': '不安全设计',
-    'A05': '安全配置错误',
-    'A06': '易受攻击组件',
-    'A07': '身份认证失败',
-    'A08': '软件和数据完整性故障',
-    'A09': '安全日志记录和监控失败',
-    'A10': '服务端请求伪造'
+    A01: '越权访问',
+    A02: '加密失败',
+    A03: '注入攻击',
+    A04: '不安全设计',
+    A05: '安全配置错误',
+    A06: '易受攻击组件',
+    A07: '身份认证失败',
+    A08: '软件和数据完整性故障',
+    A09: '安全日志记录和监控失败',
+    A10: '服务端请求伪造'
   }
   return categoryMap[categoryCode] || categoryCode
 }
@@ -307,9 +313,9 @@ const getCategoryName = (categoryCode: string) => {
 // 获取模式名称
 const getModeName = (modeCode: string) => {
   const modeMap: Record<string, string> = {
-    'realtime': '实时反馈',
-    'exam': '考试模式',
-    'random': '随机综合'
+    realtime: '实时反馈',
+    exam: '考试模式',
+    random: '随机综合'
   }
   return modeMap[modeCode] || modeCode
 }
@@ -355,10 +361,10 @@ const formatDate = (dateString: string) => {
 
   .page-header {
     margin-bottom: 24px;
-    
+
     .header-content {
       text-align: center;
-      
+
       .page-title {
         display: flex;
         align-items: center;
@@ -367,13 +373,13 @@ const formatDate = (dateString: string) => {
         font-weight: 600;
         color: #1f2937;
         margin-bottom: 8px;
-        
+
         .title-icon {
           margin-right: 12px;
           color: #3b82f6;
         }
       }
-      
+
       .page-description {
         font-size: 16px;
         color: #6b7280;
@@ -391,18 +397,18 @@ const formatDate = (dateString: string) => {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .header-left {
         display: flex;
         align-items: center;
         gap: 16px;
-        
+
         .card-title {
           font-weight: 600;
           font-size: 16px;
           color: #303133;
         }
-        
+
         .filter-tags {
           display: flex;
           gap: 8px;

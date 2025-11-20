@@ -4,10 +4,14 @@
     <div class="page-header">
       <div class="header-content">
         <h1 class="page-title">
-          <ElIcon class="title-icon"><Reading /></ElIcon>
+          <ElIcon class="title-icon">
+            <Reading />
+          </ElIcon>
           {{ $t('knowledge.title') }}
         </h1>
-        <p class="page-description">{{ $t('knowledge.description') }}</p>
+        <p class="page-description">
+          {{ $t('knowledge.description') }}
+        </p>
       </div>
     </div>
 
@@ -20,8 +24,12 @@
               <ElIcon><Warning /></ElIcon>
             </div>
             <div class="stat-info">
-              <div class="stat-number">{{ totalVulnerabilities }}</div>
-              <div class="stat-label">{{ $t('knowledge.vulnerabilityTypes') }}</div>
+              <div class="stat-number">
+                {{ totalVulnerabilities }}
+              </div>
+              <div class="stat-label">
+                {{ $t('knowledge.vulnerabilityTypes') }}
+              </div>
             </div>
           </div>
         </ElCard>
@@ -33,8 +41,12 @@
               <ElIcon><Check /></ElIcon>
             </div>
             <div class="stat-info">
-              <div class="stat-number">{{ completedVulnerabilitiesCount }}</div>
-              <div class="stat-label">{{ $t('knowledge.completed') }}</div>
+              <div class="stat-number">
+                {{ completedVulnerabilitiesCount }}
+              </div>
+              <div class="stat-label">
+                {{ $t('knowledge.completed') }}
+              </div>
             </div>
           </div>
         </ElCard>
@@ -46,8 +58,12 @@
               <ElIcon><Clock /></ElIcon>
             </div>
             <div class="stat-info">
-              <div class="stat-number">{{ totalStudyTime }}</div>
-              <div class="stat-label">{{ $t('knowledge.studyTime') }}</div>
+              <div class="stat-number">
+                {{ totalStudyTime }}
+              </div>
+              <div class="stat-label">
+                {{ $t('knowledge.studyTime') }}
+              </div>
             </div>
           </div>
         </ElCard>
@@ -59,8 +75,12 @@
               <ElIcon><DataLine /></ElIcon>
             </div>
             <div class="stat-info">
-              <div class="stat-number">{{ Math.round(completionRate) }}%</div>
-              <div class="stat-label">{{ $t('knowledge.completionRate') }}</div>
+              <div class="stat-number">
+                {{ Math.round(completionRate) }}%
+              </div>
+              <div class="stat-label">
+                {{ $t('knowledge.completionRate') }}
+              </div>
             </div>
           </div>
         </ElCard>
@@ -72,16 +92,18 @@
       <template #header>
         <div class="card-header">
           <span>{{ $t('knowledge.owaspTop10') }}</span>
-          <ElTag type="info" size="small">{{ $t('knowledge.categories') }}</ElTag>
+          <ElTag type="info" size="small">
+            {{ $t('knowledge.categories') }}
+          </ElTag>
         </div>
       </template>
 
       <ElRow :gutter="20">
-        <ElCol 
-          v-for="category in vulnerabilityCategories" 
+        <ElCol
+          v-for="category in vulnerabilityCategories"
           :key="category.code"
-          :xs="24" 
-          :sm="12" 
+          :xs="24"
+          :sm="12"
           :lg="8"
         >
           <div class="category-card" @click="navigateToCategory(category.code)">
@@ -90,8 +112,12 @@
                 <ElIcon><component :is="category.icon" /></ElIcon>
               </div>
               <div class="category-info">
-                <h3 class="category-title">{{ category.name }}</h3>
-                <p class="category-description">{{ category.description }}</p>
+                <h3 class="category-title">
+                  {{ category.name }}
+                </h3>
+                <p class="category-description">
+                  {{ category.description }}
+                </p>
               </div>
             </div>
             <div class="category-stats">
@@ -101,8 +127,8 @@
               </div>
               <div class="stat-item">
                 <span class="stat-label">{{ $t('knowledge.completionProgress') }}</span>
-                <ElProgress 
-                  :percentage="category.completionRate" 
+                <ElProgress
+                  :percentage="category.completionRate"
                   :stroke-width="6"
                   :show-text="false"
                 />
@@ -121,7 +147,6 @@
         </ElCol>
       </ElRow>
     </ElCard>
-
   </div>
 </template>
 
@@ -136,12 +161,12 @@ import { badgeProgressApi } from '@/api/badgeProgressApi'
 import { vulnerabilityProgressApi } from '@/api/vulnerabilityProgress'
 import { isSuccessResponse } from '@/utils/api-helpers'
 import { useAuthStore } from '@/stores/modules/auth'
-import { 
-  Reading, 
-  Warning, 
-  Check, 
-  Clock, 
-  DataLine, 
+import {
+  Reading,
+  Warning,
+  Check,
+  Clock,
+  DataLine,
   Lock,
   Key,
   Document,
@@ -163,8 +188,8 @@ const categoryCompletionRates = ref<Record<string, number>>({})
 
 // 计算属性
 const completionRate = computed(() => {
-  return totalVulnerabilities.value > 0 
-    ? (completedVulnerabilitiesCount.value / totalVulnerabilities.value) * 100 
+  return totalVulnerabilities.value > 0
+    ? (completedVulnerabilitiesCount.value / totalVulnerabilities.value) * 100
     : 0
 })
 
@@ -291,17 +316,17 @@ const loadUserProgress = async () => {
   loading.value = true
   try {
     console.log('开始加载用户进度数据...')
-    
+
     // 获取用户徽章进度统计
     console.log('调用徽章进度API...')
     const badgeStatsResponse = await badgeProgressApi.getUserBadgeProgressStats()
     console.log('徽章进度API响应:', badgeStatsResponse)
-    
+
     console.log('检查徽章进度API响应:', badgeStatsResponse.data)
     console.log('isSuccessResponse结果:', isSuccessResponse(badgeStatsResponse.data))
-    
+
     // 直接检查响应数据，不依赖isSuccessResponse
-    if (badgeStatsResponse.data && badgeStatsResponse.data.data) {
+    if (badgeStatsResponse.data?.data) {
       const stats = badgeStatsResponse.data.data
       console.log('徽章进度数据:', stats)
       completedVulnerabilities.value = stats.completedProgress || 0
@@ -314,24 +339,24 @@ const loadUserProgress = async () => {
 
     // 获取用户活动统计
     const authStore = useAuthStore()
-    
+
     if (!authStore.isLoggedIn || !authStore.user) {
       console.warn('用户未登录，无法加载进度数据')
       totalStudyTime.value = 0
       return
     }
-    
+
     const currentUser = authStore.user
     console.log('当前用户信息:', currentUser)
-    
+
     if (currentUser.id) {
       console.log('调用用户活动API，用户ID:', currentUser.id)
       const activityStatsResponse = await userActivityApi.getActivityStatistics(currentUser.id)
       console.log('用户活动API响应:', activityStatsResponse)
-      
+
       console.log('检查用户活动API响应:', activityStatsResponse.data)
       console.log('isSuccessResponse结果:', isSuccessResponse(activityStatsResponse.data))
-      
+
       // 直接检查响应数据，不依赖isSuccessResponse
       if (activityStatsResponse.data && activityStatsResponse.data.totalStudyTime !== undefined) {
         // 用户活动API直接返回数据对象
@@ -339,7 +364,7 @@ const loadUserProgress = async () => {
         console.log('用户活动数据:', activityStats)
         totalStudyTime.value = activityStats.totalStudyTime
         console.log('更新学习时长:', totalStudyTime.value)
-      } else if (activityStatsResponse.data && activityStatsResponse.data.data) {
+      } else if (activityStatsResponse.data?.data) {
         // 如果数据包装在data字段中
         const activityStats = activityStatsResponse.data.data
         console.log('用户活动数据(包装):', activityStats)
@@ -355,22 +380,22 @@ const loadUserProgress = async () => {
     } else {
       console.warn('没有找到用户ID，跳过用户活动API调用')
     }
-    
+
     console.log('最终数据 - 已完成:', completedVulnerabilities.value, '学习时长:', totalStudyTime.value)
-    
+
     // 加载分类完成率数据
     try {
       console.log('加载分类完成率数据...')
       const categoryRatesResponse = await vulnerabilityProgressApi.getCategoryCompletionRates()
       console.log('分类完成率API响应:', categoryRatesResponse)
-      
+
       // 响应拦截器已经返回了data，所以categoryRatesResponse就是ApiResult对象
       // 检查code是否为200，或者直接使用data字段
       const responseData = categoryRatesResponse as any
       if (responseData && responseData.code === 200 && responseData.data) {
         categoryCompletionRates.value = responseData.data || {}
         console.log('更新分类完成率:', categoryCompletionRates.value)
-      } else if (responseData && responseData.data) {
+      } else if (responseData?.data) {
         // 如果code不是200但data存在，也尝试使用
         categoryCompletionRates.value = responseData.data || {}
         console.log('更新分类完成率(备用):', categoryCompletionRates.value)
@@ -394,7 +419,6 @@ const loadUserProgress = async () => {
 onMounted(() => {
   loadUserProgress()
 })
-
 </script>
 
 <style lang="scss" scoped>

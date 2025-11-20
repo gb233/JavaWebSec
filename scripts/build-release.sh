@@ -99,16 +99,31 @@ build_backend() {
     
     cd src/backend
     
+    # 验证前端dist目录存在
+    if [ ! -d "../frontend/dist" ] || [ -z "$(ls -A ../frontend/dist 2>/dev/null)" ]; then
+        log_error "前端dist目录不存在或为空，无法构建后端"
+        return 1
+    fi
+    
+    # 清理、测试、打包
+    log_info "清理后端项目..."
+    mvn clean
+    
     # 运行测试
     log_info "运行后端测试..."
     mvn test -DskipTests=false
     
     # 构建JAR包
     log_info "构建JAR包..."
-    mvn clean package -DskipTests -Pprod
+    mvn package -DskipTests -Pprod
     
-    # 复制JAR包到发布目录
-    cp target/*.jar ../../release/security-teaching-system.jar
+    # 复制JAR包到发布目录（明确指定JAR文件名）
+    JAR_FILE="target/security-teaching-system.jar"
+    if [ ! -f "$JAR_FILE" ]; then
+        log_error "JAR文件不存在: $JAR_FILE"
+        return 1
+    fi
+    cp "$JAR_FILE" ../../release/security-teaching-system.jar
     
     cd ../..
     
@@ -121,13 +136,30 @@ build_frontend() {
     
     cd src/frontend
     
-    # 安装依赖
+    # 清理旧的构建产物和缓存（确保每次构建都是全新的）
+    log_info "清理旧的构建产物和缓存..."
+    rm -rf dist
+    rm -rf .vite
+    rm -rf node_modules/.vite 2>/dev/null || true
+    
+    # 安装依赖（构建需要开发依赖，不能使用--only=production）
     log_info "安装前端依赖..."
-    npm ci --only=production
+    if [ -f "package-lock.json" ]; then
+        npm ci
+    else
+        log_warning "package-lock.json不存在，使用npm install"
+        npm install
+    fi
     
     # 构建前端
     log_info "构建前端应用..."
     npm run build
+    
+    # 验证构建结果
+    if [ ! -d "dist" ] || [ -z "$(ls -A dist 2>/dev/null)" ]; then
+        log_error "前端构建失败：dist目录不存在或为空"
+        return 1
+    fi
     
     # 复制构建文件到发布目录
     cp -r dist ../../release/frontend
@@ -296,8 +328,9 @@ main() {
     
     check_environment
     clean_build
-    build_backend
+    # 修复：先构建前端，再构建后端（后端需要前端dist目录）
     build_frontend
+    build_backend
     build_docker
     create_release_package
     verify_build

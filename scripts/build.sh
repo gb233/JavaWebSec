@@ -52,6 +52,33 @@ EOF
 check_dependencies() {
     log_step "检查构建依赖..."
     
+    # 检查Java版本
+    if ! command -v java &> /dev/null; then
+        log_error "Java未安装，请先安装Java 17+"
+        exit 1
+    fi
+    
+    JAVA_VERSION=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
+    if [ "$JAVA_VERSION" -lt 17 ]; then
+        log_error "Java版本过低，需要Java 17+，当前版本：$JAVA_VERSION"
+        exit 1
+    fi
+    log_info "Java版本检查通过: $(java -version 2>&1 | head -n 1)"
+    
+    # 检查Node.js
+    if ! command -v node &> /dev/null; then
+        log_error "Node.js未安装，请先安装Node.js 18+"
+        exit 1
+    fi
+    log_info "Node.js版本检查通过: $(node --version)"
+    
+    # 检查Maven
+    if ! command -v mvn &> /dev/null && [ ! -f "src/backend/mvnw" ]; then
+        log_error "Maven未安装，请先安装Maven 3.6+或使用Maven Wrapper"
+        exit 1
+    fi
+    log_info "Maven检查通过"
+    
     local deps=("docker" "docker-compose" "git")
     local missing_deps=()
     
@@ -62,9 +89,8 @@ check_dependencies() {
     done
     
     if [ ${#missing_deps[@]} -ne 0 ]; then
-        log_error "缺少以下依赖: ${missing_deps[*]}"
-        log_info "请安装缺少的依赖后重试"
-        exit 1
+        log_warn "缺少以下可选依赖: ${missing_deps[*]}"
+        log_info "这些依赖是可选的，但建议安装"
     fi
     
     log_info "所有依赖检查通过"
@@ -103,12 +129,28 @@ build_frontend() {
         return 1
     fi
     
+    # 清理旧的构建产物和缓存（确保每次构建都是全新的）
+    log_info "清理旧的构建产物和缓存..."
+    rm -rf dist
+    rm -rf .vite
+    rm -rf node_modules/.vite 2>/dev/null || true
+    
     # 安装依赖
     log_info "安装前端依赖..."
     if command -v yarn &> /dev/null; then
-        yarn install --frozen-lockfile
+        if [ -f "yarn.lock" ]; then
+            yarn install --frozen-lockfile
+        else
+            log_warn "yarn.lock不存在，使用yarn install"
+            yarn install
+        fi
     else
-        npm ci
+        if [ -f "package-lock.json" ]; then
+            npm ci
+        else
+            log_warn "package-lock.json不存在，使用npm install"
+            npm install
+        fi
     fi
     
     # 构建项目
@@ -121,10 +163,10 @@ build_frontend() {
     
     cd ../..
     
-    if [ -d "src/frontend/dist" ]; then
+    if [ -d "src/frontend/dist" ] && [ -n "$(ls -A src/frontend/dist 2>/dev/null)" ]; then
         log_info "前端构建成功"
     else
-        log_error "前端构建失败"
+        log_error "前端构建失败：dist目录不存在或为空"
         return 1
     fi
 }
@@ -146,12 +188,28 @@ build_backend() {
         return 1
     fi
     
+    # 验证前端dist目录存在
+    if [ ! -d "../frontend/dist" ] || [ -z "$(ls -A ../frontend/dist 2>/dev/null)" ]; then
+        log_error "前端dist目录不存在或为空，无法构建后端"
+        return 1
+    fi
+    
+    # 确定Maven命令
+    if [ -f "./mvnw" ]; then
+        MVN_CMD="./mvnw"
+    elif command -v mvn &> /dev/null; then
+        MVN_CMD="mvn"
+    else
+        log_error "Maven未安装，请先安装Maven"
+        return 1
+    fi
+    
     # 清理并构建
     log_info "清理后端项目..."
-    ./mvnw clean || mvn clean
+    $MVN_CMD clean
     
     log_info "构建后端项目..."
-    ./mvnw package -DskipTests || mvn package -DskipTests
+    $MVN_CMD package -DskipTests
     
     cd ../..
     

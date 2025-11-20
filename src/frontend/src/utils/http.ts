@@ -12,7 +12,7 @@ const http = axios.create({
 
 // 请求拦截器
 http.interceptors.request.use(
-  (config) => {
+  config => {
     // 添加认证 token
     const token = localStorage.getItem('token')
     if (token) {
@@ -20,17 +20,17 @@ http.interceptors.request.use(
     }
     return config
   },
-  (error) => {
+  error => {
     return Promise.reject(error)
   }
 )
 
 // 响应拦截器
 http.interceptors.response.use(
-  (response) => {
+  response => {
     return response
   },
-  (error) => {
+  error => {
     if (error.response) {
       const { status, data } = error.response
       switch (status) {

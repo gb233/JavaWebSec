@@ -1,5 +1,26 @@
 <template>
   <div class="register-container">
+    <!-- 右上角GitHub链接 -->
+    <div class="github-top-right">
+      <ElLink
+        :href="githubUrl"
+        target="_blank"
+        :underline="false"
+        class="github-link-icon"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path
+            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+          />
+        </svg>
+      </ElLink>
+    </div>
     <div class="register-form-wrapper">
       <!-- 系统Logo和标题 -->
       <div class="register-header">
@@ -135,25 +156,23 @@
           <!-- 验证码 -->
           <ElFormItem label="验证码" prop="captchaAnswer">
             <div class="captcha-container">
+              <div 
+                class="captcha-question"
+                @click="() => refreshCaptcha(false)"
+                title="点击刷新验证码"
+              >
+                <span class="question-text">{{ captchaQuestion }}</span>
+              </div>
               <ElInput
                 v-model="registerForm.captchaAnswer"
-                placeholder="请输入验证码答案"
+                placeholder="请输入答案"
                 prefix-icon="Lock"
                 size="large"
                 clearable
-                style="flex: 1"
+                class="captcha-input"
+                @focus="checkCaptchaExpiry"
+                @input="checkCaptchaExpiry"
               />
-              <div class="captcha-question">
-                <span class="question-text">{{ captchaQuestion }}</span>
-                <ElButton
-                  type="primary"
-                  link
-                  size="small"
-                  @click="refreshCaptcha"
-                >
-                  刷新
-                </ElButton>
-              </div>
             </div>
           </ElFormItem>
 
@@ -204,21 +223,6 @@
           </div>
         </ElForm>
       </ElCard>
-
-      <!-- GitHub链接 -->
-      <div class="github-link">
-        <ElLink
-          :href="githubUrl"
-          target="_blank"
-          type="primary"
-          :underline="false"
-        >
-          <ElIcon :size="18" style="margin-right: 4px">
-            <Link />
-          </ElIcon>
-          <span>查看源代码</span>
-        </ElLink>
-      </div>
     </div>
 
     <!-- 用户服务协议对话框 -->
@@ -286,7 +290,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
@@ -323,8 +327,8 @@ const showTermsDialog = ref(false)
 const showPrivacyDialog = ref(false)
 
 // GitHub链接（从环境变量或默认值获取）
-const githubUrl = (import.meta.env.VITE_APP_GITHUB_URL || 
-  (typeof __GITHUB_URL__ !== 'undefined' ? __GITHUB_URL__ : 'https://github.com/javaweb-security/teaching-system')) as string
+const githubUrl = (import.meta.env.VITE_APP_GITHUB_URL ||
+  (typeof (window as any).__GITHUB_URL__ !== 'undefined' ? (window as any).__GITHUB_URL__ : 'https://github.com/javaweb-security/teaching-system')) as string
 
 // 注册表单数据
 const registerForm = reactive<RegisterForm>({
@@ -346,6 +350,10 @@ const captchaQuestion = ref('')
 const captchaId = ref('')
 const nonceToken = ref('')
 const nonceTimestamp = ref('')
+const captchaExpiryTime = ref(0) // 验证码过期时间戳（客户端时间，已转换）
+const nonceExpiryTime = ref(0) // nonce token过期时间戳（客户端时间，已转换）
+let captchaTimer: ReturnType<typeof setInterval> | null = null
+let nonceTimer: ReturnType<typeof setInterval> | null = null
 
 // 字段验证状态
 const usernameStatus = reactive({
@@ -519,14 +527,51 @@ const checkEmailAvailability = async () => {
 /**
  * 获取验证码
  */
-const refreshCaptcha = async () => {
+const refreshCaptcha = async (silent = false) => {
   try {
     const response = await getCaptcha()
     if (response.code === 200 && response.data) {
       captchaId.value = response.data.captchaId
-      captchaQuestion.value = response.data.question
+      captchaQuestion.value = response.data.captchaQuestion || ''
       registerForm.captchaId = captchaId.value
+      
+      // 设置验证码过期时间（从后端返回的expiryTime或计算120秒后）
+      if (response.data.expiryTime) {
+        // 后端返回的是服务器时间戳（绝对时间）
+        // 由于无法准确知道服务器和客户端的时间差，采用保守策略：
+        // 1. 直接使用服务器时间戳，假设时间同步（大多数情况下是同步的）
+        // 2. 如果时间不同步，前端判断可能不准确，但后端验证时会正确拒绝
+        // 3. 前端在提交前再次检查，如果过期则刷新
+        const serverExpiryTime = parseInt(response.data.expiryTime)
+        const clientTime = Date.now()
+        
+        // 计算剩余时间（保守估计，考虑时间差）
+        const remainingMs = serverExpiryTime - clientTime
+        
+        // 设置客户端过期时间（使用相对时间，更可靠）
+        if (remainingMs > 0) {
+          captchaExpiryTime.value = clientTime + remainingMs
+        } else {
+          // 如果已经过期，立即设置为当前时间（会触发刷新）
+          captchaExpiryTime.value = clientTime
+        }
+      } else {
+        captchaExpiryTime.value = Date.now() + 120 * 1000 // 120秒
+      }
+      
+      // 自动刷新时必须清空答案，避免用户使用过期验证码的答案
+      // 手动刷新时也清空答案
       registerForm.captchaAnswer = ''
+      
+      // 启动过期检测定时器
+      startCaptchaTimer()
+      
+      if (!silent) {
+        ElMessage.success('验证码已刷新')
+      } else {
+        // 静默刷新时，验证码问题已更新，但不清空其他表单字段
+        // 答案已在上面清空，这里不需要额外操作
+      }
     } else {
       ElMessage.error('获取验证码失败，请稍后重试')
     }
@@ -537,9 +582,54 @@ const refreshCaptcha = async () => {
 }
 
 /**
+ * 启动验证码过期检测定时器
+ */
+const startCaptchaTimer = () => {
+  // 清除之前的定时器
+  if (captchaTimer) {
+    clearInterval(captchaTimer)
+  }
+  
+  captchaTimer = setInterval(() => {
+    const remaining = Math.max(0, Math.floor((captchaExpiryTime.value - Date.now()) / 1000))
+    
+    // 如果验证码过期，自动刷新
+    if (remaining <= 0) {
+      clearInterval(captchaTimer!)
+      captchaTimer = null
+      // 自动刷新验证码（静默刷新，但清空答案避免用户使用过期验证码）
+      refreshCaptcha(true)
+      // 提示用户验证码已自动刷新
+      ElMessage.info('验证码已自动刷新，请重新输入')
+    }
+  }, 1000)
+}
+
+/**
+ * 检查验证码是否过期（在用户输入时检查）
+ */
+const checkCaptchaExpiry = () => {
+  if (captchaExpiryTime.value === 0) {
+    return // 验证码未初始化
+  }
+  
+  // 使用客户端时间判断（已考虑时间差调整）
+  const remaining = Math.max(0, Math.floor((captchaExpiryTime.value - Date.now()) / 1000))
+  if (remaining <= 0) {
+    // 验证码已过期，自动刷新
+    ElMessage.warning('验证码已过期，正在自动刷新...')
+    refreshCaptcha(true)
+    ElMessage.info('请重新输入验证码')
+  } else if (remaining <= 10) {
+    // 剩余时间少于10秒时，提示用户（但不自动刷新，避免打断输入）
+    // 实际刷新会在提交时进行
+  }
+}
+
+/**
  * 获取nonce token
  */
-const refreshNonce = async () => {
+const refreshNonce = async (silent = false) => {
   try {
     const response = await getNonce()
     if (response.code === 200 && response.data) {
@@ -547,6 +637,33 @@ const refreshNonce = async () => {
       nonceTimestamp.value = response.data.timestamp
       registerForm.nonce = nonceToken.value
       registerForm.timestamp = nonceTimestamp.value
+      
+      // 设置nonce token过期时间（从后端返回的expiryTime或计算300秒后）
+      if (response.data.expiryTime) {
+        // 后端返回的是服务器时间戳（绝对时间）
+        const serverExpiryTime = parseInt(response.data.expiryTime)
+        const clientTime = Date.now()
+        
+        // 计算剩余时间（保守估计，考虑时间差）
+        const remainingMs = serverExpiryTime - clientTime
+        
+        // 设置客户端过期时间（使用相对时间，更可靠）
+        if (remainingMs > 0) {
+          nonceExpiryTime.value = clientTime + remainingMs
+        } else {
+          // 如果已经过期，立即设置为当前时间（会触发刷新）
+          nonceExpiryTime.value = clientTime
+        }
+      } else {
+        nonceExpiryTime.value = Date.now() + 300 * 1000 // 300秒（5分钟）
+      }
+      
+      // 启动过期检测定时器
+      startNonceTimer()
+      
+      if (!silent) {
+        // 静默刷新时不提示
+      }
     } else {
       ElMessage.error('获取安全令牌失败，请稍后重试')
     }
@@ -554,6 +671,28 @@ const refreshNonce = async () => {
     console.error('获取nonce token失败:', error)
     ElMessage.error('获取安全令牌失败，请稍后重试')
   }
+}
+
+/**
+ * 启动nonce token过期检测定时器
+ */
+const startNonceTimer = () => {
+  // 清除之前的定时器
+  if (nonceTimer) {
+    clearInterval(nonceTimer)
+  }
+  
+  nonceTimer = setInterval(() => {
+    const remaining = Math.max(0, Math.floor((nonceExpiryTime.value - Date.now()) / 1000))
+    
+    // 如果nonce token过期，自动刷新
+    if (remaining <= 0) {
+      clearInterval(nonceTimer!)
+      nonceTimer = null
+      // 自动刷新nonce token（静默刷新）
+      refreshNonce(true)
+    }
+  }, 1000)
 }
 
 /**
@@ -573,16 +712,51 @@ const handleRegister = async () => {
       return
     }
 
+    // 检查验证码是否过期（提交前再次检查，确保准确性）
+    const remaining = Math.max(0, Math.floor((captchaExpiryTime.value - Date.now()) / 1000))
+    if (remaining <= 0) {
+      ElMessage.warning('验证码已过期，正在自动刷新...')
+      await refreshCaptcha(true)
+      ElMessage.info('请重新输入验证码')
+      return
+    }
+    
+    // 如果剩余时间少于10秒，也刷新验证码（保守策略，避免提交时过期）
+    if (remaining < 10) {
+      ElMessage.warning('验证码即将过期，正在自动刷新...')
+      await refreshCaptcha(true)
+      ElMessage.info('请重新输入验证码')
+      return
+    }
+
     // 检查验证码
     if (!registerForm.captchaAnswer || !registerForm.captchaId) {
       ElMessage.warning('请输入验证码')
       return
     }
 
-    // 检查nonce token
+    // 检查nonce token是否存在
     if (!registerForm.nonce || !registerForm.timestamp) {
-      ElMessage.warning('安全令牌已过期，请刷新页面重试')
-      await refreshNonce()
+      ElMessage.warning('安全令牌不存在，正在自动刷新...')
+      await refreshNonce(true)
+      ElMessage.info('请重新提交注册')
+      return
+    }
+    
+    // 检查nonce token是否过期（提交前再次检查，确保准确性）
+    const nonceRemaining = Math.max(0, Math.floor((nonceExpiryTime.value - Date.now()) / 1000))
+    if (nonceRemaining <= 0) {
+      ElMessage.warning('安全令牌已过期，正在自动刷新...')
+      await refreshNonce(true)
+      ElMessage.info('请重新提交注册')
+      return
+    }
+    
+    // 如果剩余时间少于30秒，也刷新nonce token（保守策略，避免提交时过期）
+    if (nonceRemaining < 30) {
+      ElMessage.warning('安全令牌即将过期，正在自动刷新...')
+      await refreshNonce(true)
+      ElMessage.info('请重新提交注册')
       return
     }
 
@@ -593,6 +767,15 @@ const handleRegister = async () => {
     const success = await authStore.registerUser(registerForm)
 
     if (success) {
+      // 注册成功，清理定时器
+      if (captchaTimer) {
+        clearInterval(captchaTimer)
+        captchaTimer = null
+      }
+      if (nonceTimer) {
+        clearInterval(nonceTimer)
+        nonceTimer = null
+      }
       // 注册成功，跳转到登录页（成功消息已在store中显示）
       await router.push('/login')
     } else {
@@ -616,6 +799,18 @@ onMounted(async () => {
   // 页面加载时获取验证码和nonce token
   await refreshCaptcha()
   await refreshNonce()
+})
+
+onBeforeUnmount(() => {
+  // 清理定时器
+  if (captchaTimer) {
+    clearInterval(captchaTimer)
+    captchaTimer = null
+  }
+  if (nonceTimer) {
+    clearInterval(nonceTimer)
+    nonceTimer = null
+  }
 })
 
 // ================================
@@ -645,6 +840,38 @@ watch(() => registerForm.email, () => {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  position: relative;
+  overflow: hidden;
+
+  .github-top-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+
+    .github-link-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s;
+      color: white;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+      }
+
+      svg {
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
 }
 
 .register-form-wrapper {
@@ -770,18 +997,38 @@ watch(() => registerForm.email, () => {
     .captcha-question {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
+      justify-content: center;
+      padding: 0 12px;
+      height: 40px;
       background: #f5f7fa;
+      border: 1px solid #dcdfe6;
       border-radius: 4px;
-      min-width: 120px;
+      width: 120px; // 固定宽度，对应"验证码"三个字的长度
       flex-shrink: 0;
+      cursor: pointer;
+      transition: all 0.3s;
+      user-select: none;
+
+      &:hover {
+        background: #ecf5ff;
+        border-color: #409eff;
+      }
+
+      &:active {
+        background: #d9ecff;
+      }
 
       .question-text {
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 600;
         color: #303133;
+        white-space: nowrap;
       }
+    }
+
+    .captcha-input {
+      flex: 1;
+      min-width: 0;
     }
   }
 
@@ -808,15 +1055,6 @@ watch(() => registerForm.email, () => {
         color: #36a3f7;
       }
     }
-  }
-
-  .github-link {
-    text-align: center;
-    margin-top: 24px;
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    backdrop-filter: blur(10px);
   }
 }
 

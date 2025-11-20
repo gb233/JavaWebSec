@@ -2,6 +2,7 @@
 
 declare module '*.vue' {
   import type { DefineComponent } from 'vue'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const component: DefineComponent<{}, {}, any>
   export default component
 }
@@ -36,10 +37,12 @@ declare global {
     monaco?: typeof import('monaco-editor')
 
     // 全局事件总线
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     $eventBus?: any
   }
 
   // 通用类型
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type Recordable<T = any> = Record<string, T>
   type Nullable<T> = T | null
   type NonNullable<T> = T extends null | undefined ? never : T
@@ -47,20 +50,25 @@ declare global {
   type Awaitable<T> = T | Promise<T>
 
   // 函数类型
-  type Fn<T = any> = (...args: any[]) => T
-  type PromiseFn<T = any> = (...args: any[]) => Promise<T>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type Fn<T = any> = (...args: any[]) => T // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type PromiseFn<T = any> = (...args: any[]) => Promise<T> // eslint-disable-line @typescript-eslint/no-explicit-any
 
   // 响应数据类型
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   interface ApiResponse<T = any> {
     code: number
     message: string
     data: T
     timestamp?: number
     path?: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     requestId?: string
   }
 
   // 分页数据类型
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   interface PageResult<T = any> {
     records: T[]
     total: number
@@ -74,6 +82,7 @@ declare global {
     current?: number
     size?: number
     keyword?: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any
   }
 

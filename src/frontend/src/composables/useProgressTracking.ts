@@ -18,13 +18,13 @@ export function useProgressTracking(userId: number) {
 
   // 记录页面访问
   const recordPageVisit = async (
-    vulnerabilityCode: string, 
-    pageType: string, 
+    vulnerabilityCode: string,
+    pageType: string,
     duration: number
   ) => {
     loading.value = true
     error.value = null
-    
+
     try {
       initProgressService()
       await progressService.value!.recordPageVisit(vulnerabilityCode, pageType, duration)
@@ -43,7 +43,7 @@ export function useProgressTracking(userId: number) {
   ) => {
     loading.value = true
     error.value = null
-    
+
     try {
       initProgressService()
       await progressService.value!.recordUserInteraction(vulnerabilityCode, interactionType, interactionData)
@@ -62,7 +62,7 @@ export function useProgressTracking(userId: number) {
   ) => {
     loading.value = true
     error.value = null
-    
+
     try {
       initProgressService()
       await progressService.value!.recordDemoExecution(vulnerabilityCode, demoType, executionData)
@@ -81,7 +81,7 @@ export function useProgressTracking(userId: number) {
   ) => {
     loading.value = true
     error.value = null
-    
+
     try {
       initProgressService()
       await progressService.value!.recordLearningCompleted(vulnerabilityCode, studyTime, score)
@@ -100,7 +100,7 @@ export function useProgressTracking(userId: number) {
   ) => {
     loading.value = true
     error.value = null
-    
+
     try {
       initProgressService()
       await progressService.value!.recordTestCompleted(vulnerabilityCode, score, accuracy)
@@ -119,7 +119,7 @@ export function useProgressTracking(userId: number) {
   ) => {
     loading.value = true
     error.value = null
-    
+
     try {
       initProgressService()
       await progressService.value!.recordChallengeCompleted(vulnerabilityCode, score, badge)
@@ -134,7 +134,7 @@ export function useProgressTracking(userId: number) {
   const updateStudyTime = async (additionalTime: number) => {
     loading.value = true
     error.value = null
-    
+
     try {
       initProgressService()
       await progressService.value!.updateStudyTime(additionalTime)
@@ -149,7 +149,7 @@ export function useProgressTracking(userId: number) {
   const updateStreak = async () => {
     loading.value = true
     error.value = null
-    
+
     try {
       initProgressService()
       await progressService.value!.updateStreak()
@@ -225,7 +225,7 @@ export function useProgressTracking(userId: number) {
     isLoading,
     hasError,
     errorMessage,
-    
+
     // 方法
     recordPageVisit,
     recordUserInteraction,

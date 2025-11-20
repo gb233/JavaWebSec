@@ -1,6 +1,7 @@
 package com.javaweb.security.entity;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import javax.persistence.*;
 
@@ -126,10 +127,17 @@ public class BadgeProgress {
   /** 更新进度百分比 */
   private void updateProgressPercentage() {
     if (targetProgress != null && targetProgress > 0) {
-      this.progressPercentage =
+      BigDecimal percentage =
           BigDecimal.valueOf(currentProgress)
-              .divide(BigDecimal.valueOf(targetProgress), 2, BigDecimal.ROUND_HALF_UP)
+              .divide(BigDecimal.valueOf(targetProgress), 2, RoundingMode.HALF_UP)
               .multiply(BigDecimal.valueOf(100));
+
+      // 确保百分比不超过100，避免数据库字段溢出（DECIMAL(5,2)最大值为999.99，但百分比应该限制在100以内）
+      if (percentage.compareTo(BigDecimal.valueOf(100)) > 0) {
+        this.progressPercentage = BigDecimal.valueOf(100);
+      } else {
+        this.progressPercentage = percentage;
+      }
 
       // 检查是否完成
       this.isCompleted = currentProgress >= targetProgress;

@@ -10,7 +10,9 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
-RUN apk add --no-cache git python3 make g++
+# 只安装git，现代npm包通常不需要原生编译工具
+# 如果构建失败，可以添加: python3 make g++
+RUN apk add --no-cache git
 
 COPY src/frontend/package*.json ./
 RUN npm ci --silent

@@ -1,22 +1,28 @@
 <template>
   <div class="basic-test">
     <h1>基础功能测试</h1>
-    
+
     <div class="test-section">
       <h2>语言切换测试</h2>
-      <button @click="switchLanguage">切换语言</button>
+      <button @click="switchLanguage">
+        切换语言
+      </button>
       <p>当前语言: {{ currentLanguage }}</p>
     </div>
-    
+
     <div class="test-section">
       <h2>新手指引测试</h2>
-      <button @click="showGuide">显示指引</button>
+      <button @click="showGuide">
+        显示指引
+      </button>
       <p>指引状态: {{ guideMessage }}</p>
     </div>
-    
+
     <div class="test-section">
       <h2>API连接测试</h2>
-      <button @click="testBackendConnection">测试后端连接</button>
+      <button @click="testBackendConnection">
+        测试后端连接
+      </button>
       <pre>{{ connectionResult }}</pre>
     </div>
   </div>
@@ -50,7 +56,7 @@ const testBackendConnection = async () => {
         'Content-Type': 'application/json'
       }
     })
-    
+
     const data = await response.json()
     connectionResult.value = `状态码: ${response.status}\n响应: ${JSON.stringify(data, null, 2)}`
   } catch (error) {

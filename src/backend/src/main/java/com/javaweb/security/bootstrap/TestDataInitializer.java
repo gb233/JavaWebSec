@@ -2,7 +2,9 @@ package com.javaweb.security.bootstrap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaweb.security.entity.TestQuestion;
+import com.javaweb.security.entity.VulnerabilityCategory;
 import com.javaweb.security.repository.TestQuestionRepository;
+import com.javaweb.security.repository.VulnerabilityCategoryRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Component;
 public class TestDataInitializer implements CommandLineRunner {
 
   private final TestQuestionRepository questionRepository;
+  private final VulnerabilityCategoryRepository categoryRepository;
   private final ObjectMapper objectMapper;
 
   @Value("${app.demo.seed-test-data:false}")
@@ -374,12 +377,21 @@ public class TestDataInitializer implements CommandLineRunner {
       int points,
       int timeLimit)
       throws Exception {
+    // 根据 categoryCode 查找对应的 vulnerability_category_id
+    // 注意：数据库表使用 category_code 和 owasp_year 作为唯一键
+    VulnerabilityCategory category =
+        categoryRepository
+            .findByCategoryCodeAndOwaspYear(categoryCode, 2021)
+            .orElseThrow(() -> new RuntimeException("找不到漏洞分类: " + categoryCode + " (OWASP 2021)"));
+
     String optionsJson = objectMapper.writeValueAsString(options);
     TestQuestion question =
         new TestQuestion()
+            .setVulnerabilityCategoryId(category.getId())
             .setCategoryCode(categoryCode)
             .setCategoryName(categoryName)
-            .setQuestionText(questionText)
+            .setQuestionTitle(questionText) // 题目标题
+            .setQuestionContent(questionText) // 题目内容（与标题相同）
             .setQuestionType(questionType)
             .setOptions(optionsJson)
             .setCorrectAnswer(correctAnswer)

@@ -9,9 +9,11 @@
             <Lock />
           </ElIcon>
         </div>
+
         <h1 class="title">
           找回密码
         </h1>
+
         <p class="subtitle">
           请输入您的邮箱地址，我们将发送重置密码的链接给您
         </p>

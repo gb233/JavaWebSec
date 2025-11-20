@@ -650,20 +650,20 @@ const handleAvatarUpload: UploadRequestHandler = async (options: UploadRequestOp
   try {
     const { uploadAvatar } = await import('@/api/user')
     const response = await uploadAvatar(options.file)
-    
+
     if (response.code === 200 && response.data) {
       ElMessage.success('头像上传成功')
       showAvatarUpload.value = false
-      
+
       // 更新用户信息
       await userStore.fetchCurrentUserProfile()
       if (userStore.userInfo) {
         authStore.updateUser(userStore.userInfo)
       }
-      
+
       // 重新初始化表单
       initializeForm()
-      
+
       options.onSuccess?.(response.data)
     } else {
       ElMessage.error(response.message || '头像上传失败')

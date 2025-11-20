@@ -6,54 +6,63 @@
         <span>已完成 {{ completedCount }} / {{ totalCount }}</span>
       </div>
     </div>
-    
+
     <div class="category-filter">
-      <button 
-        v-for="category in categories" 
+      <button
+        v-for="category in categories"
         :key="category.code"
-        :class="['filter-btn', { active: activeCategory === category.code }]"
+        class="filter-btn"
+        :class="[{ active: activeCategory === category.code }]"
         @click="activeCategory = category.code"
       >
         {{ category.icon }} {{ category.name }}
       </button>
     </div>
-    
+
     <div class="progress-list">
-      <div 
-        v-for="progress in filteredProgress" 
+      <div
+        v-for="progress in filteredProgress"
         :key="progress.id"
         class="progress-item"
       >
         <div class="progress-info">
-          <div class="badge-icon">{{ progress.badgeIcon }}</div>
+          <div class="badge-icon">
+            {{ progress.badgeIcon }}
+          </div>
           <div class="badge-details">
-            <div class="badge-name">{{ progress.badgeName }}</div>
+            <div class="badge-name">
+              {{ progress.badgeName }}
+            </div>
             <div class="progress-text">
               {{ progress.currentProgress }} / {{ progress.targetProgress }}
             </div>
           </div>
         </div>
-        
+
         <div class="progress-bar">
-          <div 
-            class="progress-fill" 
+          <div
+            class="progress-fill"
             :style="{ width: progress.progressPercentage + '%' }"
-          ></div>
+          />
         </div>
-        
+
         <div class="progress-percentage">
           {{ Math.round(progress.progressPercentage) }}%
         </div>
-        
-        <div class="progress-status" v-if="progress.isCompleted">
+
+        <div v-if="progress.isCompleted" class="progress-status">
           <span class="completed">✓ 已完成</span>
         </div>
       </div>
     </div>
-    
-    <div class="empty-state" v-if="filteredProgress.length === 0">
-      <div class="empty-icon">📊</div>
-      <div class="empty-text">暂无徽章进度</div>
+
+    <div v-if="filteredProgress.length === 0" class="empty-state">
+      <div class="empty-icon">
+        📊
+      </div>
+      <div class="empty-text">
+        暂无徽章进度
+      </div>
     </div>
   </div>
 </template>
@@ -98,16 +107,16 @@ const categories = ref<Category[]>([
 
 const filteredProgress = computed(() => {
   let filtered = progressList.value
-  
+
   if (activeCategory.value !== 'ALL') {
     filtered = filtered.filter(progress => progress.badgeCategory === activeCategory.value)
   }
-  
+
   return filtered
 })
 
 const totalCount = computed(() => progressList.value.length)
-const completedCount = computed(() => 
+const completedCount = computed(() =>
   progressList.value.filter(progress => progress.isCompleted).length
 )
 

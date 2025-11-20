@@ -21,22 +21,22 @@
         </span>
       </div>
     </div>
-    
+
     <!-- 题目导航 - 优化布局 -->
     <div class="question-navigation">
       <div class="navigation-header">
         <span class="nav-title">{{ t('navigator.title') }}</span>
         <div class="nav-controls">
-          <el-button 
-            size="small" 
-            @click="toggleViewMode"
+          <ElButton
+            size="small"
             :type="viewMode === 'grid' ? 'primary' : 'default'"
+            @click="toggleViewMode"
           >
             {{ viewMode === 'grid' ? t('navigator.grid') : t('navigator.list') }}
-          </el-button>
+          </ElButton>
         </div>
       </div>
-      
+
       <!-- 网格视图 - 紧凑布局 -->
       <div v-if="viewMode === 'grid'" class="question-grid-compact">
         <div
@@ -44,21 +44,21 @@
           :key="question.id || index"
           class="question-item-compact"
           :class="getQuestionItemClass(index)"
-          @click="navigateToQuestion(index)"
           :title="getQuestionTooltip(index)"
+          @click="navigateToQuestion(index)"
         >
           <span class="question-number">{{ index + 1 }}</span>
           <div v-if="question.isAnswered" class="question-status">
-            <el-icon v-if="question.isCorrect" class="status-icon correct">
+            <ElIcon v-if="question.isCorrect" class="status-icon correct">
               <CircleCheckFilled />
-            </el-icon>
-            <el-icon v-else class="status-icon incorrect">
+            </ElIcon>
+            <ElIcon v-else class="status-icon incorrect">
               <CircleCloseFilled />
-            </el-icon>
+            </ElIcon>
           </div>
         </div>
       </div>
-      
+
       <!-- 列表视图 - 完整信息 -->
       <div v-else class="question-list-compact">
         <!-- 调试信息 -->
@@ -68,7 +68,7 @@
         <div v-else class="debug-info">
           调试：题目数量 {{ questions.length }}，当前索引 {{ currentIndex }}
         </div>
-        
+
         <div
           v-for="(question, index) in questions"
           :key="question.id || index"
@@ -84,36 +84,36 @@
             </span>
           </div>
           <div class="question-status">
-            <el-icon v-if="question.isAnswered" :class="question.isCorrect ? 'correct' : 'incorrect'">
+            <ElIcon v-if="question.isAnswered" :class="question.isCorrect ? 'correct' : 'incorrect'">
               <CircleCheckFilled v-if="question.isCorrect" />
               <CircleCloseFilled v-else />
-            </el-icon>
+            </ElIcon>
             <span v-else class="status-text">{{ t('navigator.unanswered') }}</span>
           </div>
         </div>
       </div>
     </div>
-    
+
     <div class="navigator-footer">
       <div class="legend">
         <div class="legend-item">
-          <div class="legend-color current"></div>
+          <div class="legend-color current" />
           <span>{{ t('navigator.currentQuestion') }}</span>
         </div>
         <div class="legend-item">
-          <div class="legend-color answered-correct"></div>
+          <div class="legend-color answered-correct" />
           <span>{{ t('navigator.answeredCorrect') }}</span>
         </div>
         <div class="legend-item">
-          <div class="legend-color answered-incorrect"></div>
+          <div class="legend-color answered-incorrect" />
           <span>{{ t('navigator.answeredWrong') }}</span>
         </div>
         <div class="legend-item">
-          <div class="legend-color visited"></div>
+          <div class="legend-color visited" />
           <span>{{ t('navigator.visited') }}</span>
         </div>
         <div class="legend-item">
-          <div class="legend-color unanswered"></div>
+          <div class="legend-color unanswered" />
           <span>{{ t('navigator.notVisited') }}</span>
         </div>
       </div>
@@ -126,6 +126,15 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElIcon, ElButton, ElPagination } from 'element-plus'
 import { CircleCheckFilled, CircleCloseFilled, Grid, List } from '@element-plus/icons-vue'
+
+const props = withDefaults(defineProps<Props>(), {
+  allowNavigation: true,
+  questionsPerRow: 10
+})
+
+const emit = defineEmits<{
+  'navigate': [index: number]
+}>()
 
 const { t } = useI18n()
 
@@ -148,15 +157,6 @@ interface Props {
   questionsPerRow?: number
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  allowNavigation: true,
-  questionsPerRow: 10
-})
-
-const emit = defineEmits<{
-  'navigate': [index: number]
-}>()
-
 // 视图模式控制
 const viewMode = ref<'grid' | 'list'>('list')
 
@@ -165,7 +165,7 @@ const gridStyle = computed(() => {
   const questionsPerRow = Math.min(props.questionsPerRow, 6) // 限制最大列数
   return {
     'grid-template-columns': `repeat(${questionsPerRow}, 1fr)`,
-    'gap': '4px'
+    gap: '4px'
   }
 })
 
@@ -187,19 +187,19 @@ const getQuestionTypeName = (questionType: string) => {
   return typeMap[questionType] || ''
 }
 
-const answeredCount = computed(() => 
+const answeredCount = computed(() =>
   props.questions.filter(q => q.isAnswered).length
 )
 
-const correctCount = computed(() => 
+const correctCount = computed(() =>
   props.questions.filter(q => q.isAnswered && q.isCorrect).length
 )
 
-const incorrectCount = computed(() => 
+const incorrectCount = computed(() =>
   props.questions.filter(q => q.isAnswered && !q.isCorrect).length
 )
 
-const unansweredCount = computed(() => 
+const unansweredCount = computed(() =>
   props.questions.filter(q => !q.isAnswered).length
 )
 
@@ -207,12 +207,12 @@ const unansweredCount = computed(() =>
 const getQuestionItemClass = (index: number) => {
   const question = props.questions[index]
   const classes = []
-  
+
   // 当前题目
   if (index === props.currentIndex) {
     classes.push('current')
   }
-  
+
   // 答题状态
   if (question.isAnswered) {
     if (question.isCorrect) {
@@ -225,29 +225,29 @@ const getQuestionItemClass = (index: number) => {
   } else {
     classes.push('unanswered')
   }
-  
+
   // 导航限制
   if (!props.allowNavigation && !question.isVisited) {
     classes.push('disabled')
   }
-  
+
   return classes
 }
 
 const getQuestionTooltip = (index: number) => {
   const question = props.questions[index]
   const tooltips = []
-  
+
   tooltips.push(t('navigator.tooltip.questionIndex', { index: index + 1 }))
-  
+
   if (question.categoryCode) {
     tooltips.push(t('navigator.tooltip.category', { code: question.categoryCode }))
   }
-  
+
   if (question.questionType) {
     tooltips.push(t('navigator.tooltip.type', { type: question.questionType }))
   }
-  
+
   if (question.isAnswered) {
     tooltips.push(question.isCorrect ? t('navigator.answeredCorrect') : t('navigator.answeredWrong'))
   } else if (question.isVisited) {
@@ -255,23 +255,23 @@ const getQuestionTooltip = (index: number) => {
   } else {
     tooltips.push(t('navigator.notVisited'))
   }
-  
+
   return tooltips.join('\n')
 }
 
 const navigateToQuestion = (index: number) => {
   const question = props.questions[index]
-  
+
   // 检查导航权限
   if (!props.allowNavigation && !question.isVisited) {
     return
   }
-  
+
   // 检查模式限制
   if (props.modeCode === 'exam' && index > props.currentIndex) {
     return
   }
-  
+
   emit('navigate', index)
 }
 
@@ -730,46 +730,46 @@ const toggleViewMode = () => {
     width: 35px;
     height: 35px;
   }
-  
+
   .question-number {
     font-size: 12px;
   }
-  
+
   .navigator-stats {
     gap: 8px;
   }
-  
+
   .stat-item {
     font-size: 11px;
   }
-  
+
   .navigation-header {
     flex-direction: column;
     gap: 8px;
     align-items: flex-start;
   }
-  
+
   .nav-controls {
     width: 100%;
     justify-content: flex-end;
   }
-  
+
   .question-list-compact {
     max-height: 250px;
   }
-  
+
   .question-grid-compact {
     grid-template-columns: repeat(4, 1fr);
     max-height: 150px;
   }
-  
+
   .question-list-item-compact .question-info {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
   }
-  
-  .question-list-item-compact .question-type, 
+
+  .question-list-item-compact .question-type,
   .question-list-item-compact .question-category {
     font-size: 9px;
   }
@@ -780,16 +780,16 @@ const toggleViewMode = () => {
     grid-template-columns: repeat(5, 1fr);
     gap: 3px;
   }
-  
+
   .question-item-compact {
     width: 28px;
     height: 28px;
   }
-  
+
   .question-item-compact .question-number {
     font-size: 10px;
   }
-  
+
   .question-list-compact {
     max-height: 200px;
   }

@@ -37,7 +37,7 @@ export const learningNoteApi = {
   },
 
   // 获取我的笔记
-  getMyNotes: (params?: any) => {
+  getMyNotes: (params?: Record<string, unknown>) => {
     return request({
       url: '/api/v1/notes/my',
       method: 'get',
@@ -263,9 +263,9 @@ export const quickCreateNote = (note: {
       content: note.content,
       summary: note.summary,
       vulnerabilityCode: note.vulnerabilityCode,
-      noteType: note.noteType || 'PERSONAL',
+      noteType: note.noteType ?? 'PERSONAL',
       tags: note.tags,
-      isPublic: note.isPublic || false,
+      isPublic: note.isPublic ?? false,
       isPinned: false
     }
   })

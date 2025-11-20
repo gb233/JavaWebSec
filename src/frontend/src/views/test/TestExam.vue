@@ -3,32 +3,34 @@
     <!-- 考试头部 -->
     <div class="exam-header">
       <div class="header-left">
-        <h1 class="exam-title">{{ testRecord?.categoryCode ? `${testRecord.categoryCode}安全知识测试` : '安全知识测试' }}</h1>
+        <h1 class="exam-title">
+          {{ testRecord?.categoryCode ? `${testRecord.categoryCode}安全知识测试` : '安全知识测试' }}
+        </h1>
         <div class="exam-info">
           <span class="info-item">
-            <el-icon><QuestionFilled /></el-icon>
+            <ElIcon><QuestionFilled /></ElIcon>
             {{ currentQuestionIndex + 1 }} / {{ questions.length || 0 }}
           </span>
           <span class="info-item">
-            <el-icon><Clock /></el-icon>
+            <ElIcon><Clock /></ElIcon>
             {{ formatTime(remainingTime) }}
           </span>
           <span class="info-item mode-info">
-            <el-icon><Setting /></el-icon>
+            <ElIcon><Setting /></ElIcon>
             {{ getModeDisplayName(testRecord?.modeCode || 'realtime') }}
           </span>
         </div>
       </div>
       <div class="header-right">
-        <el-button @click="showExitDialog" type="danger" plain>
+        <ElButton type="danger" plain @click="showExitDialog">
           退出考试
-        </el-button>
+        </ElButton>
       </div>
     </div>
 
     <!-- 进度条 -->
     <div class="progress-section">
-      <el-progress 
+      <ElProgress
         :percentage="(questions.length || 0) > 0 ? Math.round((currentQuestionIndex + 1) / (questions.length || 1) * 100) : 0"
         :show-text="false"
         :stroke-width="8"
@@ -39,69 +41,72 @@
     <div class="main-content">
       <!-- 题目内容区域 -->
       <div class="question-content-area">
-
         <!-- 题目内容 -->
-        <div class="question-content" v-if="currentQuestion">
+        <div v-if="currentQuestion" class="question-content">
           <div class="question-header">
-            <div class="question-number">第 {{ currentQuestionIndex + 1 }} 题</div>
-            <div class="question-type">
-              <el-tag :type="getQuestionTypeTag(currentQuestion.questionType)">
-                {{ getQuestionTypeName(currentQuestion.questionType) }}
-              </el-tag>
+            <div class="question-number">
+              第 {{ currentQuestionIndex + 1 }} 题
             </div>
-            <div class="question-points">{{ currentQuestion.score }} 分</div>
+            <div class="question-type">
+              <ElTag :type="getQuestionTypeTag(currentQuestion.questionType)">
+                {{ getQuestionTypeName(currentQuestion.questionType) }}
+              </ElTag>
+            </div>
+            <div class="question-points">
+              {{ currentQuestion.score }} 分
+            </div>
           </div>
-          
-          <div class="question-text" v-html="formatQuestionText(currentQuestion.questionText)"></div>
+
+          <div class="question-text" v-html="formatQuestionText(currentQuestion.questionText)" />
 
           <!-- 选择题选项 -->
-          <div class="question-options" v-if="isChoiceQuestion">
-            <el-radio-group 
-              v-model="userAnswer" 
+          <div v-if="isChoiceQuestion" class="question-options">
+            <ElRadioGroup
               v-if="currentQuestion.questionType === 'single' || currentQuestion.questionType === 'SINGLE' || currentQuestion.questionType === 'single_choice'"
+              v-model="userAnswer"
             >
-              <el-radio 
-                v-for="(option, index) in parsedOptions" 
+              <ElRadio
+                v-for="(option, index) in parsedOptions"
                 :key="index"
                 :label="option"
                 class="option-item"
               >
                 {{ option }}
-              </el-radio>
-            </el-radio-group>
-            
-            <el-checkbox-group 
-              v-model="userAnswerArray" 
+              </ElRadio>
+            </ElRadioGroup>
+
+            <ElCheckboxGroup
               v-if="currentQuestion.questionType === 'multiple' || currentQuestion.questionType === 'MULTIPLE' || currentQuestion.questionType === 'multiple_choice'"
+              v-model="userAnswerArray"
             >
-              <el-checkbox 
-                v-for="(option, index) in parsedOptions" 
+              <ElCheckbox
+                v-for="(option, index) in parsedOptions"
                 :key="index"
                 :label="option"
                 class="option-item"
               >
                 {{ option }}
-              </el-checkbox>
-            </el-checkbox-group>
+              </ElCheckbox>
+            </ElCheckboxGroup>
           </div>
 
           <!-- 判断题 -->
-          <div class="question-options" v-if="currentQuestion.questionType === 'judge' || currentQuestion.questionType === 'JUDGE' || currentQuestion.questionType === 'true_false'">
-            <el-radio-group v-model="userAnswer">
-              <el-radio 
-                v-for="(option, index) in parsedOptions" 
+          <div v-if="currentQuestion.questionType === 'judge' || currentQuestion.questionType === 'JUDGE' || currentQuestion.questionType === 'true_false'" class="question-options">
+            <ElRadioGroup v-model="userAnswer">
+              <ElRadio
+                v-for="(option, index) in parsedOptions"
                 :key="index"
                 :label="String.fromCharCode(65 + index)"
                 class="option-item"
               >
                 {{ option }}
-              </el-radio>
-            </el-radio-group>
+              </ElRadio>
+            </ElRadioGroup>
           </div>
 
           <!-- 填空题 -->
-          <div class="question-options" v-if="currentQuestion.questionType === 'fill_blank' || currentQuestion.questionType === 'FILL_BLANK'">
-            <el-input
+          <div v-if="currentQuestion.questionType === 'fill_blank' || currentQuestion.questionType === 'FILL_BLANK'" class="question-options">
+            <ElInput
               v-model="userAnswer"
               type="textarea"
               :rows="3"
@@ -111,40 +116,42 @@
         </div>
 
         <!-- 空数据提示 -->
-        <div class="empty-content" v-else-if="questions.length === 0">
-          <el-empty description="暂无测试题目">
-            <el-button type="primary" @click="router.back()">返回测试分类</el-button>
-          </el-empty>
+        <div v-else-if="questions.length === 0" class="empty-content">
+          <ElEmpty description="暂无测试题目">
+            <ElButton type="primary" @click="router.back()">
+              返回测试分类
+            </ElButton>
+          </ElEmpty>
         </div>
 
         <!-- 操作按钮 - 只在题目内容区域显示 -->
         <div class="exam-actions">
-          <el-button 
-            @click="previousQuestion" 
+          <ElButton
             :disabled="currentQuestionIndex === 0"
             size="large"
+            @click="previousQuestion"
           >
             上一题
-          </el-button>
-          
+          </ElButton>
+
           <div class="action-center">
-            <el-button 
-              @click="submitAnswer" 
-              type="primary" 
+            <ElButton
+              type="primary"
               size="large"
               :loading="submitting"
+              @click="submitAnswer"
             >
               {{ currentQuestionIndex === questions.length - 1 ? '提交并完成' : '提交答案' }}
-            </el-button>
+            </ElButton>
           </div>
-          
-          <el-button 
-            @click="nextQuestion" 
+
+          <ElButton
             :disabled="currentQuestionIndex === questions.length - 1"
             size="large"
+            @click="nextQuestion"
           >
             下一题
-          </el-button>
+          </ElButton>
         </div>
       </div>
 
@@ -162,17 +169,21 @@
     </div>
 
     <!-- 退出确认对话框 -->
-    <el-dialog
+    <ElDialog
       v-model="exitDialogVisible"
       title="确认退出"
       width="400px"
     >
       <p>您确定要退出考试吗？已提交的答案将会保存。</p>
       <template #footer>
-        <el-button @click="exitDialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="exitExam">确认退出</el-button>
+        <ElButton @click="exitDialogVisible = false">
+          取消
+        </ElButton>
+        <ElButton type="danger" @click="exitExam">
+          确认退出
+        </ElButton>
       </template>
-    </el-dialog>
+    </ElDialog>
   </div>
 </template>
 
@@ -221,7 +232,7 @@ const isChoiceQuestion = computed(() => {
 // 解析选项数据
 const parsedOptions = computed(() => {
   if (!currentQuestion.value?.options) return []
-  
+
   // 如果options是字符串，解析JSON
   if (typeof currentQuestion.value.options === 'string') {
     try {
@@ -231,7 +242,7 @@ const parsedOptions = computed(() => {
       return []
     }
   }
-  
+
   // 如果options已经是数组，直接返回
   return currentQuestion.value.options
 })
@@ -256,15 +267,15 @@ const questionsWithStatus = computed(() => {
 // 导航到指定题目
 const navigateToQuestion = (index: number) => {
   if (index < 0 || index >= questions.value.length) return
-  
+
   const modeCode = testRecord.value?.modeCode || 'realtime'
-  
+
   // 考试模式限制：只能导航到已访问的题目
   if (modeCode === 'exam' && index > currentQuestionIndex.value) {
     ElMessage.warning('考试模式下只能查看已访问的题目')
     return
   }
-  
+
   currentQuestionIndex.value = index
   // 重置用户答案
   userAnswer.value = ''
@@ -298,7 +309,7 @@ onUnmounted(() => {
 const loadTestDataByCategory = async (categoryId: string) => {
   try {
     // 从test store获取当前测试数据
-    const currentSession = testStore.currentSession
+    const { currentSession } = testStore
     if (currentSession && questions.value.length > 0) {
       testRecord.value = currentSession
       startTimer()
@@ -309,12 +320,12 @@ const loadTestDataByCategory = async (categoryId: string) => {
       const modeCode = route.query.mode as string || 'realtime'
       const startResponse = await testApi.startTestSession(modeCode, categoryId)
       console.log('开始测试API响应:', startResponse)
-      
+
       if (isSuccessResponse(startResponse) && startResponse.data) {
         const session = startResponse.data
         testRecord.value = session
         console.log('创建测试会话成功，会话ID:', session.id, '会话代码:', session.sessionCode)
-        
+
         // 获取测试题目
         const questionsResponse = await testApi.getTestQuestions(session.sessionCode)
         console.log('获取测试题目API响应:', questionsResponse)
@@ -324,13 +335,13 @@ const loadTestDataByCategory = async (categoryId: string) => {
           console.log('questions数组内容:', questions.value)
           console.log('currentQuestionIndex:', currentQuestionIndex.value)
           console.log('currentQuestion:', currentQuestion.value)
-          
+
           // 调试分数信息
           if (questions.value.length > 0) {
             console.log('第一题分数:', questions.value[0].score)
             console.log('第一题完整数据:', questions.value[0])
           }
-          
+
           // 检查题目数量
           if (questions.value.length === 0) {
             console.warn('警告：获取到的题目数量为0')
@@ -338,16 +349,16 @@ const loadTestDataByCategory = async (categoryId: string) => {
             router.back()
             return
           }
-          
+
           startTimer()
         } else {
           console.error('获取测试题目失败:', questionsResponse)
-          ElMessage.error('获取测试题目失败: ' + (questionsResponse?.message || '未知错误'))
+          ElMessage.error(`获取测试题目失败: ${questionsResponse?.message || '未知错误'}`)
           router.back()
         }
       } else {
         console.error('创建测试会话失败:', startResponse)
-        ElMessage.error('创建测试会话失败: ' + (startResponse?.message || '未知错误'))
+        ElMessage.error(`创建测试会话失败: ${startResponse?.message || '未知错误'}`)
         router.back()
       }
     }
@@ -383,7 +394,7 @@ const formatTime = (seconds: number) => {
 // 格式化题目文本，处理转义字符和代码块
 const formatQuestionText = (text: string | undefined): string => {
   if (!text) return ''
-  
+
   // 转义HTML特殊字符，防止XSS攻击
   const escapeHtml = (str: string): string => {
     const map: Record<string, string> = {
@@ -391,54 +402,54 @@ const formatQuestionText = (text: string | undefined): string => {
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
-      "'": '&#039;'
+      '\'': '&#039;'
     }
-    return str.replace(/[&<>"']/g, (m) => map[m])
+    return str.replace(/[&<>"']/g, m => map[m])
   }
-  
+
   // 先处理markdown代码块：```language\ncode\n```
   // 使用非贪婪匹配，匹配代码块内容
   let formatted = text.replace(/```(\w+)?\\n([\s\S]*?)```/g, (match, lang, code) => {
     // 处理代码块内的转义字符
-    let codeContent = code
-      .replace(/\\n/g, '\n')      // 转义的换行符 -> 实际换行
-      .replace(/\\t/g, '\t')      // 转义的制表符 -> 实际制表符
-      .replace(/\\r/g, '\r')      // 转义的回车符 -> 实际回车
-      .replace(/\\\\/g, '\\')     // 转义的反斜杠 -> 实际反斜杠
-    
+    const codeContent = code
+      .replace(/\\n/g, '\n') // 转义的换行符 -> 实际换行
+      .replace(/\\t/g, '\t') // 转义的制表符 -> 实际制表符
+      .replace(/\\r/g, '\r') // 转义的回车符 -> 实际回车
+      .replace(/\\\\/g, '\\') // 转义的反斜杠 -> 实际反斜杠
+
     // 转义代码内容中的HTML特殊字符
     const escapedCode = escapeHtml(codeContent.trim())
     // 返回HTML格式的代码块
     return `<pre class="code-block"><code class="language-${lang || 'text'}">${escapedCode}</code></pre>`
   })
-  
+
   // 处理代码块外的转义字符：将字面量的\n转换为实际换行
   formatted = formatted
-    .replace(/\\n/g, '\n')      // 转义的换行符 -> 实际换行
-    .replace(/\\t/g, '\t')      // 转义的制表符 -> 实际制表符
-    .replace(/\\r/g, '\r')      // 转义的回车符 -> 实际回车
-    .replace(/\\\\/g, '\\')     // 转义的反斜杠 -> 实际反斜杠
-  
+    .replace(/\\n/g, '\n') // 转义的换行符 -> 实际换行
+    .replace(/\\t/g, '\t') // 转义的制表符 -> 实际制表符
+    .replace(/\\r/g, '\r') // 转义的回车符 -> 实际回车
+    .replace(/\\\\/g, '\\') // 转义的反斜杠 -> 实际反斜杠
+
   // 转义HTML特殊字符（代码块已经处理过，这里只处理代码块外的内容）
   // 先标记代码块，避免转义代码块内的内容
   const codeBlockPlaceholder = '___CODE_BLOCK_PLACEHOLDER___'
   const codeBlocks: string[] = []
-  formatted = formatted.replace(/<pre class="code-block">[\s\S]*?<\/pre>/g, (match) => {
+  formatted = formatted.replace(/<pre class="code-block">[\s\S]*?<\/pre>/g, match => {
     codeBlocks.push(match)
     return codeBlockPlaceholder
   })
-  
+
   // 转义非代码块内容
   formatted = escapeHtml(formatted)
-  
+
   // 恢复代码块
-  codeBlocks.forEach((codeBlock) => {
+  codeBlocks.forEach(codeBlock => {
     formatted = formatted.replace(codeBlockPlaceholder, codeBlock)
   })
-  
+
   // 将剩余的换行符转换为<br>标签
   formatted = formatted.replace(/\n/g, '<br>')
-  
+
   return formatted
 }
 
@@ -447,15 +458,15 @@ type TagType = 'primary' | 'success' | 'warning' | 'info' | 'danger'
 
 const getQuestionTypeTag = (type: string): TagType => {
   const typeMap: Record<string, TagType> = {
-    'SINGLE': 'success',
-    'MULTIPLE': 'warning',
-    'JUDGE': 'info',
-    'FILL_BLANK': 'primary',
+    SINGLE: 'success',
+    MULTIPLE: 'warning',
+    JUDGE: 'info',
+    FILL_BLANK: 'primary',
     // 兼容小写格式
-    'single_choice': 'success',
-    'multiple_choice': 'warning',
-    'true_false': 'info',
-    'fill_blank': 'primary'
+    single_choice: 'success',
+    multiple_choice: 'warning',
+    true_false: 'info',
+    fill_blank: 'primary'
   }
   return typeMap[type] ?? 'info'
 }
@@ -463,15 +474,15 @@ const getQuestionTypeTag = (type: string): TagType => {
 // 获取题目类型名称
 const getQuestionTypeName = (type: string) => {
   const typeMap: Record<string, string> = {
-    'SINGLE': '单选题',
-    'MULTIPLE': '多选题', 
-    'JUDGE': '判断题',
-    'FILL_BLANK': '填空题',
+    SINGLE: '单选题',
+    MULTIPLE: '多选题',
+    JUDGE: '判断题',
+    FILL_BLANK: '填空题',
     // 兼容小写格式
-    'single_choice': '单选题',
-    'multiple_choice': '多选题',
-    'true_false': '判断题',
-    'fill_blank': '填空题'
+    single_choice: '单选题',
+    multiple_choice: '多选题',
+    true_false: '判断题',
+    fill_blank: '填空题'
   }
   return typeMap[type] || '未知类型'
 }
@@ -516,11 +527,11 @@ const submitAnswer = async () => {
 
   try {
     submitting.value = true
-    
+
     // 处理答案格式
     let answer = ''
-    if (currentQuestion.value.questionType === 'multiple' || 
-        currentQuestion.value.questionType === 'MULTIPLE' || 
+    if (currentQuestion.value.questionType === 'multiple' ||
+        currentQuestion.value.questionType === 'MULTIPLE' ||
         currentQuestion.value.questionType === 'multiple_choice') {
       // 多选题：将选项文本转换为字母格式
       answer = userAnswerArray.value.map(option => {
@@ -547,24 +558,24 @@ const submitAnswer = async () => {
         answer = userAnswer.value
       }
     }
-    
+
     console.log('最终提交答案:', answer)
 
     // 使用新的测试模式逻辑
     const modeCode = testRecord.value?.modeCode || 'realtime'
     const { processAnswer } = useTestMode(modeCode)
-    
+
     const answerResult = await processAnswer(
       testRecord.value.sessionCode,
       currentQuestion.value,
       answer
     )
-    
+
     // 调试信息
     console.log('答案提交响应:', answerResult)
     console.log('得分:', answerResult.score)
     console.log('是否正确:', answerResult.isCorrect)
-    
+
     // 根据模式配置显示反馈
     if (answerResult.showImmediately) {
       if (answerResult.isCorrect) {
@@ -586,17 +597,17 @@ const submitAnswer = async () => {
           }
           return answer
         }
-        
+
         const formattedUserAnswer = formatAnswer(answer, currentQuestion.value?.questionType || '')
         const formattedCorrectAnswer = formatAnswer(answerResult.correctAnswer || '', currentQuestion.value?.questionType || '')
-        
+
         ElMessage.error(`答案错误！您的答案：${formattedUserAnswer}，正确答案：${formattedCorrectAnswer}`)
       }
     } else {
       // 考试模式：不显示反馈
       ElMessage.info('答案已提交，请继续下一题')
     }
-    
+
     // 显示详细解析（仅在实时反馈模式且显示即时反馈时）
     if (answerResult.showImmediately && answerResult.explanation) {
       const formatAnswer = (answer: string, questionType: string) => {
@@ -613,10 +624,10 @@ const submitAnswer = async () => {
         }
         return answer
       }
-      
+
       const formattedUserAnswer = formatAnswer(answer, currentQuestion.value?.questionType || '')
       const formattedCorrectAnswer = formatAnswer(answerResult.correctAnswer || '', currentQuestion.value?.questionType || '')
-      
+
       const score = answerResult.score || 0
       const detailedExplanation = `
 题目：${currentQuestion.value.questionText}
@@ -628,7 +639,7 @@ const submitAnswer = async () => {
 详细解析：
 ${answerResult.explanation}
       `.trim()
-      
+
       ElMessageBox.alert(
         detailedExplanation,
         '答案解析',
@@ -639,7 +650,7 @@ ${answerResult.explanation}
         }
       )
     }
-    
+
     // 更新当前题目的状态
     if (currentQuestion.value) {
       currentQuestion.value.isAnswered = true
@@ -648,7 +659,7 @@ ${answerResult.explanation}
       currentQuestion.value.userAnswer = answer
       currentQuestion.value.correctAnswer = answerResult.correctAnswer
       currentQuestion.value.explanation = answerResult.explanation
-      
+
       // 同步更新questions数组中对应题目的状态
       const questionIndex = questions.value.findIndex(q => q.id === currentQuestion.value?.id)
       if (questionIndex !== -1) {
@@ -660,7 +671,7 @@ ${answerResult.explanation}
         questions.value[questionIndex].explanation = answerResult.explanation
       }
     }
-    
+
     // 如果是最后一题，完成考试
     if (currentQuestionIndex.value === questions.value.length - 1) {
       await submitExam()
@@ -686,7 +697,7 @@ const submitExam = async () => {
     const response = await testApi.endTestSession(testRecord.value.sessionCode)
     if (isSuccessResponse(response) && response.data) {
       ElMessage.success('考试完成')
-      
+
       // 获取测试结果，从中获取正确的记录ID
       try {
         const resultResponse = await testApi.getTestResult(testRecord.value.sessionCode)
@@ -733,12 +744,12 @@ const exitExam = async () => {
     if (timer.value) {
       clearInterval(timer.value)
     }
-    
+
     // 如果有已提交的答案，先保存测试结果
     const answeredQuestions = questions.value.filter(q => q.isAnswered)
     console.log('退出考试 - 已答题数量:', answeredQuestions.length)
     console.log('退出考试 - 已答题详情:', answeredQuestions.map(q => ({ id: q.id, isAnswered: q.isAnswered, userAnswer: q.userAnswer })))
-    
+
     if (testRecord.value && answeredQuestions.length > 0) {
       try {
         await testApi.endTestSession(testRecord.value.sessionCode)
@@ -750,10 +761,10 @@ const exitExam = async () => {
     } else {
       console.log('退出考试 - 没有已提交的答案，直接退出')
     }
-    
+
     // 关闭对话框
     exitDialogVisible.value = false
-    
+
     // 跳转到测试分类页面
     router.push({ name: 'TestCategories' })
   } catch (error) {
@@ -872,7 +883,7 @@ const exitExam = async () => {
       line-height: 1.6;
       color: #1f2937;
       margin-bottom: 32px;
-      
+
       // 代码块样式
       :deep(.code-block) {
         background: #282c34;
@@ -885,7 +896,7 @@ const exitExam = async () => {
         font-size: 14px;
         line-height: 1.6;
         border: 1px solid #e5e7eb;
-        
+
         code {
           display: block;
           white-space: pre;
@@ -893,25 +904,25 @@ const exitExam = async () => {
           background: transparent;
           padding: 0;
           border: none;
-          
+
           // 代码高亮样式
           .keyword {
             color: #c678dd;
           }
-          
+
           .string {
             color: #98c379;
           }
-          
+
           .comment {
             color: #5c6370;
             font-style: italic;
           }
-          
+
           .annotation {
             color: #e5c07b;
           }
-          
+
           .function {
             color: #61afef;
           }
@@ -962,7 +973,7 @@ const exitExam = async () => {
   @media (max-width: 1200px) {
     .main-content {
       flex-direction: column;
-      
+
       .navigator-area {
         width: 100%;
         position: static;
@@ -973,26 +984,26 @@ const exitExam = async () => {
 
   @media (max-width: 768px) {
     padding: 16px;
-    
+
     .exam-header {
       flex-direction: column;
       gap: 16px;
       align-items: flex-start;
-      
+
       .header-right {
         width: 100%;
         text-align: right;
       }
     }
-    
+
     .question-content {
       padding: 20px;
     }
-    
+
     .exam-actions {
       flex-direction: column;
       gap: 12px;
-      
+
       .action-center {
         order: -1;
       }

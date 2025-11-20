@@ -9,6 +9,7 @@ import com.javaweb.security.repository.UserActivityRepository;
 import com.javaweb.security.repository.UserProfileRepository;
 import com.javaweb.security.service.BadgeDetectionService;
 import com.javaweb.security.service.UserActivityService;
+import com.javaweb.security.service.UserService;
 import com.javaweb.security.service.UserStatsUpdateService;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ public class UserActivityServiceImpl implements UserActivityService {
   private final ObjectMapper objectMapper;
   private final BadgeDetectionService badgeDetectionService;
   private final UserStatsUpdateService userStatsUpdateService;
+  private final UserService userService;
 
   @Override
   @Transactional
@@ -54,6 +56,20 @@ public class UserActivityServiceImpl implements UserActivityService {
         vulnerabilityCode,
         title);
 
+    // 数据验证：确保必填字段不为空
+    if (userId == null) {
+      throw new IllegalArgumentException("用户ID不能为空");
+    }
+    if (activityType == null) {
+      throw new IllegalArgumentException("活动类型不能为空");
+    }
+    if (title == null || title.trim().isEmpty()) {
+      throw new IllegalArgumentException("活动标题不能为空");
+    }
+
+    // 确保UserProfile存在，如果不存在则创建（关键操作，必须成功）
+    ensureUserProfileExists(userId);
+
     UserActivity activity = new UserActivity();
     activity.setUserId(userId);
     activity.setActivityType(activityType);
@@ -66,28 +82,112 @@ public class UserActivityServiceImpl implements UserActivityService {
       activity.setMetadata(objectMapper.writeValueAsString(metadata));
     } catch (JsonProcessingException e) {
       log.error("序列化活动元数据失败", e);
+      // metadata可以为空，不影响主流程
+      activity.setMetadata(null);
     }
 
-    userActivityRepository.save(activity);
+    // 保存活动记录（关键操作，必须成功）
+    try {
+      userActivityRepository.save(activity);
+      log.debug("活动记录保存成功: userId={}, activityType={}", userId, activityType);
+    } catch (Exception e) {
+      log.error(
+          "保存活动记录失败: userId={}, activityType={}, error={}",
+          userId,
+          activityType,
+          e.getMessage(),
+          e);
+      // 保存失败是致命错误，必须抛出异常
+      throw new RuntimeException("保存活动记录失败: " + e.getMessage(), e);
+    }
 
-    // 如果是学习活动，检测时间相关徽章（夜间学习和早起鸟）
+    // 如果是学习活动，检测时间相关徽章（关键操作，必须成功）
     if (activityType == ActivityType.LEARNING) {
       try {
         badgeDetectionService.checkTimeBasedBadges(userId);
-        log.debug("检测时间相关徽章: userId={}, activityType={}", userId, activityType);
+        log.debug("检测时间相关徽章成功: userId={}, activityType={}", userId, activityType);
       } catch (Exception e) {
         log.error("检测时间相关徽章失败: userId={}, error={}", userId, e.getMessage(), e);
-        // 不抛出异常，避免影响活动记录流程
+        // 尝试修复：确保UserProfile存在后重试
+        try {
+          ensureUserProfileExists(userId);
+          badgeDetectionService.checkTimeBasedBadges(userId);
+          log.debug("重试徽章检测成功: userId={}", userId);
+        } catch (Exception retryException) {
+          log.error(
+              "重试徽章检测仍然失败: userId={}, error={}",
+              userId,
+              retryException.getMessage(),
+              retryException);
+          // 徽章检测是系统功能，失败必须抛出异常
+          throw new RuntimeException(
+              "检测时间相关徽章失败: userId=" + userId + ", error=" + retryException.getMessage(),
+              retryException);
+        }
       }
     }
 
-    // 记录活动后，更新连续学习天数
+    // 记录活动后，更新连续学习天数（关键操作，必须成功）
     try {
       userStatsUpdateService.updateStreakStats(userId);
-      log.debug("更新连续学习天数: userId={}", userId);
+      log.debug("更新连续学习天数成功: userId={}", userId);
     } catch (Exception e) {
       log.error("更新连续学习天数失败: userId={}, error={}", userId, e.getMessage(), e);
-      // 不抛出异常，避免影响活动记录流程
+      // 尝试修复：确保UserProfile存在后重试
+      try {
+        ensureUserProfileExists(userId);
+        userStatsUpdateService.updateStreakStats(userId);
+        log.debug("重试更新连续学习天数成功: userId={}", userId);
+      } catch (Exception retryException) {
+        log.error(
+            "重试更新连续学习天数仍然失败: userId={}, error={}",
+            userId,
+            retryException.getMessage(),
+            retryException);
+        // 更新连续学习天数是系统功能，失败必须抛出异常
+        throw new RuntimeException(
+            "更新连续学习天数失败: userId=" + userId + ", error=" + retryException.getMessage(),
+            retryException);
+      }
+    }
+  }
+
+  /** 确保UserProfile存在，如果不存在则创建（关键操作，必须成功） */
+  private void ensureUserProfileExists(Long userId) {
+    if (userId == null) {
+      throw new IllegalArgumentException("用户ID不能为空");
+    }
+
+    // 先检查是否已存在
+    Optional<UserProfile> existingProfile = userProfileRepository.findByUserId(userId);
+    if (existingProfile.isPresent()) {
+      log.debug("UserProfile已存在: userId={}", userId);
+      return;
+    }
+
+    // 不存在则创建，如果因为并发导致DataIntegrityViolationException，重新查询
+    try {
+      userService.createUserProfile(userId);
+      log.debug("UserProfile创建成功: userId={}", userId);
+      // 验证创建是否成功
+      Optional<UserProfile> createdProfile = userProfileRepository.findByUserId(userId);
+      if (!createdProfile.isPresent()) {
+        throw new RuntimeException("UserProfile创建后验证失败: userId=" + userId);
+      }
+    } catch (Exception e) {
+      // 如果是唯一约束违反（并发创建），重新查询一次
+      if (e.getCause() instanceof org.springframework.dao.DataIntegrityViolationException
+          || e instanceof org.springframework.dao.DataIntegrityViolationException) {
+        log.debug("并发创建UserProfile，重新查询: userId={}", userId);
+        Optional<UserProfile> profileOpt = userProfileRepository.findByUserId(userId);
+        if (profileOpt.isPresent()) {
+          log.debug("UserProfile已存在: userId={}", userId);
+          return; // 已存在，正常返回
+        }
+      }
+      // 其他异常，记录日志并抛出，确保问题能被发现和修复
+      log.error("创建用户档案失败: userId={}, error={}", userId, e.getMessage(), e);
+      throw new RuntimeException("创建用户档案失败: userId=" + userId + ", error=" + e.getMessage(), e);
     }
   }
 
@@ -154,26 +254,39 @@ public class UserActivityServiceImpl implements UserActivityService {
         studyTime,
         score);
 
-    Map<String, Object> metadata = new HashMap<>();
-    metadata.put("studyTime", studyTime);
-    metadata.put("score", score);
-    metadata.put("vulnerabilityCode", vulnerabilityCode);
-
-    recordActivity(
-        userId,
-        ActivityType.LEARNING,
-        vulnerabilityCode,
-        "完成漏洞学习: " + vulnerabilityCode,
-        "成功完成了 " + vulnerabilityCode + " 漏洞的学习，学习时长: " + studyTime + " 分钟，得分: " + score,
-        metadata);
-
-    // 检测时间相关徽章（夜间学习和早起鸟）
     try {
-      badgeDetectionService.checkTimeBasedBadges(userId);
-      log.debug("检测学习时间相关徽章: userId={}, vulnerabilityCode={}", userId, vulnerabilityCode);
+      Map<String, Object> metadata = new HashMap<>();
+      metadata.put("studyTime", studyTime);
+      metadata.put("score", score);
+      metadata.put("vulnerabilityCode", vulnerabilityCode);
+
+      recordActivity(
+          userId,
+          ActivityType.LEARNING,
+          vulnerabilityCode,
+          "完成漏洞学习: " + vulnerabilityCode,
+          "成功完成了 " + vulnerabilityCode + " 漏洞的学习，学习时长: " + studyTime + " 分钟，得分: " + score,
+          metadata);
+
+      // 检测时间相关徽章（夜间学习和早起鸟）
+      try {
+        badgeDetectionService.checkTimeBasedBadges(userId);
+        log.debug("检测学习时间相关徽章: userId={}, vulnerabilityCode={}", userId, vulnerabilityCode);
+      } catch (Exception e) {
+        log.error("检测学习时间相关徽章失败: userId={}, error={}", userId, e.getMessage(), e);
+        // 不抛出异常，避免影响活动记录流程
+      }
     } catch (Exception e) {
-      log.error("检测学习时间相关徽章失败: userId={}, error={}", userId, e.getMessage(), e);
-      // 不抛出异常，避免影响活动记录流程
+      log.error(
+          "记录学习完成活动失败: userId={}, vulnerabilityCode={}, studyTime={}, score={}, error={}",
+          userId,
+          vulnerabilityCode,
+          studyTime,
+          score,
+          e.getMessage(),
+          e);
+      // 重新抛出异常，让GlobalExceptionHandler统一处理
+      throw new RuntimeException("记录学习完成活动失败: " + e.getMessage(), e);
     }
   }
 

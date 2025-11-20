@@ -82,12 +82,7 @@ export default defineConfig(({ mode, command }) => {
       // Mock服务（仅开发环境）
       isDev && viteMockServe({
         mockPath: 'mock',
-        localEnabled: true,
-        prodEnabled: false,
-        injectCode: `
-          import { setupProdMockServer } from '../mock/_createProductionServer'
-          setupProdMockServer()
-        `,
+        enable: true,
         logger: true
       }),
 
@@ -171,8 +166,11 @@ export default defineConfig(({ mode, command }) => {
       target: 'es2015',
       outDir: 'dist',
       assetsDir: 'assets',
-      minify: isProd ? 'esbuild' : false,
       sourcemap: isDev,
+      // 模块预加载配置，确保正确的加载顺序
+      modulePreload: {
+        polyfill: true
+      },
       
       // 分包策略
       rollupOptions: {
@@ -194,30 +192,61 @@ export default defineConfig(({ mode, command }) => {
             return `assets/${extType}/[name]-[hash].[ext]`
           },
           
-          // 手动分包
-          manualChunks: {
-            'vue-vendor': ['vue', 'vue-router', 'pinia'],
-            'element-plus': ['element-plus', '@element-plus/icons-vue'],
-            'utils': ['axios', 'dayjs', 'lodash-es'],
-            'charts': ['echarts', 'vue-echarts'],
-            'editor': ['monaco-editor', 'highlight.js', 'marked']
+          // 手动分包 - 简化策略，避免模块初始化顺序问题
+          manualChunks: (id) => {
+            // 将handler文件单独分包，实现按需加载
+            if (id.includes('vulnerability-handlers')) {
+              const match = id.match(/useA(\d+)Handler/)
+              if (match) {
+                return `handler-a${match[1]}`
+              }
+              return 'handlers'
+            }
+            
+            // node_modules分包 - 简化策略，避免循环依赖
+            if (id.includes('node_modules')) {
+              // 将所有Vue相关库打包在一起，避免循环依赖
+              if (id.includes('vue') || id.includes('vue-router') || id.includes('pinia') || id.includes('element-plus')) {
+                return 'vue-vendor'
+              }
+              if (id.includes('axios') || id.includes('dayjs') || id.includes('lodash')) {
+                return 'utils'
+              }
+              if (id.includes('echarts')) {
+                return 'charts'
+              }
+              if (id.includes('monaco') || id.includes('highlight') || id.includes('marked')) {
+                return 'editor'
+              }
+              // 其他大型库单独分包
+              if (id.includes('mermaid')) {
+                return 'mermaid'
+              }
+              return 'vendor'
+            }
           }
         }
       },
 
-      // Terser配置（生产环境）
-      terserOptions: undefined,
-
       // esbuild压缩配置（生产环境去除调试信息）
       esbuild: isProd ? {
-        drop: ['console', 'debugger']
+        drop: ['console', 'debugger'],
+        // 完全禁用标识符压缩，避免变量名冲突导致的模块初始化顺序问题
+        legalComments: 'none',
+        minifyIdentifiers: false,
+        minifySyntax: false,
+        minifyWhitespace: true
       } : undefined,
 
-      // 构建性能警告阈值
-      chunkSizeWarningLimit: 1000
+      // 构建性能警告阈值 - 提高阈值，因为handler文件较大
+      chunkSizeWarningLimit: 2000,
+      
+      // 启用压缩（使用esbuild，避免terser压缩导致的模块初始化顺序问题）
+      minify: isProd ? 'esbuild' : false,
+      // 使用esbuild压缩，避免terser压缩导致的变量名冲突和初始化顺序问题
     },
 
-    // 优化配置
+    // 优化配置 - 预构建依赖
     optimizeDeps: {
       include: [
         'vue',
@@ -229,8 +258,11 @@ export default defineConfig(({ mode, command }) => {
         'dayjs',
         'lodash-es',
         'echarts',
-        'vue-echarts'
-      ]
+        'vue-echarts',
+        'mermaid'
+      ],
+      // 排除handler文件，让它们按需加载
+      exclude: ['vulnerability-handlers']
     },
 
     // 环境变量

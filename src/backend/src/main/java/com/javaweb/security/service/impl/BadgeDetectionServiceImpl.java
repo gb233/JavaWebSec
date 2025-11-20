@@ -15,6 +15,7 @@ import com.javaweb.security.repository.UserRepository;
 import com.javaweb.security.repository.UserTestRecordRepository;
 import com.javaweb.security.service.BadgeDetectionService;
 import com.javaweb.security.service.BadgeProgressService;
+import com.javaweb.security.service.UserService;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -41,26 +42,52 @@ public class BadgeDetectionServiceImpl implements BadgeDetectionService {
   @Autowired private CollectionItemRepository collectionItemRepository;
   @Autowired private UserRepository userRepository;
   @Autowired private UserTestRecordRepository userTestRecordRepository;
+  @Autowired private UserService userService;
 
   @Override
   public void checkLearningBadges(Long userId, String vulnerabilityCode) {
-    // 检测学习相关徽章
-    UserProfile profile = userProfileRepository.findByUserId(userId).orElse(null);
-    if (profile == null) return;
+    try {
+      // 检测学习相关徽章
+      UserProfile profile = userProfileRepository.findByUserId(userId).orElse(null);
+      if (profile == null) {
+        log.warn("用户档案不存在，跳过徽章检测: userId={}", userId);
+        return;
+      }
 
-    int completedVulnerabilities = profile.getCompletedVulnerabilities();
+      int completedVulnerabilities = profile.getCompletedVulnerabilities();
 
-    // 更新漏洞大师徽章进度
-    updateBadgeProgress(userId, "VULNERABILITY_MASTER", completedVulnerabilities, 10);
+      // 更新漏洞大师徽章进度
+      try {
+        updateBadgeProgress(userId, "VULNERABILITY_MASTER", completedVulnerabilities, 10);
+      } catch (Exception e) {
+        log.error("更新漏洞大师徽章进度失败: userId={}, error={}", userId, e.getMessage(), e);
+      }
 
-    // 检测漏洞大师徽章（完成所有A01-A10）
-    if (completedVulnerabilities >= 10
-        && !hasUserEarnedBadgeByCode(userId, "VULNERABILITY_MASTER")) {
-      awardBadgeToUserByCode(userId, "VULNERABILITY_MASTER");
+      // 检测漏洞大师徽章（完成所有A01-A10）
+      try {
+        if (completedVulnerabilities >= 10
+            && !hasUserEarnedBadgeByCode(userId, "VULNERABILITY_MASTER")) {
+          awardBadgeToUserByCode(userId, "VULNERABILITY_MASTER");
+        }
+      } catch (Exception e) {
+        log.error("检测漏洞大师徽章失败: userId={}, error={}", userId, e.getMessage(), e);
+      }
+
+      // 检测时间相关徽章（夜间学习和早起鸟）
+      try {
+        checkTimeBasedBadges(userId);
+      } catch (Exception e) {
+        log.error("检测时间相关徽章失败: userId={}, error={}", userId, e.getMessage(), e);
+      }
+    } catch (Exception e) {
+      log.error(
+          "检测学习类徽章失败: userId={}, vulnerabilityCode={}, error={}",
+          userId,
+          vulnerabilityCode,
+          e.getMessage(),
+          e);
+      // 不抛出异常，避免影响主流程
     }
-
-    // 检测时间相关徽章（夜间学习和早起鸟）
-    checkTimeBasedBadges(userId);
   }
 
   @Override
@@ -162,8 +189,16 @@ public class BadgeDetectionServiceImpl implements BadgeDetectionService {
   @Override
   public void checkStreakBadges(Long userId) {
     // 检测连续学习徽章
+    if (userId == null) {
+      log.warn("checkStreakBadges: userId为null，跳过");
+      return;
+    }
+
     UserProfile profile = userProfileRepository.findByUserId(userId).orElse(null);
-    if (profile == null) return;
+    if (profile == null) {
+      log.warn("用户档案不存在，跳过连续学习徽章检测: userId={}", userId);
+      return;
+    }
 
     int currentStreak = profile.getCurrentStreak();
 
@@ -189,8 +224,16 @@ public class BadgeDetectionServiceImpl implements BadgeDetectionService {
   @Override
   public void checkStudyTimeBadges(Long userId) {
     // 检测学习时长徽章
+    if (userId == null) {
+      log.warn("checkStudyTimeBadges: userId为null，跳过");
+      return;
+    }
+
     UserProfile profile = userProfileRepository.findByUserId(userId).orElse(null);
-    if (profile == null) return;
+    if (profile == null) {
+      log.warn("用户档案不存在，跳过学习时长徽章检测: userId={}", userId);
+      return;
+    }
 
     long totalStudyTime = profile.getTotalStudyTime(); // 单位：秒
 
@@ -272,13 +315,37 @@ public class BadgeDetectionServiceImpl implements BadgeDetectionService {
 
   @Override
   public void checkTimeBasedBadges(Long userId) {
-    // 检测时间相关徽章
-    // 例如：每日登录、每周活跃等
-    checkStreakBadges(userId);
-    checkStudyTimeBadges(userId);
-    // 检测夜间学习和早起鸟徽章
-    checkNightStudyBadges(userId);
-    checkEarlyBirdBadge(userId);
+    // 检测时间相关徽章（关键操作，必须成功）
+    if (userId == null) {
+      throw new IllegalArgumentException("用户ID不能为空");
+    }
+
+    // 确保UserProfile存在（关键操作，必须成功）
+    UserProfile profile = userProfileRepository.findByUserId(userId).orElse(null);
+    if (profile == null) {
+      log.warn("用户档案不存在，尝试创建: userId={}", userId);
+      try {
+        // 尝试创建UserProfile
+        profile = userService.createUserProfile(userId);
+        log.info("用户档案创建成功: userId={}", userId);
+      } catch (Exception e) {
+        log.error("创建用户档案失败: userId={}, error={}", userId, e.getMessage(), e);
+        throw new RuntimeException("创建用户档案失败: userId=" + userId + ", error=" + e.getMessage(), e);
+      }
+    }
+
+    try {
+      checkStreakBadges(userId);
+      checkStudyTimeBadges(userId);
+      // 检测夜间学习和早起鸟徽章
+      checkNightStudyBadges(userId);
+      checkEarlyBirdBadge(userId);
+      log.debug("检测时间相关徽章成功: userId={}", userId);
+    } catch (Exception e) {
+      log.error("检测时间相关徽章失败: userId={}, error={}", userId, e.getMessage(), e);
+      // 徽章检测是系统功能，失败必须抛出异常
+      throw new RuntimeException("检测时间相关徽章失败: userId=" + userId + ", error=" + e.getMessage(), e);
+    }
   }
 
   @Override

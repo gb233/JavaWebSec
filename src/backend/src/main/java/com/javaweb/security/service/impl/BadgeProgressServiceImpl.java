@@ -8,6 +8,7 @@ import com.javaweb.security.repository.BadgeProgressRepository;
 import com.javaweb.security.service.BadgeNotificationService;
 import com.javaweb.security.service.BadgeProgressService;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -205,9 +206,15 @@ public class BadgeProgressServiceImpl implements BadgeProgressService {
     if (targetProgress != null && targetProgress > 0) {
       BigDecimal percentage =
           BigDecimal.valueOf(currentProgress)
-              .divide(BigDecimal.valueOf(targetProgress), 2, BigDecimal.ROUND_HALF_UP)
+              .divide(BigDecimal.valueOf(targetProgress), 2, RoundingMode.HALF_UP)
               .multiply(BigDecimal.valueOf(100));
-      progress.setProgressPercentage(percentage);
+
+      // 确保百分比不超过100，避免数据库字段溢出
+      if (percentage.compareTo(BigDecimal.valueOf(100)) > 0) {
+        progress.setProgressPercentage(BigDecimal.valueOf(100));
+      } else {
+        progress.setProgressPercentage(percentage);
+      }
 
       // 检查是否完成
       progress.setIsCompleted(currentProgress >= targetProgress);

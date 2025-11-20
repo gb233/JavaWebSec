@@ -32,7 +32,7 @@ public class AttackLog {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "user_id")
+  @Column(name = "user_id", columnDefinition = "BIGINT UNSIGNED")
   private Long userId;
 
   @ManyToOne(fetch = FetchType.LAZY)

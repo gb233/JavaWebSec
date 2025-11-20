@@ -4,18 +4,19 @@
       <h1>成就徽章中心</h1>
       <p>展示您的学习成就和徽章收藏</p>
     </div>
-    
+
     <div class="badge-tabs">
-      <button 
-        v-for="tab in tabs" 
+      <button
+        v-for="tab in tabs"
         :key="tab.key"
-        :class="['tab-btn', { active: activeTab === tab.key }]"
+        class="tab-btn"
+        :class="[{ active: activeTab === tab.key }]"
         @click="activeTab = tab.key"
       >
         {{ tab.icon }} {{ tab.label }}
       </button>
     </div>
-    
+
     <div class="tab-content">
       <BadgeShowcase v-if="activeTab === 'showcase'" />
       <BadgeProgress v-if="activeTab === 'progress'" />

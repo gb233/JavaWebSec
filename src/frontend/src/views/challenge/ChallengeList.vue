@@ -3,58 +3,58 @@
     <div class="challenge-header">
       <h2>{{ $t('challenge.integratedChallenges') }}</h2>
       <div class="filter-controls">
-        <el-select v-model="selectedDifficulty" :placeholder="$t('challenge.selectDifficulty')" @change="filterChallenges">
-          <el-option :label="$t('challenge.all')" value="" />
-          <el-option :label="$t('challenge.beginner')" value="beginner" />
-          <el-option :label="$t('challenge.intermediate')" value="intermediate" />
-          <el-option :label="$t('challenge.advanced')" value="advanced" />
-          <el-option :label="$t('challenge.expert')" value="expert" />
-        </el-select>
+        <ElSelect v-model="selectedDifficulty" :placeholder="$t('challenge.selectDifficulty')" @change="filterChallenges">
+          <ElOption :label="$t('challenge.all')" value="" />
+          <ElOption :label="$t('challenge.beginner')" value="beginner" />
+          <ElOption :label="$t('challenge.intermediate')" value="intermediate" />
+          <ElOption :label="$t('challenge.advanced')" value="advanced" />
+          <ElOption :label="$t('challenge.expert')" value="expert" />
+        </ElSelect>
       </div>
     </div>
-    
+
     <div v-if="loading" class="loading">
-      <el-skeleton :rows="3" animated />
+      <ElSkeleton :rows="3" animated />
     </div>
-    
+
     <div v-else class="challenge-grid">
-      <el-card 
-        v-for="challenge in filteredChallenges" 
-        :key="challenge.id" 
+      <ElCard
+        v-for="challenge in filteredChallenges"
+        :key="challenge.id"
         class="challenge-card"
         @click="viewChallenge(challenge.id)"
       >
         <div class="challenge-card-header">
           <h3>{{ challenge.title }}</h3>
-          <el-tag :type="getDifficultyTag(challenge.difficultyLevel)">
+          <ElTag :type="getDifficultyTag(challenge.difficultyLevel)">
             {{ getDifficultyText(challenge.difficultyLevel) }}
-          </el-tag>
+          </ElTag>
         </div>
-        
+
         <div class="challenge-card-content">
           <p>{{ challenge.description }}</p>
           <div class="challenge-meta">
-            <span><i class="el-icon-time"></i> {{ challenge.estimatedTime }}{{ $t('challenge.minutes') }}</span>
-            <span><i class="el-icon-star"></i> {{ challenge.points }}{{ $t('challenge.points') }}</span>
+            <span><i class="el-icon-time" /> {{ challenge.estimatedTime }}{{ $t('challenge.minutes') }}</span>
+            <span><i class="el-icon-star" /> {{ challenge.points }}{{ $t('challenge.points') }}</span>
           </div>
           <div class="vulnerability-chain">
-            <el-tag 
-              v-for="vuln in getVulnerabilityChain(challenge.vulnerabilityChain)" 
+            <ElTag
+              v-for="vuln in getVulnerabilityChain(challenge.vulnerabilityChain)"
               :key="vuln"
               size="small"
               type="info"
             >
               {{ vuln }}
-            </el-tag>
+            </ElTag>
           </div>
         </div>
-        
+
         <div class="challenge-card-footer">
-          <el-button type="primary" @click.stop="startChallenge(challenge.id)">
+          <ElButton type="primary" @click.stop="startChallenge(challenge.id)">
             开始挑战
-          </el-button>
+          </ElButton>
         </div>
-      </el-card>
+      </ElCard>
     </div>
   </div>
 </template>
@@ -113,20 +113,20 @@ const startChallenge = async (id: number) => {
 
 const getDifficultyTag = (level: string) => {
   const tagMap = {
-    'beginner': 'success',
-    'intermediate': 'warning',
-    'advanced': 'danger',
-    'expert': 'info'
+    beginner: 'success',
+    intermediate: 'warning',
+    advanced: 'danger',
+    expert: 'info'
   }
   return tagMap[level] || 'info'
 }
 
 const getDifficultyText = (level: string) => {
   const textMap = {
-    'beginner': '初级',
-    'intermediate': '中级',
-    'advanced': '高级',
-    'expert': '专家'
+    beginner: '初级',
+    intermediate: '中级',
+    advanced: '高级',
+    expert: '专家'
   }
   return textMap[level] || level
 }

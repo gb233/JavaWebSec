@@ -100,7 +100,6 @@ export default {
     flowchart: 'Attack Flowchart'
   },
 
-
   // Challenge mode
   challenge: {
     title: 'Challenge Mode',

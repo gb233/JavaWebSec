@@ -4,96 +4,122 @@
       <h1>我的收藏</h1>
       <p>管理您收藏的漏洞学习内容和学习资源</p>
     </div>
-    
+
     <div class="collections-stats">
-      <el-row :gutter="20">
-        <el-col :span="6">
-          <el-card class="stat-card">
+      <ElRow :gutter="20">
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ collections.length }}</div>
-              <div class="stat-label">收藏夹数量</div>
+              <div class="stat-number">
+                {{ collections.length }}
+              </div>
+              <div class="stat-label">
+                收藏夹数量
+              </div>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card">
+          </ElCard>
+        </ElCol>
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ totalItems }}</div>
-              <div class="stat-label">收藏项总数</div>
+              <div class="stat-number">
+                {{ totalItems }}
+              </div>
+              <div class="stat-label">
+                收藏项总数
+              </div>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card">
+          </ElCard>
+        </ElCol>
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ publicCollections.length }}</div>
-              <div class="stat-label">公开收藏夹</div>
+              <div class="stat-number">
+                {{ publicCollections.length }}
+              </div>
+              <div class="stat-label">
+                公开收藏夹
+              </div>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :span="6">
-          <el-card class="stat-card">
+          </ElCard>
+        </ElCol>
+        <ElCol :span="6">
+          <ElCard class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ totalViews }}</div>
-              <div class="stat-label">总浏览次数</div>
+              <div class="stat-number">
+                {{ totalViews }}
+              </div>
+              <div class="stat-label">
+                总浏览次数
+              </div>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
+          </ElCard>
+        </ElCol>
+      </ElRow>
     </div>
 
     <div class="collections-list">
-      <el-card>
+      <ElCard>
         <template #header>
           <div class="card-header">
             <span>我的收藏夹</span>
-            <el-button type="primary" @click="createCollection">
-              <el-icon><Plus /></el-icon>
+            <ElButton type="primary" @click="createCollection">
+              <ElIcon><Plus /></ElIcon>
               新建收藏夹
-            </el-button>
+            </ElButton>
           </div>
         </template>
-        
+
         <div v-if="loading" class="loading">
-          <el-skeleton :rows="3" animated />
+          <ElSkeleton :rows="3" animated />
         </div>
-        
+
         <div v-else-if="collections.length === 0" class="empty-state">
-          <el-empty description="暂无收藏夹">
-            <el-button type="primary" @click="createCollection">创建第一个收藏夹</el-button>
-          </el-empty>
+          <ElEmpty description="暂无收藏夹">
+            <ElButton type="primary" @click="createCollection">
+              创建第一个收藏夹
+            </ElButton>
+          </ElEmpty>
         </div>
-        
+
         <div v-else class="collections-grid">
           <div v-for="collection in collections" :key="collection.id" class="collection-item">
-            <el-card class="collection-card" @click="viewCollection(collection.id)">
+            <ElCard class="collection-card" @click="viewCollection(collection.id)">
               <div class="collection-header">
-                <h3 class="collection-title">{{ collection.name }}</h3>
+                <h3 class="collection-title">
+                  {{ collection.name }}
+                </h3>
                 <div class="collection-actions">
-                  <el-tag v-if="collection.isPublic" type="success" size="small">公开</el-tag>
-                  <el-tag v-if="collection.isDefault" type="warning" size="small">默认</el-tag>
+                  <ElTag v-if="collection.isPublic" type="success" size="small">
+                    公开
+                  </ElTag>
+                  <ElTag v-if="collection.isDefault" type="warning" size="small">
+                    默认
+                  </ElTag>
                 </div>
               </div>
-              <p class="collection-description">{{ collection.description || '暂无描述' }}</p>
+              <p class="collection-description">
+                {{ collection.description || '暂无描述' }}
+              </p>
               <div class="collection-meta">
                 <span class="collection-items">{{ collection.itemCount || 0 }} 项</span>
                 <span class="collection-views">{{ collection.viewCount || 0 }} 次浏览</span>
                 <span class="collection-date">{{ formatDate(collection.createdAt) }}</span>
               </div>
-              <div class="collection-tags" v-if="collection.tags">
-                <el-tag 
-                  v-for="tag in parseTags(collection.tags)" 
-                  :key="tag" 
-                  size="small" 
+              <div v-if="collection.tags" class="collection-tags">
+                <ElTag
+                  v-for="tag in parseTags(collection.tags)"
+                  :key="tag"
+                  size="small"
                   class="collection-tag"
                 >
                   {{ tag }}
-                </el-tag>
+                </ElTag>
               </div>
-            </el-card>
+            </ElCard>
           </div>
         </div>
-      </el-card>
+      </ElCard>
     </div>
   </div>
 </template>

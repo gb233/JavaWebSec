@@ -40,7 +40,7 @@ export const A02_ATTACK_SCENARIOS: A02AttackScenario[] = [
   {
     name: 'SQL注入绕过',
     description: '通过SQL注入绕过身份验证',
-    payload: "admin' -- ",
+    payload: 'admin\' -- ',
     expectedResult: '认证成功'
   },
   {

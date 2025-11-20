@@ -1,45 +1,45 @@
 <template>
   <div class="challenge-detail">
     <div v-if="loading" class="loading">
-      <el-skeleton :rows="5" animated />
+      <ElSkeleton :rows="5" animated />
     </div>
-    
+
     <div v-else-if="challenge" class="challenge-content">
       <div class="challenge-header">
         <h1>{{ challenge.title }}</h1>
         <div class="challenge-meta">
-          <el-tag :type="getDifficultyTag(challenge.difficultyLevel)">
+          <ElTag :type="getDifficultyTag(challenge.difficultyLevel)">
             {{ getDifficultyText(challenge.difficultyLevel) }}
-          </el-tag>
+          </ElTag>
           <span class="time">{{ challenge.estimatedTime }}分钟</span>
           <span class="points">{{ challenge.points }}分</span>
         </div>
       </div>
-      
+
       <div class="challenge-description">
         <h3>挑战描述</h3>
         <p>{{ challenge.description }}</p>
       </div>
-      
+
       <div class="vulnerability-chain">
         <h3>漏洞链</h3>
-        <el-steps :active="0" finish-status="success">
-          <el-step 
-            v-for="(vuln, index) in vulnerabilityChain" 
+        <ElSteps :active="0" finish-status="success">
+          <ElStep
+            v-for="(vuln, index) in vulnerabilityChain"
             :key="index"
             :title="vuln"
             :description="`步骤 ${index + 1}`"
           />
-        </el-steps>
+        </ElSteps>
       </div>
-      
+
       <div class="challenge-actions">
-        <el-button type="primary" size="large" @click="startChallenge">
+        <ElButton type="primary" size="large" @click="startChallenge">
           开始挑战
-        </el-button>
-        <el-button size="large" @click="viewProgress">
+        </ElButton>
+        <ElButton size="large" @click="viewProgress">
           查看进度
-        </el-button>
+        </ElButton>
       </div>
     </div>
   </div>
@@ -97,20 +97,20 @@ const viewProgress = () => {
 
 const getDifficultyTag = (level: string) => {
   const tagMap = {
-    'beginner': 'success',
-    'intermediate': 'warning',
-    'advanced': 'danger',
-    'expert': 'info'
+    beginner: 'success',
+    intermediate: 'warning',
+    advanced: 'danger',
+    expert: 'info'
   }
   return tagMap[level] || 'info'
 }
 
 const getDifficultyText = (level: string) => {
   const textMap = {
-    'beginner': '初级',
-    'intermediate': '中级',
-    'advanced': '高级',
-    'expert': '专家'
+    beginner: '初级',
+    intermediate: '中级',
+    advanced: '高级',
+    expert: '专家'
   }
   return textMap[level] || level
 }

@@ -3,6 +3,7 @@ package com.javaweb.security.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import javax.persistence.*;
 import lombok.Data;
@@ -90,7 +91,7 @@ public class UserTestRecord {
       return BigDecimal.ZERO;
     }
     return BigDecimal.valueOf(correctCount)
-        .divide(BigDecimal.valueOf(totalQuestions), 4, BigDecimal.ROUND_HALF_UP)
+        .divide(BigDecimal.valueOf(totalQuestions), 4, RoundingMode.HALF_UP)
         .multiply(BigDecimal.valueOf(100));
   }
 
@@ -100,7 +101,7 @@ public class UserTestRecord {
       return BigDecimal.ZERO;
     }
     return BigDecimal.valueOf(timeSpent)
-        .divide(BigDecimal.valueOf(totalQuestions), 2, BigDecimal.ROUND_HALF_UP);
+        .divide(BigDecimal.valueOf(totalQuestions), 2, RoundingMode.HALF_UP);
   }
 
   /** 检查是否已完成 */

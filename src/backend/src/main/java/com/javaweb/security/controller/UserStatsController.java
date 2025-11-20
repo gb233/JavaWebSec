@@ -39,9 +39,39 @@ public class UserStatsController {
         studyTime,
         points);
 
-    userStatsUpdateService.updateVulnerabilityStats(userId, vulnerabilityCode, studyTime, points);
+    try {
+      // 参数验证
+      if (userId == null) {
+        return ResponseEntity.badRequest().body(ApiResult.failed("用户ID不能为空"));
+      }
+      if (vulnerabilityCode == null || vulnerabilityCode.trim().isEmpty()) {
+        return ResponseEntity.badRequest().body(ApiResult.failed("漏洞代码不能为空"));
+      }
+      if (studyTime == null || studyTime < 0) {
+        return ResponseEntity.badRequest().body(ApiResult.failed("学习时长必须大于等于0"));
+      }
+      if (points == null || points < 0) {
+        return ResponseEntity.badRequest().body(ApiResult.failed("积分必须大于等于0"));
+      }
 
-    return ResponseEntity.ok(ApiResult.success("漏洞学习统计更新成功"));
+      userStatsUpdateService.updateVulnerabilityStats(userId, vulnerabilityCode, studyTime, points);
+
+      return ResponseEntity.ok(ApiResult.success("漏洞学习统计更新成功"));
+    } catch (IllegalArgumentException e) {
+      log.warn("更新漏洞学习统计参数错误: {}", e.getMessage());
+      return ResponseEntity.badRequest().body(ApiResult.failed(e.getMessage()));
+    } catch (Exception e) {
+      log.error(
+          "更新漏洞学习统计失败: userId={}, vulnerabilityCode={}, studyTime={}, points={}, error={}",
+          userId,
+          vulnerabilityCode,
+          studyTime,
+          points,
+          e.getMessage(),
+          e);
+      return ResponseEntity.internalServerError()
+          .body(ApiResult.failed("更新漏洞学习统计失败: " + e.getMessage()));
+    }
   }
 
   @PostMapping("/test")

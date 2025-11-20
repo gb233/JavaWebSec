@@ -14,14 +14,14 @@ export function useWebSocket(url: string) {
   const connect = () => {
     try {
       socket.value = new WebSocket(url)
-      
+
       socket.value.onopen = () => {
         connected.value = true
         error.value = null
         console.log('WebSocket连接已建立')
       }
-      
-      socket.value.onmessage = (event) => {
+
+      socket.value.onmessage = event => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data)
           const handler = messageHandlers.get(message.type)
@@ -32,7 +32,7 @@ export function useWebSocket(url: string) {
           console.error('解析WebSocket消息失败:', err)
         }
       }
-      
+
       socket.value.onclose = () => {
         connected.value = false
         console.log('WebSocket连接已关闭')
@@ -43,8 +43,8 @@ export function useWebSocket(url: string) {
           }
         }, 3000)
       }
-      
-      socket.value.onerror = (err) => {
+
+      socket.value.onerror = err => {
         error.value = 'WebSocket连接错误'
         console.error('WebSocket错误:', err)
       }
