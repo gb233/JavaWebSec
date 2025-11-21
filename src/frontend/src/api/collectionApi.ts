@@ -1,10 +1,50 @@
 import request from '@/utils/request'
 import { collectionItemApi } from './collectionItemApi'
 
+// 收藏夹类型定义
+export interface Collection {
+  id: number
+  name: string
+  description?: string
+  isPublic: boolean
+  isDefault: boolean
+  createdAt: string
+  updatedAt?: string
+  viewCount?: number
+  userId: number
+  tags?: string
+}
+
+// 创建收藏夹请求数据
+export interface CreateCollectionData {
+  name: string
+  description?: string
+  isPublic?: boolean
+  isDefault?: boolean
+  tags?: string
+}
+
+// 更新收藏夹请求数据
+export interface UpdateCollectionData {
+  name?: string
+  description?: string
+  isPublic?: boolean
+  isDefault?: boolean
+  tags?: string
+}
+
+// 分页查询参数
+export interface CollectionPageParams {
+  page?: number
+  size?: number
+  keyword?: string
+  isPublic?: boolean
+}
+
 // 收藏夹相关API接口
 export const collectionApi = {
   // 创建收藏夹
-  createCollection: (data: any) => {
+  createCollection: (data: CreateCollectionData) => {
     return request({
       url: '/api/v1/collections',
       method: 'post',
@@ -13,7 +53,7 @@ export const collectionApi = {
   },
 
   // 更新收藏夹
-  updateCollection: (collectionId: number, data: any) => {
+  updateCollection: (collectionId: number, data: UpdateCollectionData) => {
     return request({
       url: `/api/v1/collections/${collectionId}`,
       method: 'put',
@@ -46,7 +86,7 @@ export const collectionApi = {
   },
 
   // 分页获取我的收藏夹
-  getMyCollectionsPaged: (params: any) => {
+  getMyCollectionsPaged: (params: CollectionPageParams) => {
     return request({
       url: '/api/v1/collections/my/page',
       method: 'get',
@@ -83,7 +123,7 @@ export const collectionApi = {
   },
 
   // 获取所有公开收藏夹
-  getPublicCollections: (params: any) => {
+  getPublicCollections: (params: CollectionPageParams) => {
     return request({
       url: '/api/v1/collections/public',
       method: 'get',
@@ -125,7 +165,7 @@ export const collectionApi = {
   },
 
   // 获取我的最近收藏夹
-  getMyRecentCollections: (params: any) => {
+  getMyRecentCollections: (params: CollectionPageParams) => {
     return request({
       url: '/api/v1/collections/my/recent',
       method: 'get',
@@ -134,7 +174,7 @@ export const collectionApi = {
   },
 
   // 获取热门收藏夹
-  getPopularCollections: (params: any) => {
+  getPopularCollections: (params: CollectionPageParams) => {
     return request({
       url: '/api/v1/collections/popular',
       method: 'get',

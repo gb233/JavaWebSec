@@ -47,10 +47,21 @@ const showGuide = () => {
   guideMessage.value = '新手指引功能已触发！'
 }
 
+// 获取API基础URL（使用环境变量或相对路径）
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL
+  if (envUrl) {
+    return envUrl.replace(/\/api\/?$/, '')
+  }
+  // 生产环境使用相对路径，开发环境使用默认值
+  return import.meta.env.PROD ? '' : 'http://localhost:8080'
+}
+
 // 测试后端连接
 const testBackendConnection = async () => {
   try {
-    const response = await fetch('http://localhost:8080/api/v1/language/supported', {
+    const baseUrl = getApiBaseUrl()
+    const response = await fetch(`${baseUrl}/api/v1/language/supported`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'

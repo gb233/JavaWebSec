@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { House, Back, Tools } from '@element-plus/icons-vue'
+import { House, Back } from '@element-plus/icons-vue'
 
 interface Props {
   title: string
@@ -38,7 +38,7 @@ interface Props {
   showActions?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   description: '该功能正在开发中，敬请期待！',
   icon: 'Tools',
   showActions: true

@@ -1,4 +1,3 @@
-import { computed } from 'vue'
 import testApi, { type TestQuestion } from '@/api/test'
 
 // 测试模式配置

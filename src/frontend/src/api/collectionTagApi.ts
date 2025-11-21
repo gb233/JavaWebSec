@@ -1,9 +1,27 @@
 import request from '@/utils/request'
 
+// 收藏标签类型定义
+export interface CollectionTag {
+  id: number
+  name: string
+  usageCount?: number
+  createdAt?: string
+}
+
+// 创建标签请求数据
+export interface CreateTagData {
+  name: string
+}
+
+// 更新标签请求数据
+export interface UpdateTagData {
+  name?: string
+}
+
 // 收藏标签相关API接口
 export const collectionTagApi = {
   // 创建标签
-  createTag: (data: any) => {
+  createTag: (data: CreateTagData) => {
     return request({
       url: '/api/v1/collection-tags',
       method: 'post',
@@ -12,7 +30,7 @@ export const collectionTagApi = {
   },
 
   // 更新标签
-  updateTag: (tagId: number, data: any) => {
+  updateTag: (tagId: number, data: UpdateTagData) => {
     return request({
       url: `/api/v1/collection-tags/${tagId}`,
       method: 'put',
@@ -102,7 +120,7 @@ export const collectionTagApi = {
   },
 
   // 批量创建标签
-  batchCreateTags: (tags: any[]) => {
+  batchCreateTags: (tags: CreateTagData[]) => {
     return request({
       url: '/api/v1/collection-tags/batch',
       method: 'post',

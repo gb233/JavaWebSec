@@ -68,7 +68,7 @@ jobs:
           labels: ${{ steps.meta-backend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
 
   build-frontend:
     name: Build Frontend Image
@@ -113,7 +113,7 @@ jobs:
           labels: ${{ steps.meta-frontend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
 
   build-full:
     name: Build Full Stack Image
@@ -158,7 +158,7 @@ jobs:
           labels: ${{ steps.meta-full.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
 
   build-matrix:
     name: Build All Images
@@ -172,6 +172,7 @@ jobs:
           echo "Backend: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}"
           echo "Frontend: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}"
           echo "Full Stack: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FULL }}"
+
 
 
 

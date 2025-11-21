@@ -3,7 +3,7 @@ import { request } from '@/utils/request'
 export interface A01Response {
   success: boolean
   message: string
-  data?: any
+  data?: Record<string, unknown>
 }
 
 export interface A01VulnerabilityInfo {

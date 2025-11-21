@@ -141,19 +141,25 @@ public class ApplicationConfig {
    *
    * <p>配置跨域资源共享，允许前端访问后端API
    *
+   * <p>支持通过环境变量配置允许的源，默认允许所有来源（生产环境建议配置具体域名）
+   *
    * @return CORS配置源
    */
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
 
-    // 允许的源（开发环境）
-    configuration.setAllowedOriginPatterns(
-        Arrays.asList(
-            "http://localhost:*",
-            "http://127.0.0.1:*",
-            "https://localhost:*",
-            "https://127.0.0.1:*"));
+    // 从环境变量读取允许的源，如果没有配置则允许所有来源
+    // 生产环境建议通过环境变量 CORS_ALLOWED_ORIGINS 配置具体域名
+    String allowedOrigins = System.getenv("CORS_ALLOWED_ORIGINS");
+    if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+      // 支持多个源，用逗号分隔
+      configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
+    } else {
+      // 默认允许所有来源（开发环境和公网部署）
+      // 注意：生产环境建议通过环境变量配置具体域名以提高安全性
+      configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+    }
 
     // 允许的HTTP方法
     configuration.setAllowedMethods(

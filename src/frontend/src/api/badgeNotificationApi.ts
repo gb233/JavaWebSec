@@ -1,5 +1,10 @@
 import request from '@/utils/request'
 
+// 徽章通知统计数据类型
+export interface BadgeStats {
+  [key: string]: unknown
+}
+
 // 徽章通知相关API接口
 export const badgeNotificationApi = {
   // 测试徽章通知
@@ -38,7 +43,7 @@ export const badgeNotificationApi = {
   },
 
   // 发送统计更新通知
-  sendStatsUpdateNotification: (stats: any) => {
+  sendStatsUpdateNotification: (stats: BadgeStats) => {
     return request({
       url: '/api/v1/badge-notifications/stats',
       method: 'post',

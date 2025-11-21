@@ -79,11 +79,22 @@ const noteForm = reactive({
   title: '测试笔记'
 })
 
+// 获取API基础URL（使用环境变量或相对路径）
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL
+  if (envUrl) {
+    return envUrl.replace(/\/api\/?$/, '')
+  }
+  // 生产环境使用相对路径，开发环境使用默认值
+  return import.meta.env.PROD ? '' : 'http://localhost:8080'
+}
+
 // 测试后端健康检查
 const testHealth = async () => {
   healthLoading.value = true
   try {
-    const response = await fetch('http://localhost:8080/actuator/health')
+    const baseUrl = getApiBaseUrl()
+    const response = await fetch(`${baseUrl}/actuator/health`)
     const data = await response.json()
     healthResult.value = {
       success: response.ok,
@@ -104,7 +115,8 @@ const testHealth = async () => {
 const testUserStats = async () => {
   statsLoading.value = true
   try {
-    const response = await fetch('http://localhost:8080/api/v1/users/stats')
+    const baseUrl = getApiBaseUrl()
+    const response = await fetch(`${baseUrl}/api/v1/users/stats`)
     const data = await response.json()
     statsResult.value = {
       success: data.success !== false,
@@ -130,7 +142,8 @@ const testNoteApi = async () => {
 
   noteLoading.value = true
   try {
-    const response = await fetch('http://localhost:8080/api/v1/notes/my?page=0&size=10')
+    const baseUrl = getApiBaseUrl()
+    const response = await fetch(`${baseUrl}/api/v1/notes/my?page=0&size=10`)
     const data = await response.json()
     noteResult.value = {
       success: data.success !== false,

@@ -2,15 +2,6 @@ import { createI18n } from 'vue-i18n'
 import zhCN from '@/locales/zh-CN'
 import enUS from '@/locales/en-US'
 
-// 获取浏览器语言
-const getBrowserLanguage = () => {
-  const lang = navigator.language || navigator.languages[0]
-  if (lang.startsWith('zh')) {
-    return 'zh-CN'
-  }
-  return 'zh-CN' // 默认使用中文
-}
-
 // 从localStorage获取保存的语言设置
 const getSavedLanguage = () => {
   // 优先使用用户语言偏好

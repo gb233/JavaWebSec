@@ -2,14 +2,14 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 interface WebSocketMessage {
   type: string
-  data: any
+  data: Record<string, unknown>
 }
 
 export function useWebSocket(url: string) {
   const socket = ref<WebSocket | null>(null)
   const connected = ref(false)
   const error = ref<string | null>(null)
-  const messageHandlers = new Map<string, (data: any) => void>()
+  const messageHandlers = new Map<string, (data: Record<string, unknown>) => void>()
 
   const connect = () => {
     try {
@@ -62,7 +62,7 @@ export function useWebSocket(url: string) {
     }
   }
 
-  const send = (type: string, data: any) => {
+  const send = (type: string, data: Record<string, unknown>) => {
     if (socket.value && connected.value) {
       const message = { type, data }
       socket.value.send(JSON.stringify(message))
@@ -71,7 +71,7 @@ export function useWebSocket(url: string) {
     }
   }
 
-  const on = (type: string, handler: (data: any) => void) => {
+  const on = (type: string, handler: (data: Record<string, unknown>) => void) => {
     messageHandlers.set(type, handler)
   }
 

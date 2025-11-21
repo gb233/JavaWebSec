@@ -332,3 +332,82 @@ java -jar src/backend/target/security-teaching-system.jar
 **🎓 让Web安全学习更简单、更系统、更实战！**
 
 </div>
+
+---
+
+## 📝 开发日志
+
+### 2025-11-20 20:34 - CI Lint错误修复
+
+#### 会话目的
+修复Git推送后CI构建失败的问题，解决前端代码的ESLint和TypeScript类型检查错误。
+
+#### 完成的主要任务
+1. **修复未使用的导入和变量**：
+   - 移除 `src/frontend/src/layouts/index.vue` 中未使用的图标导入（Setting, Monitor, Collection）
+   - 移除 `src/frontend/src/i18n/index.ts` 中未使用的 `getBrowserLanguage` 函数
+   - 移除 `src/frontend/src/composables/useTestMode.ts` 中未使用的 `computed` 导入
+   - 移除 `src/frontend/src/components/PlaceholderView.vue` 中未使用的 `Tools` 导入和 `props` 变量
+   - 移除 `src/frontend/src/components/LanguageSwitch.vue` 中未使用的 `computed` 导入
+
+2. **修复代码格式问题**：
+   - 修复 `src/frontend/src/api/vulnerabilityProgress.ts` 文件末尾多余的空行
+
+3. **修复TypeScript类型安全问题**：
+   - 为 `src/frontend/src/api/collectionApi.ts` 添加完整的类型定义：
+     - `Collection` 接口：收藏夹实体类型
+     - `CreateCollectionData` 接口：创建收藏夹请求数据类型
+     - `UpdateCollectionData` 接口：更新收藏夹请求数据类型
+     - `CollectionPageParams` 接口：分页查询参数类型
+     - 将所有 `any` 类型替换为具体类型
+   
+   - 为 `src/frontend/src/api/collectionTagApi.ts` 添加类型定义：
+     - `CollectionTag` 接口：收藏标签实体类型
+     - `CreateTagData` 接口：创建标签请求数据类型
+     - `UpdateTagData` 接口：更新标签请求数据类型
+     - 修复 `batchCreateTags` 方法的参数类型
+   
+   - 为 `src/frontend/src/api/badgeNotificationApi.ts` 添加类型定义：
+     - `BadgeStats` 接口：徽章统计数据类型
+   
+   - 修复 `src/frontend/src/api/a01.ts` 中的 `any` 类型：
+     - 将 `A01Response` 接口中的 `data?: any` 改为 `data?: Record<string, unknown>`
+   
+   - 修复 `src/frontend/src/composables/useWebSocket.ts` 中的类型：
+     - 将 `WebSocketMessage` 接口中的 `data: any` 改为 `data: Record<string, unknown>`
+     - 将所有相关的 `any` 类型替换为 `Record<string, unknown>`
+
+#### 关键决策和解决方案
+1. **类型安全优先**：将所有 `any` 类型替换为具体的接口类型或 `Record<string, unknown>`，提高代码的类型安全性
+2. **代码清理**：移除所有未使用的导入和变量，保持代码整洁
+3. **接口定义规范**：为API接口创建完整的TypeScript类型定义，确保前后端类型一致性
+
+#### 使用的技术栈
+- TypeScript：类型检查和类型定义
+- ESLint：代码质量检查
+- Vue 3 Composition API：前端框架
+
+#### 修改的文件列表
+1. `src/frontend/src/layouts/index.vue` - 移除未使用的图标导入
+2. `src/frontend/src/i18n/index.ts` - 移除未使用的函数
+3. `src/frontend/src/composables/useTestMode.ts` - 移除未使用的导入
+4. `src/frontend/src/components/PlaceholderView.vue` - 移除未使用的导入和变量
+5. `src/frontend/src/components/LanguageSwitch.vue` - 移除未使用的导入
+6. `src/frontend/src/api/vulnerabilityProgress.ts` - 修复文件末尾空行
+7. `src/frontend/src/api/collectionApi.ts` - 添加完整的类型定义，修复所有 `any` 类型
+8. `src/frontend/src/api/collectionTagApi.ts` - 添加类型定义，修复所有 `any` 类型
+9. `src/frontend/src/api/badgeNotificationApi.ts` - 添加类型定义，修复 `any` 类型
+10. `src/frontend/src/api/a01.ts` - 修复 `any` 类型
+11. `src/frontend/src/composables/useWebSocket.ts` - 修复所有 `any` 类型
+
+#### 文件的修改内容
+- **类型定义增强**：为所有API接口添加了完整的TypeScript类型定义，包括请求参数类型、响应数据类型和实体类型
+- **代码清理**：移除了所有未使用的导入、变量和函数，减少代码冗余
+- **类型安全**：将所有 `any` 类型替换为具体类型或 `Record<string, unknown>`，提高代码的类型安全性
+- **格式规范**：修复了文件末尾多余空行等格式问题
+
+#### 验证结果
+- ✅ 所有ESLint错误已修复
+- ✅ 所有TypeScript类型检查错误已修复
+- ✅ CI构建应该能够通过
+
