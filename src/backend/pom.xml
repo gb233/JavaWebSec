@@ -44,7 +44,7 @@
         
         <!-- JSON处理 -->
         <jackson.version>2.15.4</jackson.version>
-        <fastjson.version>1.2.24</fastjson.version>
+        <fastjson.version>1.2.83</fastjson.version>
         
         <!-- 文档和API -->
         <springdoc.version>1.7.0</springdoc.version>
