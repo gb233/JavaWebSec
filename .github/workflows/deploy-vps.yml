@@ -22,7 +22,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT || 22 }}
-          script_steps: |
+          script: |
             cd ${{ secrets.DEPLOY_PATH || 'javaweb-security' }} || exit 1
             if [ "${{ secrets.STOP_BEFORE_START || 'true' }}" = "true" ]; then docker compose -f docker-compose.prod.yml down; fi
             git fetch origin && (git reset --hard origin/main || git reset --hard origin/master)
