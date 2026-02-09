@@ -38,7 +38,7 @@ RUN mvn clean package -DskipTests -B \
 # ========================================
 # 阶段3: 运行时镜像
 # ========================================
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 RUN apk add --no-cache curl tzdata \
     && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
