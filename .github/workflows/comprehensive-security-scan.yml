@@ -1,0 +1,237 @@
+name: Comprehensive Security Scan
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 2 * * *'  # 每天凌晨2点
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  # =====================================================
+  # 1. Snyk依赖漏洞扫描
+  # =====================================================
+  snyk-backend:
+    name: Snyk Backend Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/backend
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/maven@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --fail-on=upgradable
+        id: snyk-backend
+
+      - name: Upload Snyk results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+
+      - name: Snyk backend scan result
+        if: steps.snyk-backend.outcome == 'failure'
+        run: |
+          echo "❌ Snyk发现后端依赖漏洞"
+          exit 1
+
+  snyk-frontend:
+    name: Snyk Frontend Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/npm@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --fail-on=upgradable
+        id: snyk-frontend
+
+      - name: Snyk frontend scan result
+        if: steps.snyk-frontend.outcome == 'failure'
+        run: |
+          echo "❌ Snyk发现前端依赖漏洞"
+          exit 1
+
+  # =====================================================
+  # 2. Semgrep静态代码分析
+  # =====================================================
+  semgrep:
+    name: Semgrep Static Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/owasp-top-ten
+            p/java
+            p/typescript
+            p/security-audit
+          generateSarif: "1"
+          generateGitHubSARIF: "1"
+        continue-on-error: true
+        id: semgrep
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+
+      - name: Semgrep scan result
+        if: steps.semgrep.outcome == 'failure'
+        run: |
+          echo "❌ Semgrep发现安全问题"
+          exit 1
+
+  # =====================================================
+  # 3. SpotBugs Java安全扫描
+  # =====================================================
+  spotbugs:
+    name: SpotBugs Security Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/backend
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Build with SpotBugs
+        run: |
+          mvn clean compile spotbugs:check
+        continue-on-error: true
+        id: spotbugs
+
+      - name: Upload SpotBugs report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: spotbugs-report
+          path: src/backend/target/spotbugsXml.xml
+          retention-days: 7
+
+      - name: SpotBugs scan result
+        if: steps.spotbugs.outcome == 'failure'
+        run: |
+          echo "❌ SpotBugs发现安全问题"
+          exit 1
+
+  # =====================================================
+  # 4. ESLint安全扫描（前端）
+  # =====================================================
+  eslint-security:
+    name: ESLint Security Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint security scan
+        run: |
+          if npm list eslint-plugin-security > /dev/null 2>&1; then
+            npm run lint:security || true
+          else
+            echo "⚠️ eslint-plugin-security未安装，跳过安全扫描"
+            echo "建议: npm install --save-dev eslint-plugin-security"
+          fi
+        continue-on-error: true
+        id: eslint-security
+
+  # =====================================================
+  # 5. 安全扫描总结
+  # =====================================================
+  security-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs: [snyk-backend, snyk-frontend, semgrep, spotbugs, eslint-security]
+    if: always()
+    
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## 🔒 综合安全扫描结果汇总" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 扫描工具 | 后端 | 前端 | 状态 |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|------|------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Snyk依赖扫描 | ${{ needs.snyk-backend.result }} | ${{ needs.snyk-frontend.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Semgrep静态分析 | ${{ needs.semgrep.result }} | ${{ needs.semgrep.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| SpotBugs Java扫描 | ${{ needs.spotbugs.result }} | - | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| ESLint安全扫描 | - | ${{ needs.eslint-security.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 详细报告：" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub Security标签页" >> $GITHUB_STEP_SUMMARY
+          echo "- Snyk Dashboard（如配置）" >> $GITHUB_STEP_SUMMARY
+          echo "- Semgrep Dashboard（如配置）" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "💡 提示：使用专业工具进行更深入的安全分析" >> $GITHUB_STEP_SUMMARY
+
+
+

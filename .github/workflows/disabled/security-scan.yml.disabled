@@ -1,0 +1,311 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # 每天凌晨2点执行安全扫描
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+# 限制权限，保护敏感信息
+# 注意：公开仓库的扫描结果对所有人可见，建议使用私有仓库
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  # 不授予其他权限，限制可见性
+
+env:
+  JAVA_VERSION: '17'
+  NODE_VERSION: '20'
+
+jobs:
+  # =====================================================
+  # 1. 代码安全扫描 (CodeQL)
+  # =====================================================
+  codeql-analysis:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['java', 'javascript']
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+          queries: +security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  # =====================================================
+  # 2. 后端依赖漏洞扫描 (OWASP Dependency-Check)
+  # =====================================================
+  backend-dependency-check:
+    name: Backend Dependency Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/backend
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'maven'
+
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: depcheck
+        with:
+          project: 'Security-Teaching-System-Backend'
+          path: 'src/backend'
+          format: 'ALL'
+          args: >
+            --failOnCVSS 7.0
+            --enableRetired
+            --enableExperimental
+          suppressionFiles: '.github/dependency-check-suppressions.xml'
+
+      - name: Upload Dependency-Check Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: backend-dependency-check-report
+          path: |
+            src/backend/reports/dependency-check-report.html
+            src/backend/reports/dependency-check-report.json
+          retention-days: 7
+          # 注意：Artifacts只有仓库成员可以下载
+          # 公开仓库的成员下载链接可能暴露，建议使用私有仓库
+
+      - name: Check for high severity vulnerabilities
+        if: steps.depcheck.outcome == 'failure'
+        run: |
+          echo "❌ 发现高危漏洞（CVSS >= 7.0），请查看报告"
+          exit 1
+
+  # =====================================================
+  # 3. 前端依赖漏洞扫描 (npm audit + Snyk)
+  # =====================================================
+  frontend-dependency-check:
+    name: Frontend Dependency Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: |
+          npm audit --audit-level=high --production || true
+          npm audit --audit-level=high --production --json > npm-audit-report.json || true
+
+      - name: Upload npm audit report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: frontend-npm-audit-report
+          path: src/frontend/npm-audit-report.json
+          retention-days: 7
+          # 注意：Artifacts只有仓库成员可以下载
+          # 公开仓库的成员下载链接可能暴露，建议使用私有仓库
+
+      - name: Run Snyk test (if token provided)
+        if: ${{ secrets.SNYK_TOKEN != '' }}
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --file=package.json
+
+      - name: Upload Snyk report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: frontend-snyk-report
+          path: snyk-report.json
+          retention-days: 7
+          if-no-files-found: ignore
+          # 注意：Artifacts只有仓库成员可以下载
+          # 公开仓库的成员下载链接可能暴露，建议使用私有仓库
+
+  # =====================================================
+  # 4. 容器镜像安全扫描 (Trivy)
+  # =====================================================
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    needs: [backend-dependency-check, frontend-dependency-check]
+    if: github.event_name != 'schedule'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker images
+        run: |
+          docker build -f Dockerfile.backend -t backend:test .
+          docker build -f Dockerfile.frontend -t frontend:test .
+
+      - name: Run Trivy vulnerability scanner on backend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'backend:test'
+          format: 'sarif'
+          output: 'trivy-backend-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Trivy vulnerability scanner on frontend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'frontend:test'
+          format: 'sarif'
+          output: 'trivy-frontend-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-backend-results.sarif'
+          wait-for-processing: true
+
+      - name: Upload Trivy reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: trivy-scan-reports
+          path: |
+            trivy-backend-results.sarif
+            trivy-frontend-results.sarif
+          retention-days: 7
+          # 注意：Artifacts只有仓库成员可以下载
+          # 公开仓库的成员下载链接可能暴露，建议使用私有仓库
+
+  # =====================================================
+  # 5. 密钥泄露扫描 (Gitleaks)
+  # =====================================================
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 完整历史记录
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-path: .github/gitleaks.toml
+          no-git: false
+          verbose: true
+
+  # =====================================================
+  # 6. 许可证合规性检查
+  # =====================================================
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check backend licenses
+        working-directory: src/backend
+        run: |
+          mvn license:add-third-party || true
+          mvn license:download-licenses || true
+
+      - name: Check frontend licenses
+        working-directory: src/frontend
+        run: |
+          npx license-checker --json > licenses.json || true
+
+      - name: Upload license reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: license-reports
+          path: |
+            src/backend/target/generated-sources/license/THIRD-PARTY.txt
+            src/frontend/licenses.json
+          retention-days: 30
+          if-no-files-found: ignore
+          # 注意：Artifacts只有仓库成员可以下载
+          # 公开仓库的成员下载链接可能暴露，建议使用私有仓库
+
+  # =====================================================
+  # 7. 安全扫描总结
+  # =====================================================
+  security-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs: [codeql-analysis, backend-dependency-check, frontend-dependency-check, container-scan, secret-scan]
+    if: always()
+    
+    steps:
+      - name: Generate security summary
+        run: |
+          echo "## 🔒 安全扫描结果汇总" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **重要提示**：公开仓库的扫描结果对所有人可见，建议使用私有仓库保护敏感信息" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 扫描类型 | 状态 |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeQL 代码扫描 | ${{ needs.codeql-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 后端依赖扫描 | ${{ needs.backend-dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 前端依赖扫描 | ${{ needs.frontend-dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 容器镜像扫描 | ${{ needs.container-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 密钥泄露扫描 | ${{ needs.secret-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 详细报告：" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub Security标签页（仅仓库成员可见）" >> $GITHUB_STEP_SUMMARY
+          echo "- Artifacts（仅仓库成员可下载）" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.repository_visibility }}" == "public" ]; then
+            echo "⚠️ 当前为公开仓库，安全扫描结果对所有人可见！" >> $GITHUB_STEP_SUMMARY
+            echo "💡 建议：转为私有仓库或使用私有模式工作流" >> $GITHUB_STEP_SUMMARY
+          fi
+

@@ -1,0 +1,219 @@
+name: Security Scan (Private Mode)
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '17'
+  NODE_VERSION: '20'
+
+# 限制权限，只允许有权限的成员查看
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  # 不授予其他权限，限制可见性
+
+jobs:
+  # =====================================================
+  # 1. 代码安全扫描 (CodeQL) - 私有模式
+  # =====================================================
+  codeql-analysis:
+    name: CodeQL Security Analysis (Private)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+      # 限制权限，只有仓库成员可以看到结果
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['java', 'javascript']
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+          queries: +security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{ matrix.language }}"
+          upload: true
+          # 上传到GitHub Security，只有仓库成员可见
+
+  # =====================================================
+  # 2. 后端依赖漏洞扫描 - 私有模式
+  # =====================================================
+  backend-dependency-check:
+    name: Backend Dependency Check (Private)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/backend
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'maven'
+
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: depcheck
+        with:
+          project: 'Security-Teaching-System-Backend'
+          path: 'src/backend'
+          format: 'JSON'  # 只生成JSON，不上传HTML
+          args: >
+            --failOnCVSS 7.0
+            --enableRetired
+          suppressionFiles: '.github/dependency-check-suppressions.xml'
+
+      - name: Generate summary (no details)
+        run: |
+          # 只生成摘要，不包含详细漏洞信息
+          if [ -f "src/backend/reports/dependency-check-report.json" ]; then
+            echo "## Backend Dependency Check Summary" > summary.md
+            echo "Scan completed: $(date)" >> summary.md
+            echo "Status: ${{ steps.depcheck.outcome }}" >> summary.md
+            # 不包含具体漏洞信息
+          fi
+
+      - name: Upload summary only
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: backend-dependency-summary
+          path: summary.md
+          retention-days: 7
+          # 只上传摘要，不包含详细报告
+
+      - name: Check for high severity vulnerabilities
+        if: steps.depcheck.outcome == 'failure'
+        run: |
+          echo "❌ 发现高危漏洞（CVSS >= 7.0）"
+          echo "详细报告仅仓库成员可见"
+          exit 1
+
+  # =====================================================
+  # 3. 前端依赖漏洞扫描 - 私有模式
+  # =====================================================
+  frontend-dependency-check:
+    name: Frontend Dependency Check (Private)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit (summary only)
+        run: |
+          # 只显示摘要，不输出详细漏洞信息
+          npm audit --audit-level=high --production 2>&1 | head -20 || true
+          npm audit --audit-level=high --production --json > npm-audit-report.json 2>&1 || true
+
+      - name: Generate summary
+        run: |
+          echo "## Frontend Dependency Check Summary" > summary.md
+          echo "Scan completed: $(date)" >> summary.md
+          if [ -f "npm-audit-report.json" ]; then
+            echo "Audit report generated" >> summary.md
+          fi
+
+      - name: Upload summary only
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: frontend-dependency-summary
+          path: summary.md
+          retention-days: 7
+          # 不上传详细报告
+
+  # =====================================================
+  # 4. 密钥泄露扫描 - 私有模式
+  # =====================================================
+  secret-scan:
+    name: Secret Scanning (Private)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-path: .github/gitleaks.toml
+          no-git: false
+          verbose: false  # 不输出详细信息
+          exit-code: 1  # 发现泄露时失败
+
+      - name: Secret scan result
+        if: failure()
+        run: |
+          echo "❌ 发现密钥泄露"
+          echo "详细信息仅仓库成员可见"
+          exit 1
+
+  # =====================================================
+  # 5. 安全扫描总结（不包含详细信息）
+  # =====================================================
+  security-summary:
+    name: Security Scan Summary (Private)
+    runs-on: ubuntu-latest
+    needs: [codeql-analysis, backend-dependency-check, frontend-dependency-check, secret-scan]
+    if: always()
+    
+    steps:
+      - name: Generate private summary
+        run: |
+          echo "## 🔒 安全扫描结果汇总（私有）" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 扫描类型 | 状态 |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeQL 代码扫描 | ${{ needs.codeql-analysis.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 后端依赖扫描 | ${{ needs.backend-dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 前端依赖扫描 | ${{ needs.frontend-dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 密钥泄露扫描 | ${{ needs.secret-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ 详细报告仅仓库成员可见" >> $GITHUB_STEP_SUMMARY
+          echo "📊 查看详细报告：Security标签页" >> $GITHUB_STEP_SUMMARY
+

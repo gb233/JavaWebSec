@@ -23,8 +23,12 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      - name: Maven package (skip tests placeholder)
-        run: mvn -B -DskipTests package
+      - name: Run unit tests
+        run: mvn -B test
+        continue-on-error: false
+
+      - name: Build package
+        run: mvn -B package -DskipTests
 
   frontend:
     name: Frontend Lint & Build
@@ -49,5 +53,9 @@ jobs:
       - name: Lint check (if available)
         run: npm run lint:check --if-present
 
-      - name: Build (placeholder)
-        run: npm run build --if-present
+      - name: Run unit tests
+        run: npm run test:unit --if-present
+        continue-on-error: false
+
+      - name: Build
+        run: npm run build

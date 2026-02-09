@@ -1,0 +1,2 @@
+[CRITICAL] 发现可能的硬编码敏感配置
+[WARNING] 发现v-html使用，需要确认已转义

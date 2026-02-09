@@ -1,0 +1,24 @@
+# CodeQL配置文件
+# 文档: https://docs.github.com/en/code-security/code-scanning/using-codeql-code-scanning-with-your-ci/customizing-code-scanning
+
+name: "Security Teaching System CodeQL Config"
+
+paths:
+  - src/backend/src/main/java
+  - src/frontend/src
+
+paths-ignore:
+  - "**/*.test.ts"
+  - "**/*.test.js"
+  - "**/*.spec.ts"
+  - "**/*.spec.js"
+  - "**/node_modules"
+  - "**/target"
+  - "**/dist"
+
+queries:
+  # 使用安全相关查询
+  - uses: security-and-quality
+
+
+

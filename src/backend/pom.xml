@@ -44,7 +44,8 @@
         
         <!-- JSON处理 -->
         <jackson.version>2.15.4</jackson.version>
-        <fastjson.version>1.2.24</fastjson.version>
+        <!-- fastjson已移除：存在严重安全漏洞，不再使用 -->
+        <!-- <fastjson.version>1.2.24</fastjson.version> -->
         
         <!-- 文档和API -->
         <springdoc.version>1.7.0</springdoc.version>
@@ -195,14 +196,18 @@
 
         <!-- JSON处理 - 使用Spring Boot管理的版本 -->
         
-        <!-- 故意引入有漏洞的fastjson版本用于演示 -->
+        <!-- Fastjson已移除：存在严重安全漏洞（CVE-2022-25845, CVE-2017-18349等）
+             即使设置为provided scope，安全扫描工具仍会检测到
+             建议：使用Jackson替代（Spring Boot默认，已包含在项目中）
+        -->
+        <!--
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>${fastjson.version}</version>
             <scope>provided</scope>
-            <!-- 仅在演示模块中使用，不参与正常业务 -->
         </dependency>
+        -->
 
         <!-- API文档 -->
         <dependency>

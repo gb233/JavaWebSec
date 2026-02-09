@@ -1,0 +1,136 @@
+name: Database Schema Verification
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'scripts/**/*.sql'
+      - 'src/backend/**/entity/*.java'
+      - '.github/workflows/database-schema-verify.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'scripts/**/*.sql'
+      - 'src/backend/**/entity/*.java'
+  workflow_dispatch:
+    inputs:
+      database_host:
+        description: 'Database host'
+        required: false
+        default: 'localhost'
+      database_port:
+        description: 'Database port'
+        required: false
+        default: '3306'
+      database_name:
+        description: 'Database name'
+        required: false
+        default: 'security_teaching_system'
+
+env:
+  DB_HOST: ${{ github.event.inputs.database_host || 'localhost' }}
+  DB_PORT: ${{ github.event.inputs.database_port || '3306' }}
+  DB_USER: root
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD || 'root' }}
+  DB_NAME: ${{ github.event.inputs.database_name || 'security_teaching_system' }}
+
+jobs:
+  verify-schema:
+    name: Verify Database Schema
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ env.DB_PASSWORD }}
+          MYSQL_DATABASE: ${{ env.DB_NAME }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+      
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {1..30}; do
+            if mysql -h 127.0.0.1 -P 3306 -u root -p${{ env.DB_PASSWORD }} -e "SELECT 1" &>/dev/null; then
+              echo "MySQL is ready"
+              break
+            fi
+            echo "Waiting for MySQL... ($i/30)"
+            sleep 2
+          done
+      
+      - name: Initialize test database
+        run: |
+          chmod +x scripts/init-database.sh
+          export DB_HOST=127.0.0.1
+          export DB_PORT=3306
+          export DB_USER=root
+          export DB_PASSWORD=${{ env.DB_PASSWORD }}
+          export DB_NAME=${{ env.DB_NAME }}
+          echo "${{ env.DB_PASSWORD }}" | scripts/init-database.sh || true
+      
+      - name: Run schema verification
+        run: |
+          chmod +x scripts/verify-database-schema.sh
+          export DB_HOST=127.0.0.1
+          export DB_PORT=3306
+          export DB_USER=root
+          export DB_PASSWORD=${{ env.DB_PASSWORD }}
+          export DB_NAME=${{ env.DB_NAME }}
+          echo "${{ env.DB_PASSWORD }}" | scripts/verify-database-schema.sh
+        continue-on-error: true
+      
+      - name: Upload verification report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: schema-verification-report
+          path: |
+            scripts/schema-verification-reports/*.txt
+            scripts/schema-verification-reports/*.json
+          retention-days: 30
+      
+      - name: Check verification result
+        run: |
+          REPORT_FILE=$(ls -t scripts/schema-verification-reports/schema_verification_*.txt 2>/dev/null | head -1)
+          if [ -z "$REPORT_FILE" ]; then
+            echo "❌ 未找到核对报告"
+            exit 1
+          fi
+          
+          # 检查是否有缺失的表
+          MISSING_COUNT=$(grep -c "✗ 缺失的表" "$REPORT_FILE" || echo "0")
+          if [ "$MISSING_COUNT" -gt 0 ]; then
+            echo "❌ 发现缺失的表，请查看报告"
+            cat "$REPORT_FILE"
+            exit 1
+          fi
+          
+          echo "✅ 数据库结构核对通过"
+          cat "$REPORT_FILE"
+
+
+

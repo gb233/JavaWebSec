@@ -1,0 +1,93 @@
+# GitHub Linguist配置 - 让Java成为主要语言
+# 参考：https://github.com/github/linguist#using-gitattributes
+
+# ==========================================
+# 排除前端构建产物和依赖（不参与语言统计）
+# ==========================================
+
+# 前端构建产物（生成的文件，不应统计）
+src/frontend/dist/** linguist-generated=true
+src/frontend/.vite/** linguist-generated=true
+src/frontend/node_modules/** linguist-vendored=true
+src/frontend/coverage/** linguist-generated=true
+src/frontend/.nyc_output/** linguist-generated=true
+
+# 后端构建产物（生成的文件，不应统计）
+src/backend/target/** linguist-generated=true
+src/backend/.mvn/wrapper/maven-wrapper.jar linguist-generated=true
+*.jar linguist-generated=true
+*.war linguist-generated=true
+*.ear linguist-generated=true
+
+# ==========================================
+# 排除文档和配置文件（减少其他语言占比）
+# ==========================================
+
+# 文档文件（虽然有用，但不应该影响主要语言统计）
+docs/** linguist-documentation=true
+*.md linguist-documentation=true
+README.md linguist-documentation=true
+
+# 配置文件
+*.yml linguist-generated=true
+*.yaml linguist-generated=true
+*.json linguist-generated=true
+*.xml linguist-generated=true
+*.properties linguist-generated=true
+*.conf linguist-generated=true
+*.config linguist-generated=true
+
+# Docker和部署配置
+Dockerfile linguist-generated=true
+docker-compose*.yml linguist-generated=true
+.dockerignore linguist-generated=true
+
+# CI/CD配置
+.github/** linguist-generated=true
+
+# ==========================================
+# 明确指定Java为主要语言
+# ==========================================
+
+# Java源代码（核心业务代码）
+src/backend/src/**/*.java linguist-detectable=true
+*.java linguist-detectable=true
+
+# ==========================================
+# 前端代码处理（采用温和方式，不排除前端代码）
+# ==========================================
+
+# 注意：不排除前端源代码，只是排除构建产物和依赖
+# 这样既能突出Java，又能保留前端技术栈的展示
+# 前端源代码仍然会被统计，但构建产物和依赖不会
+
+# ==========================================
+# 其他文件处理
+# ==========================================
+
+# Shell脚本
+*.sh linguist-detectable=true
+
+# SQL脚本
+*.sql linguist-detectable=true
+
+# 日志文件
+*.log linguist-generated=true
+
+# 测试覆盖率报告
+coverage/** linguist-generated=true
+*.lcov linguist-generated=true
+
+# 锁文件
+package-lock.json linguist-generated=true
+yarn.lock linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
+
+# ==========================================
+# 强制语言检测（如果需要）
+# ==========================================
+
+# 如果上述配置不够，可以强制指定整个目录的语言
+# src/backend/** linguist-language=Java
+# src/frontend/** linguist-language=TypeScript
+

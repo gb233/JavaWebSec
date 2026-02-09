@@ -175,7 +175,7 @@ extract_entity_schema() {
     
     # 使用Python脚本提取实体类信息（如果可用）
     if command -v python3 &> /dev/null; then
-        python3 << 'PYTHON_SCRIPT' > "${ENTITY_SCHEMA_FILE}" 2>/dev/null || true
+        python3 << PYTHON_SCRIPT > "${ENTITY_SCHEMA_FILE}" 2>/dev/null || true
 import os
 import re
 import json
@@ -269,7 +269,7 @@ extract_sql_schema() {
     
     # 使用Python提取SQL表结构
     if command -v python3 &> /dev/null; then
-        python3 << 'PYTHON_SCRIPT' > "${SQL_SCHEMA_FILE}" 2>/dev/null || true
+        python3 << PYTHON_SCRIPT > "${SQL_SCHEMA_FILE}" 2>/dev/null || true
 import re
 import json
 from pathlib import Path

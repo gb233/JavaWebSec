@@ -311,7 +311,8 @@ import {
   checkUsernameAvailability as fetchUsernameAvailability,
   checkEmailAvailability as fetchEmailAvailability,
   getCaptcha,
-  getNonce
+  getNonce,
+  getServerTime
 } from '@/api/auth'
 import type { RegisterForm } from '@/types/api'
 
@@ -350,10 +351,12 @@ const captchaQuestion = ref('')
 const captchaId = ref('')
 const nonceToken = ref('')
 const nonceTimestamp = ref('')
-const captchaExpiryTime = ref(0) // 验证码过期时间戳（客户端时间，已转换）
-const nonceExpiryTime = ref(0) // nonce token过期时间戳（客户端时间，已转换）
+const captchaExpiryTime = ref(0) // 验证码过期时间戳（服务器时间）
+const nonceExpiryTime = ref(0) // nonce token过期时间戳（服务器时间）
 let captchaTimer: ReturnType<typeof setInterval> | null = null
 let nonceTimer: ReturnType<typeof setInterval> | null = null
+let serverTimeSyncTimer: ReturnType<typeof setInterval> | null = null
+let serverTimeOffset = ref(0) // 服务器时间与客户端时间的差值（毫秒）
 
 // 字段验证状态
 const usernameStatus = reactive({
@@ -525,55 +528,127 @@ const checkEmailAvailability = async () => {
 }
 
 /**
- * 获取验证码
+ * 同步服务器时间
+ */
+const syncServerTime = async () => {
+  try {
+    const response = await getServerTime()
+    if (response.code === 200 && response.data) {
+      const serverTime = response.data.serverTime || response.data.timestamp
+      const clientTime = Date.now()
+      serverTimeOffset.value = serverTime - clientTime
+      console.log(`[时间同步] 服务器时间: ${serverTime}, 客户端时间: ${clientTime}, 时间差: ${serverTimeOffset.value}ms`)
+    }
+  } catch (error) {
+    console.warn('同步服务器时间失败:', error)
+    // 同步失败不影响功能，使用客户端时间
+    serverTimeOffset.value = 0
+  }
+}
+
+/**
+ * 获取当前服务器时间（客户端时间 + 时间差）
+ */
+const getCurrentServerTime = () => {
+  return Date.now() + serverTimeOffset.value
+}
+
+/**
+ * 获取验证码（同时刷新nonce token，确保时间一致）
  */
 const refreshCaptcha = async (silent = false) => {
   try {
-    const response = await getCaptcha()
-    if (response.code === 200 && response.data) {
-      captchaId.value = response.data.captchaId
-      captchaQuestion.value = response.data.captchaQuestion || ''
+    // 先同步服务器时间，确保时间准确
+    await syncServerTime()
+    
+    // 同时刷新验证码和nonce token，确保它们的时间戳一致
+    const [captchaResponse, nonceResponse] = await Promise.all([
+      getCaptcha(),
+      getNonce()
+    ])
+    
+    // 处理验证码响应
+    if (captchaResponse.code === 200 && captchaResponse.data) {
+      captchaId.value = captchaResponse.data.captchaId
+      captchaQuestion.value = captchaResponse.data.captchaQuestion || ''
       registerForm.captchaId = captchaId.value
       
-      // 设置验证码过期时间（从后端返回的expiryTime或计算120秒后）
-      if (response.data.expiryTime) {
-        // 后端返回的是服务器时间戳（绝对时间）
-        // 由于无法准确知道服务器和客户端的时间差，采用保守策略：
-        // 1. 直接使用服务器时间戳，假设时间同步（大多数情况下是同步的）
-        // 2. 如果时间不同步，前端判断可能不准确，但后端验证时会正确拒绝
-        // 3. 前端在提交前再次检查，如果过期则刷新
-        const serverExpiryTime = parseInt(response.data.expiryTime)
-        const clientTime = Date.now()
-        
-        // 计算剩余时间（保守估计，考虑时间差）
-        const remainingMs = serverExpiryTime - clientTime
-        
-        // 设置客户端过期时间（使用相对时间，更可靠）
-        if (remainingMs > 0) {
-          captchaExpiryTime.value = clientTime + remainingMs
+      // 使用服务器时间设置过期时间（统一使用绝对时间戳）
+      // 确保无论服务器是否返回expiryTime，都使用一致的绝对时间戳格式
+      if (captchaResponse.data.expiryTime) {
+        // 服务器返回的过期时间（绝对时间戳）
+        const serverExpiryTime = parseInt(captchaResponse.data.expiryTime)
+        // 验证时间戳有效性（应该是未来的时间戳）
+        const currentTime = getCurrentServerTime()
+        if (serverExpiryTime > currentTime) {
+          captchaExpiryTime.value = serverExpiryTime
         } else {
-          // 如果已经过期，立即设置为当前时间（会触发刷新）
-          captchaExpiryTime.value = clientTime
+          // 如果服务器返回的时间戳已过期，使用当前时间+120秒
+          captchaExpiryTime.value = currentTime + 120 * 1000
         }
       } else {
-        captchaExpiryTime.value = Date.now() + 120 * 1000 // 120秒
+        // 服务器未返回过期时间，使用当前服务器时间+120秒（绝对时间戳）
+        captchaExpiryTime.value = getCurrentServerTime() + 120 * 1000
       }
       
-      // 自动刷新时必须清空答案，避免用户使用过期验证码的答案
-      // 手动刷新时也清空答案
+      // 清空答案
       registerForm.captchaAnswer = ''
       
       // 启动过期检测定时器
       startCaptchaTimer()
-      
-      if (!silent) {
-        ElMessage.success('验证码已刷新')
-      } else {
-        // 静默刷新时，验证码问题已更新，但不清空其他表单字段
-        // 答案已在上面清空，这里不需要额外操作
-      }
     } else {
       ElMessage.error('获取验证码失败，请稍后重试')
+      return
+    }
+    
+    // 处理nonce token响应（与验证码同步刷新）
+    if (nonceResponse.code === 200 && nonceResponse.data) {
+      const newNonce = nonceResponse.data.nonce
+      const newTimestamp = nonceResponse.data.timestamp
+      
+      // 立即更新表单数据
+      nonceToken.value = newNonce
+      nonceTimestamp.value = newTimestamp
+      registerForm.nonce = newNonce
+      registerForm.timestamp = newTimestamp
+      
+      // 使用与验证码相同的过期时间（统一使用绝对时间戳，确保时间一致）
+      // 优先使用验证码的过期时间，确保两者时间完全一致
+      if (captchaResponse.data && captchaResponse.data.expiryTime) {
+        // 使用验证码的过期时间（绝对时间戳）
+        const serverExpiryTime = parseInt(captchaResponse.data.expiryTime)
+        const currentTime = getCurrentServerTime()
+        if (serverExpiryTime > currentTime) {
+          nonceExpiryTime.value = serverExpiryTime
+        } else {
+          // 如果服务器返回的时间戳已过期，使用当前时间+120秒
+          nonceExpiryTime.value = currentTime + 120 * 1000
+        }
+      } else if (nonceResponse.data && nonceResponse.data.expiryTime) {
+        // 如果验证码没有过期时间，使用nonce的过期时间（绝对时间戳）
+        const serverExpiryTime = parseInt(nonceResponse.data.expiryTime)
+        const currentTime = getCurrentServerTime()
+        if (serverExpiryTime > currentTime) {
+          nonceExpiryTime.value = serverExpiryTime
+        } else {
+          // 如果服务器返回的时间戳已过期，使用当前时间+120秒
+          nonceExpiryTime.value = currentTime + 120 * 1000
+        }
+      } else {
+        // 如果都没有过期时间，使用当前服务器时间 + 120秒（绝对时间戳，与验证码一致）
+        nonceExpiryTime.value = getCurrentServerTime() + 120 * 1000
+      }
+      
+      // 启动过期检测定时器
+      startNonceTimer()
+      
+      console.log(`[同步刷新] 验证码和nonce token已同步刷新，过期时间: ${new Date(nonceExpiryTime.value).toLocaleTimeString()}`)
+    } else {
+      console.warn('获取nonce token失败，但验证码已刷新')
+    }
+    
+    if (!silent) {
+      ElMessage.success('验证码已刷新')
     }
   } catch (error) {
     console.error('获取验证码失败:', error)
@@ -582,7 +657,7 @@ const refreshCaptcha = async (silent = false) => {
 }
 
 /**
- * 启动验证码过期检测定时器
+ * 启动验证码过期检测定时器（基于服务器时间）
  */
 const startCaptchaTimer = () => {
   // 清除之前的定时器
@@ -591,13 +666,15 @@ const startCaptchaTimer = () => {
   }
   
   captchaTimer = setInterval(() => {
-    const remaining = Math.max(0, Math.floor((captchaExpiryTime.value - Date.now()) / 1000))
+    // 使用服务器时间判断是否过期（实时同步）
+    const currentServerTime = getCurrentServerTime()
+    const remaining = Math.max(0, Math.floor((captchaExpiryTime.value - currentServerTime) / 1000))
     
     // 如果验证码过期，自动刷新
     if (remaining <= 0) {
       clearInterval(captchaTimer!)
       captchaTimer = null
-      // 自动刷新验证码（静默刷新，但清空答案避免用户使用过期验证码）
+      // 自动刷新验证码（静默刷新，但必须清空答案）
       refreshCaptcha(true)
       // 提示用户验证码已自动刷新
       ElMessage.info('验证码已自动刷新，请重新输入')
@@ -606,15 +683,16 @@ const startCaptchaTimer = () => {
 }
 
 /**
- * 检查验证码是否过期（在用户输入时检查）
+ * 检查验证码是否过期（在用户输入时检查，基于服务器时间）
  */
 const checkCaptchaExpiry = () => {
   if (captchaExpiryTime.value === 0) {
     return // 验证码未初始化
   }
   
-  // 使用客户端时间判断（已考虑时间差调整）
-  const remaining = Math.max(0, Math.floor((captchaExpiryTime.value - Date.now()) / 1000))
+  // 使用服务器时间判断（实时同步）
+  const currentServerTime = getCurrentServerTime()
+  const remaining = Math.max(0, Math.floor((captchaExpiryTime.value - currentServerTime) / 1000))
   if (remaining <= 0) {
     // 验证码已过期，自动刷新
     ElMessage.warning('验证码已过期，正在自动刷新...')
@@ -627,42 +705,46 @@ const checkCaptchaExpiry = () => {
 }
 
 /**
- * 获取nonce token
+ * 获取nonce token（独立刷新，使用与验证码相同的过期时间）
  */
 const refreshNonce = async (silent = false) => {
   try {
+    // 先同步服务器时间，确保时间准确
+    await syncServerTime()
+    
     const response = await getNonce()
     if (response.code === 200 && response.data) {
-      nonceToken.value = response.data.nonce
-      nonceTimestamp.value = response.data.timestamp
-      registerForm.nonce = nonceToken.value
-      registerForm.timestamp = nonceTimestamp.value
+      // 获取最新的nonce token和时间戳
+      const newNonce = response.data.nonce
+      const newTimestamp = response.data.timestamp
       
-      // 设置nonce token过期时间（从后端返回的expiryTime或计算300秒后）
-      if (response.data.expiryTime) {
-        // 后端返回的是服务器时间戳（绝对时间）
+      // 立即更新表单数据
+      nonceToken.value = newNonce
+      nonceTimestamp.value = newTimestamp
+      registerForm.nonce = newNonce
+      registerForm.timestamp = newTimestamp
+      
+      // 使用与验证码相同的过期时间（120秒），确保时间一致
+      if (captchaExpiryTime.value > 0) {
+        // 如果验证码已存在，使用验证码的过期时间
+        nonceExpiryTime.value = captchaExpiryTime.value
+      } else if (response.data.expiryTime) {
+        // 否则使用后端返回的过期时间（但会被调整为120秒）
         const serverExpiryTime = parseInt(response.data.expiryTime)
-        const clientTime = Date.now()
-        
-        // 计算剩余时间（保守估计，考虑时间差）
-        const remainingMs = serverExpiryTime - clientTime
-        
-        // 设置客户端过期时间（使用相对时间，更可靠）
-        if (remainingMs > 0) {
-          nonceExpiryTime.value = clientTime + remainingMs
-        } else {
-          // 如果已经过期，立即设置为当前时间（会触发刷新）
-          nonceExpiryTime.value = clientTime
-        }
+        // 计算剩余时间，但限制为120秒
+        const currentServerTime = getCurrentServerTime()
+        const remaining = Math.min(120 * 1000, serverExpiryTime - currentServerTime)
+        nonceExpiryTime.value = currentServerTime + remaining
       } else {
-        nonceExpiryTime.value = Date.now() + 300 * 1000 // 300秒（5分钟）
+        // 使用当前服务器时间 + 120秒（与验证码一致）
+        nonceExpiryTime.value = getCurrentServerTime() + 120 * 1000
       }
       
       // 启动过期检测定时器
       startNonceTimer()
       
       if (!silent) {
-        // 静默刷新时不提示
+        console.log(`[Nonce刷新] 新的nonce已刷新，过期时间: ${new Date(nonceExpiryTime.value).toLocaleTimeString()}`)
       }
     } else {
       ElMessage.error('获取安全令牌失败，请稍后重试')
@@ -674,7 +756,8 @@ const refreshNonce = async (silent = false) => {
 }
 
 /**
- * 启动nonce token过期检测定时器
+ * 启动nonce token过期检测定时器（基于服务器时间）
+ * nonce token过期时，同时刷新验证码，确保时间一致
  */
 const startNonceTimer = () => {
   // 清除之前的定时器
@@ -683,28 +766,52 @@ const startNonceTimer = () => {
   }
   
   nonceTimer = setInterval(() => {
-    const remaining = Math.max(0, Math.floor((nonceExpiryTime.value - Date.now()) / 1000))
+    // 使用服务器时间判断是否过期（实时同步）
+    const currentServerTime = getCurrentServerTime()
+    const remaining = Math.max(0, Math.floor((nonceExpiryTime.value - currentServerTime) / 1000))
     
-    // 如果nonce token过期，自动刷新
+    // 如果nonce token过期，自动刷新验证码和nonce token（同步刷新，确保时间一致）
     if (remaining <= 0) {
       clearInterval(nonceTimer!)
       nonceTimer = null
-      // 自动刷新nonce token（静默刷新）
-      refreshNonce(true)
+      // 自动刷新验证码和nonce token（同步刷新）
+      refreshCaptcha(true)
     }
   }, 1000)
+}
+
+/**
+ * 启动服务器时间同步定时器（每30秒同步一次）
+ */
+const startServerTimeSync = () => {
+  // 清除之前的定时器
+  if (serverTimeSyncTimer) {
+    clearInterval(serverTimeSyncTimer)
+  }
+  
+  // 立即同步一次
+  syncServerTime()
+  
+  // 每30秒同步一次服务器时间
+  serverTimeSyncTimer = setInterval(() => {
+    syncServerTime()
+  }, 30000) // 30秒
 }
 
 /**
  * 处理注册
  */
 const handleRegister = async () => {
-  if (!registerFormRef.value) return
+  if (!registerFormRef.value) {
+    return
+  }
 
   try {
     // 验证表单
     const valid = await registerFormRef.value.validate()
-    if (!valid) return
+    if (!valid) {
+      return
+    }
 
     // 检查必要条件
     if (!canRegister.value) {
@@ -712,19 +819,26 @@ const handleRegister = async () => {
       return
     }
 
-    // 检查验证码是否过期（提交前再次检查，确保准确性）
-    const remaining = Math.max(0, Math.floor((captchaExpiryTime.value - Date.now()) / 1000))
-    if (remaining <= 0) {
-      ElMessage.warning('验证码已过期，正在自动刷新...')
-      await refreshCaptcha(true)
+    // 提交前先同步服务器时间，确保时间准确
+    await syncServerTime()
+    
+    // 检查验证码和nonce token是否过期（基于服务器时间）
+    const currentServerTime = getCurrentServerTime()
+    const captchaRemaining = Math.max(0, Math.floor((captchaExpiryTime.value - currentServerTime) / 1000))
+    const nonceRemaining = Math.max(0, Math.floor((nonceExpiryTime.value - currentServerTime) / 1000))
+    
+    // 如果验证码或nonce token过期，同步刷新（确保时间一致）
+    if (captchaRemaining <= 0 || nonceRemaining <= 0) {
+      ElMessage.warning('验证码或安全令牌已过期，正在自动刷新...')
+      await refreshCaptcha(true) // 同步刷新验证码和nonce token
       ElMessage.info('请重新输入验证码')
       return
     }
     
-    // 如果剩余时间少于10秒，也刷新验证码（保守策略，避免提交时过期）
-    if (remaining < 10) {
-      ElMessage.warning('验证码即将过期，正在自动刷新...')
-      await refreshCaptcha(true)
+    // 如果剩余时间少于10秒，提前刷新（保守策略）
+    if (captchaRemaining < 10 || nonceRemaining < 10) {
+      ElMessage.warning('验证码或安全令牌即将过期，正在自动刷新...')
+      await refreshCaptcha(true) // 同步刷新验证码和nonce token
       ElMessage.info('请重新输入验证码')
       return
     }
@@ -738,27 +852,21 @@ const handleRegister = async () => {
     // 检查nonce token是否存在
     if (!registerForm.nonce || !registerForm.timestamp) {
       ElMessage.warning('安全令牌不存在，正在自动刷新...')
-      await refreshNonce(true)
+      await refreshCaptcha(true) // 同步刷新验证码和nonce token
       ElMessage.info('请重新提交注册')
       return
     }
     
-    // 检查nonce token是否过期（提交前再次检查，确保准确性）
-    const nonceRemaining = Math.max(0, Math.floor((nonceExpiryTime.value - Date.now()) / 1000))
-    if (nonceRemaining <= 0) {
-      ElMessage.warning('安全令牌已过期，正在自动刷新...')
-      await refreshNonce(true)
-      ElMessage.info('请重新提交注册')
-      return
-    }
+    // 确保表单中的nonce token和时间戳都是最新的（防御性编程）
+    registerForm.nonce = nonceToken.value
+    registerForm.timestamp = nonceTimestamp.value
     
-    // 如果剩余时间少于30秒，也刷新nonce token（保守策略，避免提交时过期）
-    if (nonceRemaining < 30) {
-      ElMessage.warning('安全令牌即将过期，正在自动刷新...')
-      await refreshNonce(true)
-      ElMessage.info('请重新提交注册')
-      return
-    }
+    console.log('[注册提交] 验证码和nonce token状态:', {
+      captchaRemaining: captchaRemaining + '秒',
+      nonceRemaining: nonceRemaining + '秒',
+      nonce: registerForm.nonce?.substring(0, 20) + '...',
+      timestamp: registerForm.timestamp
+    })
 
     // 清除之前的错误信息
     authStore.clearErrors()
@@ -776,18 +884,20 @@ const handleRegister = async () => {
         clearInterval(nonceTimer)
         nonceTimer = null
       }
+      if (serverTimeSyncTimer) {
+        clearInterval(serverTimeSyncTimer)
+        serverTimeSyncTimer = null
+      }
       // 注册成功，跳转到登录页（成功消息已在store中显示）
       await router.push('/login')
     } else {
-      // 注册失败，刷新验证码和nonce
+      // 注册失败，同步刷新验证码和nonce token
       await refreshCaptcha()
-      await refreshNonce()
     }
   } catch (error) {
     console.error('注册处理失败:', error)
-    // 注册失败，刷新验证码和nonce
+    // 注册失败，同步刷新验证码和nonce token
     await refreshCaptcha()
-    await refreshNonce()
   }
 }
 
@@ -796,9 +906,20 @@ const handleRegister = async () => {
 // ================================
 
 onMounted(async () => {
-  // 页面加载时获取验证码和nonce token
+  // 如果已经登录，直接跳转到首页
+  if (authStore.isLoggedIn) {
+    router.push('/')
+    return
+  }
+
+  // 清除之前的错误信息
+  authStore.clearErrors()
+
+  // 启动服务器时间同步（每30秒同步一次）
+  startServerTimeSync()
+
+  // 页面加载时获取验证码和nonce token（同步刷新）
   await refreshCaptcha()
-  await refreshNonce()
 })
 
 onBeforeUnmount(() => {
@@ -810,6 +931,10 @@ onBeforeUnmount(() => {
   if (nonceTimer) {
     clearInterval(nonceTimer)
     nonceTimer = null
+  }
+  if (serverTimeSyncTimer) {
+    clearInterval(serverTimeSyncTimer)
+    serverTimeSyncTimer = null
   }
 })
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- 排除测试文件 -->
+    <Match>
+        <Source name="~.*Test\.java"/>
+    </Match>
+    <Match>
+        <Source name="~.*test\.java"/>
+    </Match>
+    
+    <!-- 排除已知的误报（根据实际情况添加） -->
+    <!-- 示例：
+    <Match>
+        <Bug pattern="HARD_CODE_PASSWORD"/>
+        <Source name="~.*Config\.java"/>
+    </Match>
+    -->
+</FindBugsFilter>
+
+
+

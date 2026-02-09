@@ -185,19 +185,60 @@ const completedVulnerabilities = ref(0)
 const totalStudyTime = ref(0)
 const loading = ref(false)
 const categoryCompletionRates = ref<Record<string, number>>({})
+const categoryVulnerabilityCounts = ref<Record<string, number>>({})
 
-// 计算属性
+// 计算属性 - 完成率（使用所有分类的平均完成率，而不是基于100%完成的分类数）
 const completionRate = computed(() => {
-  return totalVulnerabilities.value > 0
-    ? (completedVulnerabilitiesCount.value / totalVulnerabilities.value) * 100
-    : 0
+  const categories = ['A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08', 'A09', 'A10']
+  const totalRate = categories.reduce((sum, category) => {
+    return sum + getCategoryCompletionRate(category)
+  }, 0)
+  const avgRate = categories.length > 0 ? totalRate / categories.length : 0
+  console.log('完成率计算（平均）:', { 
+    totalRate, 
+    categories: categories.length, 
+    avgRate: Math.round(avgRate),
+    rates: categories.map(c => ({ code: c, rate: getCategoryCompletionRate(c) }))
+  })
+  return Math.round(avgRate)
 })
 
 // 计算已完成数量（完成率为100%的分类数量）
 const completedVulnerabilitiesCount = computed(() => {
   const categories = ['A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08', 'A09', 'A10']
-  return categories.filter(category => getCategoryCompletionRate(category) === 100).length
+  // 统计完成率为100%的分类数量
+  const completedCount = categories.filter(category => {
+    const rate = getCategoryCompletionRate(category)
+    return rate >= 100 // 完成率大于等于100%视为完成
+  }).length
+  console.log('已完成分类数量计算:', {
+    categories,
+    rates: categories.map(c => ({ code: c, rate: getCategoryCompletionRate(c) })),
+    completedCount
+  })
+  return completedCount
 })
+
+// 获取分类的漏洞数量（从API获取，如果没有则使用默认值）
+const getCategoryVulnerabilityCount = (categoryCode: string): number => {
+  if (categoryVulnerabilityCounts.value && categoryVulnerabilityCounts.value[categoryCode] !== undefined) {
+    return categoryVulnerabilityCounts.value[categoryCode]
+  }
+  // 默认值（如果API未返回数据）
+  const defaults: Record<string, number> = {
+    A01: 5,
+    A02: 3,
+    A03: 8,
+    A04: 4,
+    A05: 3,
+    A06: 2,
+    A07: 4,
+    A08: 2,
+    A09: 3,
+    A10: 2
+  }
+  return defaults[categoryCode] || 0
+}
 
 // 漏洞分类数据
 const vulnerabilityCategories = computed(() => [
@@ -207,7 +248,7 @@ const vulnerabilityCategories = computed(() => [
     description: t('knowledge.a01.description'),
     severity: 'critical',
     icon: 'Lock',
-    vulnerabilityCount: 5,
+    vulnerabilityCount: getCategoryVulnerabilityCount('A01'),
     completionRate: getCategoryCompletionRate('A01')
   },
   {
@@ -216,7 +257,7 @@ const vulnerabilityCategories = computed(() => [
     description: t('knowledge.a02.description'),
     severity: 'high',
     icon: 'Key',
-    vulnerabilityCount: 3,
+    vulnerabilityCount: getCategoryVulnerabilityCount('A02'),
     completionRate: getCategoryCompletionRate('A02')
   },
   {
@@ -225,7 +266,7 @@ const vulnerabilityCategories = computed(() => [
     description: t('knowledge.a03.description'),
     severity: 'critical',
     icon: 'Warning',
-    vulnerabilityCount: 8,
+    vulnerabilityCount: getCategoryVulnerabilityCount('A03'),
     completionRate: getCategoryCompletionRate('A03')
   },
   {
@@ -234,7 +275,7 @@ const vulnerabilityCategories = computed(() => [
     description: t('knowledge.a04.description'),
     severity: 'medium',
     icon: 'Document',
-    vulnerabilityCount: 4,
+    vulnerabilityCount: getCategoryVulnerabilityCount('A04'),
     completionRate: getCategoryCompletionRate('A04')
   },
   {
@@ -243,7 +284,7 @@ const vulnerabilityCategories = computed(() => [
     description: t('knowledge.a05.description'),
     severity: 'medium',
     icon: 'Setting',
-    vulnerabilityCount: 3,
+    vulnerabilityCount: getCategoryVulnerabilityCount('A05'),
     completionRate: getCategoryCompletionRate('A05')
   },
   {
@@ -252,7 +293,7 @@ const vulnerabilityCategories = computed(() => [
     description: t('knowledge.a06.description'),
     severity: 'high',
     icon: 'Files',
-    vulnerabilityCount: 2,
+    vulnerabilityCount: getCategoryVulnerabilityCount('A06'),
     completionRate: getCategoryCompletionRate('A06')
   },
   {
@@ -261,7 +302,7 @@ const vulnerabilityCategories = computed(() => [
     description: t('knowledge.a07.description'),
     severity: 'critical',
     icon: 'User',
-    vulnerabilityCount: 4,
+    vulnerabilityCount: getCategoryVulnerabilityCount('A07'),
     completionRate: getCategoryCompletionRate('A07')
   },
   {
@@ -270,7 +311,7 @@ const vulnerabilityCategories = computed(() => [
     description: t('knowledge.a08.description'),
     severity: 'high',
     icon: 'User',
-    vulnerabilityCount: 2,
+    vulnerabilityCount: getCategoryVulnerabilityCount('A08'),
     completionRate: getCategoryCompletionRate('A08')
   },
   {
@@ -279,7 +320,7 @@ const vulnerabilityCategories = computed(() => [
     description: t('knowledge.a09.description'),
     severity: 'medium',
     icon: 'Monitor',
-    vulnerabilityCount: 3,
+    vulnerabilityCount: getCategoryVulnerabilityCount('A09'),
     completionRate: getCategoryCompletionRate('A09')
   },
   {
@@ -288,7 +329,7 @@ const vulnerabilityCategories = computed(() => [
     description: t('knowledge.a10.description'),
     severity: 'high',
     icon: 'Tools',
-    vulnerabilityCount: 2,
+    vulnerabilityCount: getCategoryVulnerabilityCount('A10'),
     completionRate: getCategoryCompletionRate('A10')
   }
 ])
@@ -305,9 +346,13 @@ const viewCategoryDetails = (code: string) => {
 // 获取分类完成率的方法
 const getCategoryCompletionRate = (categoryCode: string) => {
   // 从真实API获取分类完成率，而不是硬编码
-  if (categoryCompletionRates.value && categoryCompletionRates.value[categoryCode]) {
-    return categoryCompletionRates.value[categoryCode]
+  if (categoryCompletionRates.value && categoryCompletionRates.value[categoryCode] !== undefined) {
+    const rate = categoryCompletionRates.value[categoryCode]
+    // 确保返回数字类型，处理可能的字符串或null值
+    const numRate = typeof rate === 'number' ? rate : parseInt(String(rate)) || 0
+    return Math.max(0, Math.min(100, numRate)) // 限制在0-100之间
   }
+  // 如果没有数据，返回0
   return 0
 }
 
@@ -406,6 +451,39 @@ const loadUserProgress = async () => {
     } catch (error) {
       console.error('获取分类完成率失败:', error)
       categoryCompletionRates.value = {}
+    }
+
+    // 加载各分类的漏洞数量数据
+    try {
+      console.log('加载各分类的漏洞数量数据...')
+      const countsResponse = await vulnerabilityProgressApi.getCategoryVulnerabilityCounts()
+      console.log('漏洞数量API响应:', countsResponse)
+
+      const responseData = countsResponse as any
+      if (responseData && responseData.code === 200 && responseData.data) {
+        // 将Long类型转换为Number
+        const counts = responseData.data || {}
+        const convertedCounts: Record<string, number> = {}
+        Object.keys(counts).forEach(key => {
+          convertedCounts[key] = Number(counts[key]) || 0
+        })
+        categoryVulnerabilityCounts.value = convertedCounts
+        console.log('更新分类漏洞数量:', categoryVulnerabilityCounts.value)
+      } else if (responseData?.data) {
+        const counts = responseData.data || {}
+        const convertedCounts: Record<string, number> = {}
+        Object.keys(counts).forEach(key => {
+          convertedCounts[key] = Number(counts[key]) || 0
+        })
+        categoryVulnerabilityCounts.value = convertedCounts
+        console.log('更新分类漏洞数量(备用):', categoryVulnerabilityCounts.value)
+      } else {
+        console.warn('漏洞数量API响应失败，使用默认值', countsResponse)
+        categoryVulnerabilityCounts.value = {}
+      }
+    } catch (error) {
+      console.error('获取分类漏洞数量失败:', error)
+      categoryVulnerabilityCounts.value = {}
     }
   } catch (error) {
     console.error('获取用户进度数据失败:', error)

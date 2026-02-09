@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OWASP Dependency-Check 误报抑制文件
+  用于抑制已知的误报或已接受的风险
+  文档: https://jeremylong.github.io/DependencyCheck/general/suppression.html
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  
+  <!-- 示例：抑制特定CVE的误报 -->
+  <!--
+  <suppress>
+    <notes><![CDATA[
+      这是一个误报，该漏洞在实际使用场景中不可利用
+    ]]></notes>
+    <cve>CVE-2023-XXXXX</cve>
+  </suppress>
+  -->
+  
+  <!-- 示例：抑制特定依赖的所有漏洞（谨慎使用） -->
+  <!--
+  <suppress>
+    <notes><![CDATA[
+      该依赖的漏洞已评估，风险可接受
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/.*/example-library@.*$</packageUrl>
+  </suppress>
+  -->
+  
+  <!-- 示例：抑制特定文件路径的扫描 -->
+  <!--
+  <suppress>
+    <notes><![CDATA[
+      测试依赖，不用于生产环境
+    ]]></notes>
+    <filePath regex="true">.*test.*\.jar$</filePath>
+  </suppress>
+  -->
+
+</suppressions>
+
+
+

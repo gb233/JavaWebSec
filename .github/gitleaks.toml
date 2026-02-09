@@ -1,0 +1,48 @@
+# Gitleaks配置文件 - 密钥泄露扫描
+# 文档: https://github.com/gitleaks/gitleaks
+
+title = "Security Teaching System Secret Detection"
+
+[extend]
+# 使用默认规则
+useDefault = true
+
+[allowlist]
+description = "允许的误报模式"
+paths = [
+  '''\.github/.*''',
+  '''docs/.*''',
+  '''scripts/.*\.sh''',
+  '''\.env\.example''',
+  '''\.env\.template''',
+]
+
+commits = [
+  # 允许历史提交中的测试密钥
+  "test",
+  "example",
+  "demo",
+]
+
+regexes = [
+  # 允许示例配置中的占位符
+  '''password.*=.*(?:test|example|demo|placeholder)''',
+  '''api.*key.*=.*(?:test|example|demo|placeholder)''',
+]
+
+[rules]
+# 自定义规则
+id = "custom-jwt-secret"
+description = "检测硬编码的JWT密钥"
+regex = '''jwt\.secret\s*=\s*['"](?!test|example|demo)[^'"]{20,}['"]'''
+entropy = 3.5
+message = "发现硬编码的JWT密钥，请使用环境变量"
+
+id = "custom-db-password"
+description = "检测硬编码的数据库密码"
+regex = '''(?:password|pwd)\s*[:=]\s*['"](?!test|example|demo)[^'"]{8,}['"]'''
+entropy = 3.0
+message = "发现硬编码的数据库密码，请使用环境变量或密钥管理服务"
+
+
+

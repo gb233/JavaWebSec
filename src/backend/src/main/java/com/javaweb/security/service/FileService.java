@@ -35,3 +35,5 @@ public interface FileService {
    */
   String getAvatarUrl(Long userId);
 }
+
+

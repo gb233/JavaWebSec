@@ -1,0 +1,40 @@
+# CI 通过后自动部署到 VPS 演示环境，并做简单验证
+name: Deploy to VPS
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    # 仅当 CI 成功时执行（手动触发时 workflow_run 不存在，条件为 true）
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.VPS_PORT || 22 }} -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy and restart on VPS
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || 'javaweb-security' }}
+          VPS_PORT: ${{ secrets.VPS_PORT || 22 }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -p "$VPS_PORT" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "cd $DEPLOY_PATH && git fetch origin && (git reset --hard origin/main || git reset --hard origin/master) && docker compose -f docker-compose.prod.yml pull --quiet 2>/dev/null || true && docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml ps"
+
+      - name: Verify deployment
+        run: |
+          url="${{ secrets.DEMO_URL || 'http://javasec.icu:8080' }}"
+          if curl -sf --connect-timeout 10 "${url}/actuator/health" > /dev/null 2>&1; then
+            echo "✅ Backend health check passed: $url/actuator/health"
+          else
+            echo "⚠️ Backend health check failed or DEMO_URL not set; skipping."
+          fi

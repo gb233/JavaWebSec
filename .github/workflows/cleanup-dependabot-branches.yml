@@ -1,0 +1,88 @@
+name: Cleanup Dependabot Branches
+
+on:
+  schedule:
+    # 每周一凌晨3点清理已合并的Dependabot分支
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  cleanup:
+    name: Cleanup Merged Dependabot Branches
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all branches
+        run: git fetch --all --prune
+
+      - name: List Dependabot branches
+        id: list-branches
+        run: |
+          echo "## 🔍 Dependabot分支清理报告" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # 获取所有远程分支
+          branches=$(git branch -r | grep -E 'dependabot|dependabot' | sed 's/origin\///' | xargs)
+          
+          if [ -z "$branches" ]; then
+            echo "✅ 没有找到Dependabot分支" >> $GITHUB_STEP_SUMMARY
+            echo "branches=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "找到以下Dependabot分支：" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "$branches" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "branches=$branches" >> $GITHUB_OUTPUT
+
+      - name: Check and delete merged branches
+        if: steps.list-branches.outputs.branches != ''
+        run: |
+          echo "## 🗑️ 删除已合并的分支" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          deleted_count=0
+          kept_count=0
+          
+          for branch in ${{ steps.list-branches.outputs.branches }}; do
+            # 检查分支是否已合并到main
+            if git branch -r --merged origin/main | grep -q "origin/$branch"; then
+              echo "删除已合并的分支: $branch" >> $GITHUB_STEP_SUMMARY
+              git push origin --delete "$branch" 2>&1 || echo "⚠️ 无法删除 $branch（可能已被删除）" >> $GITHUB_STEP_SUMMARY
+              deleted_count=$((deleted_count + 1))
+            else
+              echo "保留未合并的分支: $branch" >> $GITHUB_STEP_SUMMARY
+              kept_count=$((kept_count + 1))
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**清理结果**：" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ 已删除: $deleted_count 个分支" >> $GITHUB_STEP_SUMMARY
+          echo "- 📌 保留: $kept_count 个分支（未合并）" >> $GITHUB_STEP_SUMMARY
+
+      - name: Summary
+        run: |
+          echo "## ✅ 清理完成" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Dependabot分支清理工作已完成。已合并的分支已被删除，未合并的分支已保留。" >> $GITHUB_STEP_SUMMARY
+
+
+

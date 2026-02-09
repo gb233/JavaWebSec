@@ -149,16 +149,21 @@ public class ApplicationConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
 
-    // 从环境变量读取允许的源，如果没有配置则允许所有来源
-    // 生产环境建议通过环境变量 CORS_ALLOWED_ORIGINS 配置具体域名
+    // 从环境变量读取允许的源
+    // 生产环境必须通过环境变量 CORS_ALLOWED_ORIGINS 配置具体域名
     String allowedOrigins = System.getenv("CORS_ALLOWED_ORIGINS");
     if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
       // 支持多个源，用逗号分隔
       configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
     } else {
-      // 默认允许所有来源（开发环境和公网部署）
-      // 注意：生产环境建议通过环境变量配置具体域名以提高安全性
-      configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+      // 默认仅允许localhost（开发环境安全配置）
+      // 生产环境必须通过环境变量配置具体域名，不允许使用通配符
+      configuration.setAllowedOriginPatterns(
+          Arrays.asList(
+              "http://localhost:*",
+              "http://127.0.0.1:*",
+              "https://localhost:*",
+              "https://127.0.0.1:*"));
     }
 
     // 允许的HTTP方法
