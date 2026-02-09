@@ -34,7 +34,7 @@
     "axios": "^1.6.2",
     "dayjs": "^1.11.10",
     "echarts": "^5.4.3",
-    "element-plus": "^2.4.4",
+    "element-plus": "^2.13.2",
     "highlight.js": "^11.9.0",
     "html2canvas": "^1.4.1",
     "js-cookie": "^3.0.5",
