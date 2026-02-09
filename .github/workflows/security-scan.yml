@@ -111,7 +111,7 @@ jobs:
           echo "⚠️ 详细报告仅管理员可在GitHub Security标签页查看" >> summary.md
 
       - name: Upload summary only
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: backend-dependency-summary
@@ -166,7 +166,7 @@ jobs:
           echo "⚠️ 详细报告仅管理员可在GitHub Security标签页查看" >> summary.md
 
       - name: Upload summary only
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: frontend-dependency-summary
