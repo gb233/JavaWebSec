@@ -79,9 +79,12 @@
   - CI 工作流完成后且分支为 main/master
   - 手动触发 (workflow_dispatch)
 功能:
-  - SSH 连接 VPS，在项目目录 git pull 并 docker compose up -d --build
+  - 当前仅支持 Docker 方式，要求 VPS 已安装 Docker、已 clone 本仓库到 DEPLOY_PATH
+  - 可选先停止现有容器（小内存 VPS 建议开启）：STOP_BEFORE_START=true 时先执行 docker compose down，再 git pull 与 up -d --build，避免双进程导致宕机
   - 使用 docker-compose.prod.yml 更新演示环境
   - 可选：对 DEMO_URL 做健康检查
+从零环境:
+  - 首次部署可在 VPS 上执行 scripts/ubuntu-docker-deploy.sh，或手动安装 Docker 后 clone 仓库再执行 docker compose -f docker-compose.prod.yml up -d
 所需 Secrets:
   - VPS_HOST: VPS 主机名或 IP
   - VPS_USER: SSH 登录用户名
@@ -89,6 +92,7 @@
   - DEPLOY_PATH:（可选）项目在 VPS 上的路径，默认 javaweb-security
   - VPS_PORT:（可选）SSH 端口，默认 22
   - DEMO_URL:（可选）演示站健康检查 URL，如 http://javasec.icu:8080
+  - STOP_BEFORE_START:（可选）部署前是否先停止现有容器，默认 true，小内存 VPS 建议保持 true
 ```
 
 ## ⚠️ 重要说明

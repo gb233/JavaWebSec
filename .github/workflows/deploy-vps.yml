@@ -26,9 +26,10 @@ jobs:
         env:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || 'javaweb-security' }}
           VPS_PORT: ${{ secrets.VPS_PORT || 22 }}
+          STOP_BEFORE_START: ${{ secrets.STOP_BEFORE_START || 'true' }}
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -p "$VPS_PORT" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            "cd $DEPLOY_PATH && git fetch origin && (git reset --hard origin/main || git reset --hard origin/master) && docker compose -f docker-compose.prod.yml pull --quiet 2>/dev/null || true && docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml ps"
+            "cd $DEPLOY_PATH && ( [ \"$STOP_BEFORE_START\" != 'true' ] || docker compose -f docker-compose.prod.yml down ) && git fetch origin && (git reset --hard origin/main || git reset --hard origin/master) && docker compose -f docker-compose.prod.yml pull --quiet 2>/dev/null || true && docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml ps"
 
       - name: Verify deployment
         run: |
