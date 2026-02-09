@@ -157,7 +157,7 @@ jobs:
         id: spotbugs
 
       - name: Upload SpotBugs report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: spotbugs-report
