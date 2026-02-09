@@ -1,4 +1,5 @@
 # CI 通过后自动部署到 VPS 演示环境，并做简单验证
+# 支持账号密码 SSH（VPS_PASSWORD）或私钥（SSH_PRIVATE_KEY）二选一
 name: Deploy to VPS
 
 on:
@@ -12,28 +13,26 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    # 仅当 CI 成功时执行（手动触发时 workflow_run 不存在，条件为 true）
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p ${{ secrets.VPS_PORT || 22 }} -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
-
-      - name: Deploy and restart on VPS
-        env:
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || 'javaweb-security' }}
-          VPS_PORT: ${{ secrets.VPS_PORT || 22 }}
-          STOP_BEFORE_START: ${{ secrets.STOP_BEFORE_START || 'true' }}
-        run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new -p "$VPS_PORT" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            "cd $DEPLOY_PATH && ( [ \"$STOP_BEFORE_START\" != 'true' ] || docker compose -f docker-compose.prod.yml down ) && git fetch origin && (git reset --hard origin/main || git reset --hard origin/master) && docker compose -f docker-compose.prod.yml pull --quiet 2>/dev/null || true && docker compose -f docker-compose.prod.yml up -d --build && docker compose -f docker-compose.prod.yml ps"
+      - name: Deploy and restart on VPS (SSH)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_steps: |
+            cd ${{ secrets.DEPLOY_PATH || 'javaweb-security' }} || exit 1
+            if [ "${{ secrets.STOP_BEFORE_START || 'true' }}" = "true" ]; then docker compose -f docker-compose.prod.yml down; fi
+            git fetch origin && (git reset --hard origin/main || git reset --hard origin/master)
+            docker compose -f docker-compose.prod.yml pull --quiet 2>/dev/null || true
+            docker compose -f docker-compose.prod.yml up -d --build
+            docker compose -f docker-compose.prod.yml ps
 
       - name: Verify deployment
         run: |
-          url="${{ secrets.DEMO_URL || 'http://javasec.icu:8080' }}"
+          url="${{ secrets.DEMO_URL || 'http://43.139.23.197:8080' }}"
           if curl -sf --connect-timeout 10 "${url}/actuator/health" > /dev/null 2>&1; then
             echo "✅ Backend health check passed: $url/actuator/health"
           else

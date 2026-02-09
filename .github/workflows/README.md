@@ -85,14 +85,14 @@
   - 可选：对 DEMO_URL 做健康检查
 从零环境:
   - 首次部署可在 VPS 上执行 scripts/ubuntu-docker-deploy.sh，或手动安装 Docker 后 clone 仓库再执行 docker compose -f docker-compose.prod.yml up -d
-所需 Secrets:
-  - VPS_HOST: VPS 主机名或 IP
+所需 Secrets（账号密码 SSH）:
+  - VPS_HOST: VPS 主机名或 IP（已设示例：43.139.23.197）
   - VPS_USER: SSH 登录用户名
-  - SSH_PRIVATE_KEY: 能登录 VPS 的私钥全文
+  - VPS_PASSWORD: SSH 登录密码（与私钥二选一；当前流程使用密码）
   - DEPLOY_PATH:（可选）项目在 VPS 上的路径，默认 javaweb-security
   - VPS_PORT:（可选）SSH 端口，默认 22
-  - DEMO_URL:（可选）演示站健康检查 URL，如 http://javasec.icu:8080
-  - STOP_BEFORE_START:（可选）部署前是否先停止现有容器，默认 true，小内存 VPS 建议保持 true
+  - DEMO_URL:（可选）演示站健康检查 URL，默认 http://43.139.23.197:8080
+  - STOP_BEFORE_START:（可选）部署前是否先停止现有容器，默认 true
 ```
 
 ## ⚠️ 重要说明
