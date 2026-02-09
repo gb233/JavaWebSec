@@ -23,7 +23,7 @@ RUN npm run build
 # ========================================
 # 阶段2: 后端构建
 # ========================================
-FROM maven:3.9-eclipse-temurin-17 AS backend-builder
+FROM maven:3-eclipse-temurin-25 AS backend-builder
 
 WORKDIR /app
 
